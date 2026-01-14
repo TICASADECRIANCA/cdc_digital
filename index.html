@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CASA+ - Sistema Online</title>
+    <title>CASA+ - Gestão Escolar</title>
     <style>
         /* --- CSS GERAL --- */
         :root { --primary: #004aad; --sec: #0097b2; --bg: #f4f6f8; --text: #333; --success: #27ae60; --danger: #c0392b; --warning: #f39c12; }
@@ -45,15 +45,21 @@
         h2 { color: var(--primary); margin-bottom: 10px; margin-top: 0; }
         
         input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 1rem; }
-        input:disabled, textarea:disabled { background-color: #e9ecef; color: #6c757d; cursor: not-allowed; border: 1px dashed #ccc; }
-        
         button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.2s; font-size: 1rem; }
         button:hover { filter: brightness(90%); }
         .secondary-btn { background: #7f8c8d; }
         .success-btn { background: var(--success); }
         .warning-btn { background: var(--warning); color: white; }
         .link-text { margin-top: 15px; font-size: 0.9rem; color: #666; cursor: pointer; text-decoration: underline; }
+
+        /* --- PAINEL COORDENAÇÃO --- */
+        #view-coord { display: none; padding: 2rem; max-width: 1000px; margin: 0 auto; width: 100%; }
+        .grid-turmas { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
+        .btn-turma { background: white; color: var(--primary); border: 2px solid var(--primary); padding: 20px; border-radius: 8px; font-size: 1.1rem; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; }
+        .btn-turma:hover { background: var(--primary); color: white; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .grupo-titulo { grid-column: 1 / -1; margin-top: 20px; border-bottom: 2px solid #ddd; padding-bottom: 5px; color: #555; }
         
+        /* --- PAINEL PROFESSOR --- */
         #app-painel { display: none; height: 100%; flex-direction: column; }
         header { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); }
         .turma-badge { background: var(--sec); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin-left: 15px; }
@@ -85,7 +91,6 @@
         .modal-content { background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto; }
         .hist-item { border-bottom: 1px solid #eee; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; }
 
-        /* --- CSS IMPRESSÃO --- */
         @media print {
             body * { visibility: hidden; }
             .view-section.active, .view-section.active * { visibility: visible; }
@@ -107,17 +112,13 @@
     <div id="view-login" class="auth-container">
         <div class="card">
             <img src="logo.png" alt="Logo Escola" class="logo-login">
-            
             <h2>CASA+</h2>
-            <p style="color: #777; margin-bottom: 20px;">Controle Acadêmico de Sala de Aula</p>
-            <p style="color: #777; margin-bottom: 20px;">Acesso Professor</p>
+            <p style="color: #777; margin-bottom: 20px;">Acesso Restrito</p>
             <input type="email" id="login-email" placeholder="E-mail">
             <input type="password" id="login-senha" placeholder="Senha">
             <button onclick="window.fazerLogin()">Entrar</button>
-            
-            <p class="link-text" onclick="window.showView('cadastro')">Cadastrar novo professor</p>
-            
-            <p class="link-text" style="color: #999; font-size: 0.8rem; margin-top: 30px;" onclick="window.abrirAreaAdmin()">⚙️ Acesso Secretaria (Cadastro em Massa)</p>
+            <p class="link-text" onclick="window.showView('cadastro')">Cadastrar Professor</p>
+            <p class="link-text" style="color: #999; font-size: 0.8rem; margin-top: 30px;" onclick="window.abrirAreaAdmin()">⚙️ Secretaria (Gestão de Acessos)</p>
         </div>
     </div>
 
@@ -127,7 +128,7 @@
             <h2>Novo Cadastro</h2>
             <input type="text" id="cad-nome" placeholder="Nome Completo">
             <select id="cad-turma">
-                <option value="" disabled selected>Selecione a Turma</option>
+                <option value="" disabled selected>Selecione Turma ou Cargo</option>
             </select>
             <input type="email" id="cad-email" placeholder="E-mail">
             <input type="password" id="cad-senha" placeholder="Senha">
@@ -136,9 +137,24 @@
         </div>
     </div>
 
+    <div id="view-coord">
+        <header style="border-radius: 8px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center;">
+                <span class="logo" style="font-weight: bold; font-size: 1.2rem;">Painel Coordenação</span>
+                <span id="coord-badge" class="turma-badge" style="background: var(--primary);">Geral</span>
+            </div>
+            <button onclick="window.fazerLogout()" class="secondary-btn" style="width: auto; padding: 8px 20px; margin: 0;">Sair</button>
+        </header>
+
+        <h3 style="color: #555;">Selecione uma turma para gerenciar:</h3>
+        <div id="container-turmas" class="grid-turmas">
+            </div>
+    </div>
+
     <div id="app-painel">
         <header>
             <div style="display: flex; align-items: center;">
+                <button id="btn-voltar-coord" onclick="window.voltarParaCoord()" style="display:none; width: auto; padding: 5px 15px; margin-right: 15px; background: #666;">⬅ Voltar</button>
                 <span class="logo">CDC Digital</span>
                 <span id="display-turma" class="turma-badge">...</span>
             </div>
@@ -154,69 +170,52 @@
             <div id="tab-freq" class="view-section active">
                 <div class="control-bar">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-weight: bold;">Data:</span>
+                        <span>Data:</span>
                         <input type="date" id="data-freq" style="width: auto; margin: 0;" onchange="window.verificarChamadaDia()">
                     </div>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button onclick="window.salvarChamada()" class="success-btn" style="width: auto; margin: 0;">💾 Salvar</button>
-                        <button onclick="window.abrirHistorico('freq')" class="secondary-btn" style="width: auto; margin: 0;">📅 Histórico</button>
-                        <button onclick="window.print()" style="background-color: #2c3e50; width: auto; margin: 0;">🖨️ Imprimir Lista</button>
+                        <button onclick="window.salvarChamada()" class="success-btn" style="width: auto;">💾 Salvar</button>
+                        <button onclick="window.abrirHistorico('freq')" class="secondary-btn" style="width: auto;">📅 Histórico</button>
+                        <button onclick="window.print()" style="background: #2c3e50; width: auto;">🖨️ Imprimir</button>
                     </div>
                 </div>
 
                 <div style="margin-bottom: 15px; text-align: right;">
                      <button onclick="window.toggleImport()" style="background: #f39c12; width: auto; font-size: 0.9rem; padding: 6px 15px;">📥 Importar Lista</button>
                 </div>
-
                 <div id="area-importacao" class="import-area">
-                    <h4>Importação de Alunos</h4>
-                    <p>Cole: <strong>Nome do Aluno, Turma</strong></p>
                     <textarea id="lista-import" rows="5" placeholder="Maria Silva, Infantil 1 A"></textarea>
                     <button onclick="window.processarImportacao()">Processar Lista</button>
                 </div>
                 
-                <h3 style="display:none; text-align:center; margin-bottom:10px;" id="titulo-impressao-freq">Lista de Presença</h3>
-
                 <table id="tabela-alunos">
-                    <thead>
-                        <tr>
-                            <th>Aluno</th>
-                            <th style="width: 150px; text-align: center;">Presença</th>
-                            <th style="width: 50px; text-align: center;" class="no-print">Ação</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Aluno</th><th style="text-align: center;">Presença</th><th style="text-align: center;" class="no-print">Ação</th></tr></thead>
                     <tbody id="lista-tbody"></tbody>
                 </table>
-                <p id="msg-vazia" style="text-align: center; color: #777; margin-top: 40px;">Carregando ou sem alunos...</p>
+                <p id="msg-vazia" style="text-align: center; color: #777; margin-top: 40px;">Carregando...</p>
             </div>
 
             <div id="tab-plan" class="view-section">
                 <div class="control-bar">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-weight: bold;">Data:</span>
+                        <span>Data:</span>
                         <input type="date" id="data-plan" style="width: auto; margin: 0;" onchange="window.carregarPlanejamento()">
                     </div>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button onclick="window.salvarPlanejamento()" class="success-btn" style="width: auto; margin: 0;">💾 Salvar</button>
-                        <button id="btn-editar-plan" onclick="window.desbloquearEdicao()" class="warning-btn" style="width: auto; margin: 0; display:none;">🔓 Editar</button>
-                        <button onclick="window.abrirHistorico('plan')" class="secondary-btn" style="width: auto; margin: 0;">📅 Ver Salvos</button>
-                        <button onclick="window.print()" style="background-color: #2c3e50; width: auto; margin: 0;">🖨️ Imprimir</button>
-                        <button onclick="window.limparTelaPlanejamento()" class="warning-btn" style="width: auto; margin: 0;">🗑️ Limpar Tela</button>
+                        <button onclick="window.salvarPlanejamento()" class="success-btn" style="width: auto;">💾 Salvar</button>
+                        <button id="btn-editar-plan" onclick="window.desbloquearEdicao()" class="warning-btn" style="width: auto; display:none;">🔓 Editar</button>
+                        <button onclick="window.abrirHistorico('plan')" class="secondary-btn" style="width: auto;">📅 Ver Salvos</button>
+                        <button onclick="window.print()" style="background: #2c3e50; width: auto;">🖨️ Imprimir</button>
+                        <button onclick="window.limparTelaPlanejamento()" class="warning-btn" style="width: auto;">🗑️ Limpar</button>
                     </div>
                 </div>
-
                 <div class="plan-card">
                     <h3 style="margin-top: 0; color: var(--primary);">Registro Diário</h3>
-                    <label>Componente Curricular / Disciplina:</label>
-                    <input type="text" id="plan-disciplina" class="input-plan">
-                    <label>Tema da Aula:</label>
-                    <input type="text" id="plan-tema" class="input-plan">
-                    <label>Objetivos de Aprendizagem (BNCC):</label>
-                    <textarea id="plan-objetivos" class="input-plan"></textarea>
-                    <label>Metodologia / Desenvolvimento:</label>
-                    <textarea id="plan-metodologia" style="height: 120px;" class="input-plan"></textarea>
-                    <label>Avaliação / Observações:</label>
-                    <textarea id="plan-avaliacao" class="input-plan"></textarea>
+                    <label>Componente Curricular / Disciplina:</label><input type="text" id="plan-disciplina" class="input-plan">
+                    <label>Tema da Aula:</label><input type="text" id="plan-tema" class="input-plan">
+                    <label>Objetivos (BNCC):</label><textarea id="plan-objetivos" class="input-plan"></textarea>
+                    <label>Metodologia:</label><textarea id="plan-metodologia" style="height: 120px;" class="input-plan"></textarea>
+                    <label>Avaliação:</label><textarea id="plan-avaliacao" class="input-plan"></textarea>
                 </div>
             </div>
         </div>
@@ -224,32 +223,27 @@
 
     <div id="modal-historico" class="modal-overlay">
         <div class="modal-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 id="modal-titulo">Histórico</h3>
-                <button onclick="window.fecharHistorico()" style="width: auto; background: none; color: #333; font-size: 1.5rem; margin: 0;">&times;</button>
-            </div>
+            <div style="display: flex; justify-content: space-between;"><h3>Histórico</h3><button onclick="window.fecharHistorico()" style="width:auto; background:none; color:black;">&times;</button></div>
             <div id="modal-lista"></div>
-            <button onclick="window.fecharHistorico()" class="secondary-btn" style="margin-top: 20px;">Fechar</button>
+            <button onclick="window.fecharHistorico()" class="secondary-btn">Fechar</button>
         </div>
     </div>
 
     <div id="modal-admin" class="modal-overlay">
         <div class="modal-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3>Secretaria - Importar Professores</h3>
-                <button onclick="window.fecharAdmin()" style="width: auto; background: none; color: #333; font-size: 1.5rem; margin: 0;">&times;</button>
-            </div>
-            
+            <div style="display: flex; justify-content: space-between;"><h3>Secretaria - Acessos</h3><button onclick="window.fecharAdmin()" style="width:auto; background:none; color:black;">&times;</button></div>
             <div class="import-area" style="display: block; background: #e3f2fd; border-color: #90caf9;">
-                <p>Cole a lista de professores no formato:</p>
-                <p><strong>Nome, Turma, Email, Senha</strong></p>
-                <p style="font-size: 0.8rem; color: #666;">Exemplo:<br>Ana Souza, 1º Ano A, ana@escola.com, 1234<br>Bia Lima, Infantil 1 B, bia@escola.com, 1234</p>
-                
+                <p><strong>Formato de Importação:</strong></p>
+                <p>Nome, Turma/Cargo, Email, Senha</p>
+                <p style="font-size: 0.8rem; color: #555;">
+                    Ex. Professor: <code>Ana, Infantil 1 A, ana@x.com, 123</code><br>
+                    Ex. Coord Nível: <code>Bia, Educação Infantil, bia@x.com, 123</code><br>
+                    Ex. Coord Geral: <code>Carla, Geral, carla@x.com, 123</code>
+                </p>
                 <textarea id="lista-profs-import" rows="6" placeholder="Nome, Turma, Email, Senha"></textarea>
                 <button onclick="window.processarImportacaoProfs()">🚀 Criar Contas</button>
             </div>
-            
-            <button onclick="window.fecharAdmin()" class="secondary-btn" style="margin-top: 20px;">Fechar</button>
+            <button onclick="window.fecharAdmin()" class="secondary-btn">Fechar</button>
         </div>
     </div>
 
@@ -269,7 +263,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // --- ESTRUTURA E VARIÁVEIS ---
         let usuarioAtual = null;
+        let perfilCoord = null; // Armazena dados originais da coord
         let listaAlunosCache = [];
         const SENHA_EDICAO = "1234";
 
@@ -291,107 +287,125 @@
         window.onload = function() {
             carregarOpcoesTurma();
             const hoje = new Date().toISOString().split('T')[0];
-            const inputFreq = document.getElementById('data-freq');
-            inputFreq.value = hoje;
-            inputFreq.max = hoje;
+            document.getElementById('data-freq').value = hoje;
+            document.getElementById('data-freq').max = hoje;
             document.getElementById('data-plan').value = hoje;
         };
 
-        // --- FUNÇÕES ADMIN / IMPORTAÇÃO PROFESSORES ---
-        window.abrirAreaAdmin = () => {
-            const senha = prompt("Senha da Secretaria:");
-            if(senha === "admin") { // Você pode mudar a senha aqui
-                document.getElementById('modal-admin').style.display = 'flex';
+        // --- LÓGICA DE COORDENAÇÃO ---
+        
+        function verificarNivelAcesso(turmaUsuario) {
+            // Se for "Geral", é Coord Geral
+            if (turmaUsuario === "Geral") return "COORD_GERAL";
+            
+            // Se for o nome de um grupo (Ex: Educação Infantil), é Coord de Nível
+            if (ESTRUTURA_TURMAS[turmaUsuario]) return "COORD_NIVEL";
+            
+            // Senão, é Professor
+            return "PROFESSOR";
+        }
+
+        window.logar = async (user) => {
+            const nivel = verificarNivelAcesso(user.turma);
+            
+            if (nivel === "PROFESSOR") {
+                // FLUXO NORMAL DE PROFESSOR
+                usuarioAtual = user;
+                perfilCoord = null;
+                document.getElementById('btn-voltar-coord').style.display = 'none';
+                window.abrirPainelTurma(user.turma, user.nome);
+            
             } else {
-                alert("Senha incorreta.");
+                // FLUXO DE COORDENAÇÃO
+                usuarioAtual = user; 
+                perfilCoord = user; // Salva quem é a coordenadora
+                document.getElementById('display-turma').innerText = "Modo Visualização";
+                window.showView('coord');
+                window.renderizarPainelCoord(user.turma, nivel);
             }
         }
 
-        window.fecharAdmin = () => {
-            document.getElementById('modal-admin').style.display = 'none';
-        }
+        window.renderizarPainelCoord = (filtroTurma, nivel) => {
+            const container = document.getElementById('container-turmas');
+            container.innerHTML = "";
+            document.getElementById('coord-badge').innerText = filtroTurma;
 
-        window.processarImportacaoProfs = async () => {
-            const texto = document.getElementById('lista-profs-import').value;
-            if(!texto.trim()) return;
+            for (const [grupo, listaSeries] of Object.entries(ESTRUTURA_TURMAS)) {
+                // Filtro: Se for Coord Nível, só mostra o grupo dela. Se for Geral, mostra tudo.
+                if (nivel === "COORD_NIVEL" && grupo !== filtroTurma) continue;
 
-            loading(true);
-            const linhas = texto.split('\n');
-            let sucesso = 0;
-            let erros = 0;
+                // Título do Grupo
+                const titulo = document.createElement('div');
+                titulo.className = 'grupo-titulo';
+                titulo.innerText = grupo;
+                container.appendChild(titulo);
 
-            const batchPromises = [];
-
-            for (let linha of linhas) {
-                const partes = linha.split(',');
-                if(partes.length >= 4) {
-                    const nome = partes[0].trim();
-                    const turma = partes[1].trim();
-                    const email = partes[2].trim();
-                    const senha = partes[3].trim();
-
-                    if(nome && turma && email && senha) {
-                        // Verifica se email já existe antes de adicionar
-                        // Nota: Em cadastro em massa simples, para ser rápido,
-                        // as vezes pulamos a verificação, mas é bom ter.
-                        // Aqui faremos direto para ser rápido (Firestore permite duplicatas se não tratar,
-                        // mas nosso login pega o primeiro que achar).
-                        batchPromises.push(addDoc(collection(db, "professores"), { nome, turma, email, senha }));
-                        sucesso++;
-                    } else {
-                        erros++;
-                    }
-                }
-            }
-
-            try {
-                await Promise.all(batchPromises);
-                alert(`Processo finalizado!\nCriados: ${sucesso}\nErros/Inválidos: ${erros}`);
-                document.getElementById('lista-profs-import').value = "";
-                window.fecharAdmin();
-            } catch(e) {
-                alert("Erro ao importar: " + e.message);
-            } finally {
-                loading(false);
-            }
-        }
-
-        // --- LÓGICA PADRÃO (MANTIDA) ---
-        window.verificarChamadaDia = async () => {
-            const inputFreq = document.getElementById('data-freq');
-            const dataSelecionada = inputFreq.value;
-            const hoje = new Date().toISOString().split('T')[0];
-
-            if (dataSelecionada > hoje) {
-                alert("Não é permitido preencher frequência de datas futuras.");
-                inputFreq.value = hoje;
-                return window.verificarChamadaDia();
-            }
-
-            document.querySelectorAll('.status-btn').forEach(btn => {
-                btn.className = 'status-btn presente'; btn.innerText = 'Presente';
-            });
-
-            try {
-                const docSnap = await getDocs(query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma), where("data", "==", inputFreq.value)));
-                if(!docSnap.empty) {
-                    const dados = docSnap.docs[0].data();
-                    const rows = document.querySelectorAll('#lista-tbody tr');
-                    rows.forEach(row => {
-                        const nome = row.cells[0].innerText;
-                        const btn = row.cells[1].querySelector('button');
-                        const info = dados.detalhes.find(d => d.nome === nome);
-                        if(info) {
-                            btn.className = info.presente ? 'status-btn presente' : 'status-btn ausente';
-                            btn.innerText = info.presente ? 'Presente' : 'Ausente';
-                        }
+                listaSeries.forEach(serie => {
+                    serie.letras.forEach(letra => {
+                        const nomeTurma = `${serie.nome} ${letra}`;
+                        const btn = document.createElement('div');
+                        btn.className = 'btn-turma';
+                        btn.innerHTML = `<strong>${serie.nome}</strong><span>Turma ${letra}</span>`;
+                        btn.onclick = () => window.entrarComoCoord(nomeTurma);
+                        container.appendChild(btn);
                     });
-                }
-            } catch(e) { console.log("Erro carregar freq", e); }
+                });
+            }
+        }
+
+        window.entrarComoCoord = async (turmaAlvo) => {
+            // "Impersonate": A coord vira professora temporariamente
+            usuarioAtual = { nome: perfilCoord.nome + " (Coord)", turma: turmaAlvo };
+            
+            document.getElementById('btn-voltar-coord').style.display = 'block'; // Mostra botão voltar
+            window.abrirPainelTurma(turmaAlvo, usuarioAtual.nome);
+        }
+
+        window.voltarParaCoord = () => {
+            // Restaura o usuário coord e volta pro painel
+            usuarioAtual = perfilCoord;
+            window.showView('coord');
+        }
+
+        window.abrirPainelTurma = async (turma, nomeUsuario) => {
+            document.getElementById('display-turma').innerText = `${turma} | ${nomeUsuario}`;
+            window.showView('app');
+            await window.carregarAlunosNaTela();
+            await window.carregarPlanejamento();
+        }
+
+        // --- FUNÇÕES GERAIS ---
+
+        window.showView = (view) => {
+            document.getElementById('view-login').style.display = 'none';
+            document.getElementById('view-cadastro').style.display = 'none';
+            document.getElementById('app-painel').style.display = 'none';
+            document.getElementById('view-coord').style.display = 'none';
+
+            if(view === 'login') document.getElementById('view-login').style.display = 'flex';
+            if(view === 'cadastro') document.getElementById('view-cadastro').style.display = 'flex';
+            if(view === 'app') document.getElementById('app-painel').style.display = 'flex';
+            if(view === 'coord') document.getElementById('view-coord').style.display = 'block';
         }
 
         function carregarOpcoesTurma() {
             const select = document.getElementById('cad-turma');
+            
+            // Opções especiais para Coordenação
+            const grpAdm = document.createElement('optgroup');
+            grpAdm.label = "Coordenação";
+            const optGeral = document.createElement('option');
+            optGeral.value = "Geral"; optGeral.innerText = "Coordenação Geral (Todas)";
+            grpAdm.appendChild(optGeral);
+            
+            for (const grupo of Object.keys(ESTRUTURA_TURMAS)) {
+                const optNivel = document.createElement('option');
+                optNivel.value = grupo; optNivel.innerText = `Coord. ${grupo}`;
+                grpAdm.appendChild(optNivel);
+            }
+            select.appendChild(grpAdm);
+
+            // Opções de Turmas
             for (const [grupo, listaSeries] of Object.entries(ESTRUTURA_TURMAS)) {
                 const optgroup = document.createElement('optgroup');
                 optgroup.label = grupo;
@@ -407,33 +421,40 @@
             }
         }
 
-        window.showView = (view) => {
-            document.getElementById('view-login').style.display = 'none';
-            document.getElementById('view-cadastro').style.display = 'none';
-            document.getElementById('app-painel').style.display = 'none';
-            if(view === 'login') document.getElementById('view-login').style.display = 'flex';
-            if(view === 'cadastro') document.getElementById('view-cadastro').style.display = 'flex';
-            if(view === 'app') document.getElementById('app-painel').style.display = 'flex';
+        // --- SISTEMA ADMIN / SECRETARIA (IMPORTAÇÃO) ---
+        window.abrirAreaAdmin = () => {
+            if(prompt("Senha Mestra:") === "admin") document.getElementById('modal-admin').style.display = 'flex';
+            else alert("Senha incorreta.");
+        }
+        window.fecharAdmin = () => document.getElementById('modal-admin').style.display = 'none';
+
+        window.processarImportacaoProfs = async () => {
+            const texto = document.getElementById('lista-profs-import').value;
+            if(!texto.trim()) return;
+            loading(true);
+            const linhas = texto.split('\n');
+            const batchPromises = [];
+            for (let linha of linhas) {
+                const [nome, turma, email, senha] = linha.split(',').map(s => s?.trim());
+                if(nome && turma && email && senha) {
+                    batchPromises.push(addDoc(collection(db, "professores"), { nome, turma, email, senha }));
+                }
+            }
+            await Promise.all(batchPromises);
+            alert("Contas criadas!"); loading(false); window.fecharAdmin();
         }
 
-        window.mudarAba = (aba) => {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById('tab-' + aba).classList.add('active');
-            document.getElementById('btn-tab-' + aba).classList.add('active');
-        }
-
+        // --- LÓGICA DE DADOS (DB) ---
         window.fazerLogin = async () => {
             const email = document.getElementById('login-email').value;
             const senha = document.getElementById('login-senha').value;
             loading(true);
             try {
                 const q = query(collection(db, "professores"), where("email", "==", email), where("senha", "==", senha));
-                const querySnapshot = await getDocs(q);
-                if(querySnapshot.empty) alert("Dados incorretos.");
-                else window.logar(querySnapshot.docs[0].data());
-            } catch(e) { alert("Erro conexão."); } 
-            finally { loading(false); }
+                const snap = await getDocs(q);
+                if(snap.empty) alert("Dados incorretos.");
+                else window.logar(snap.docs[0].data());
+            } catch(e) { alert("Erro conexão."); } finally { loading(false); }
         }
 
         window.fazerCadastro = async () => {
@@ -445,208 +466,138 @@
             loading(true);
             try {
                 await addDoc(collection(db, "professores"), { nome, turma, email, senha });
-                alert("Cadastrado!");
-                window.logar({ nome, turma, email, senha });
-            } catch(e) { alert("Erro."); }
-            finally { loading(false); }
+                alert("Cadastrado!"); window.logar({ nome, turma, email, senha });
+            } catch(e) { alert("Erro."); } finally { loading(false); }
+        }
+        
+        window.fazerLogout = () => { usuarioAtual = null; perfilCoord = null; window.showView('login'); }
+        window.mudarAba = (aba) => {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + aba).classList.add('active');
+            document.getElementById('btn-tab-' + aba).classList.add('active');
         }
 
-        window.logar = async (user) => {
-            usuarioAtual = user;
-            document.getElementById('display-turma').innerText = `${user.turma} | ${user.nome}`;
-            window.showView('app');
-            await window.carregarAlunosNaTela();
-            await window.carregarPlanejamento();
+        window.verificarChamadaDia = async () => {
+            const dt = document.getElementById('data-freq').value;
+            document.querySelectorAll('.status-btn').forEach(b => { b.className = 'status-btn presente'; b.innerText = 'Presente'; });
+            try {
+                const snap = await getDocs(query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma), where("data", "==", dt)));
+                if(!snap.empty) {
+                    const d = snap.docs[0].data();
+                    document.querySelectorAll('#lista-tbody tr').forEach(row => {
+                        const nome = row.cells[0].innerText;
+                        const info = d.detalhes.find(x => x.nome === nome);
+                        if(info) {
+                            const btn = row.cells[1].querySelector('button');
+                            btn.className = info.presente ? 'status-btn presente' : 'status-btn ausente';
+                            btn.innerText = info.presente ? 'Presente' : 'Ausente';
+                        }
+                    });
+                }
+            } catch(e) {}
         }
-
-        window.fazerLogout = () => { usuarioAtual = null; window.showView('login'); }
 
         window.carregarAlunosNaTela = async () => {
             loading(true);
-            const tbody = document.getElementById('lista-tbody');
-            tbody.innerHTML = "";
+            const tbody = document.getElementById('lista-tbody'); tbody.innerHTML = "";
             try {
-                const q = query(collection(db, "alunos"), where("turma", "==", usuarioAtual.turma));
-                const snapshot = await getDocs(q);
+                const snap = await getDocs(query(collection(db, "alunos"), where("turma", "==", usuarioAtual.turma)));
                 listaAlunosCache = [];
-                snapshot.forEach(doc => listaAlunosCache.push({ id: doc.id, ...doc.data() }));
+                snap.forEach(d => listaAlunosCache.push({ id: d.id, ...d.data() }));
                 listaAlunosCache.sort((a,b) => a.nome.localeCompare(b.nome));
-
-                if(listaAlunosCache.length === 0) {
-                    document.getElementById('msg-vazia').style.display = 'block';
-                } else {
-                    document.getElementById('msg-vazia').style.display = 'none';
-                    listaAlunosCache.forEach(aluno => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${aluno.nome}</td>
-                            <td style="text-align: center;"><button class="status-btn presente" onclick="window.toggleStatus(this)">Presente</button></td>
-                            <td style="text-align: center;" class="no-print"><button style="border:none; background:none; cursor:pointer;" onclick="window.removerAluno('${aluno.id}')">🗑️</button></td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                    await window.verificarChamadaDia();
-                }
-            } catch(e) { console.error(e); } finally { loading(false); }
+                document.getElementById('msg-vazia').style.display = listaAlunosCache.length ? 'none' : 'block';
+                listaAlunosCache.forEach(aluno => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${aluno.nome}</td><td style="text-align:center;"><button class="status-btn presente" onclick="window.toggleStatus(this)">Presente</button></td><td class="no-print" style="text-align:center;"><button style="border:none;background:none;cursor:pointer;" onclick="window.removerAluno('${aluno.id}')">🗑️</button></td>`;
+                    tbody.appendChild(tr);
+                });
+                await window.verificarChamadaDia();
+            } catch(e) {} finally { loading(false); }
         }
 
         window.toggleStatus = (btn) => {
-            if(btn.classList.contains('presente')) {
-                btn.classList.remove('presente'); btn.classList.add('ausente'); btn.innerText = "Ausente";
-            } else {
-                btn.classList.remove('ausente'); btn.classList.add('presente'); btn.innerText = "Presente";
-            }
+            if(btn.classList.contains('presente')) { btn.className = 'status-btn ausente'; btn.innerText = "Ausente"; }
+            else { btn.className = 'status-btn presente'; btn.innerText = "Presente"; }
         }
-
-        window.toggleImport = () => { const a = document.getElementById('area-importacao'); a.style.display = a.style.display==='none'?'block':'none'; }
-        window.processarImportacao = async () => {
-             const texto = document.getElementById('lista-import').value;
-            if(!texto.trim()) return;
-            loading(true);
-            const linhas = texto.split('\n');
-            const batchPromises = [];
-            linhas.forEach(linha => {
-                const p = linha.split(',');
-                if(p.length >= 2) batchPromises.push(addDoc(collection(db, "alunos"), { nome: p[0].trim(), turma: p[1].trim() }));
-            });
-            await Promise.all(batchPromises);
-            alert("Importado!");
-            loading(false);
-            window.carregarAlunosNaTela();
-        }
-        window.removerAluno = async (id) => { if(confirm("Remover?")) { await deleteDoc(doc(db, "alunos", id)); window.carregarAlunosNaTela(); } }
-
+        
         window.salvarChamada = async () => {
             const data = document.getElementById('data-freq').value;
-            const hoje = new Date().toISOString().split('T')[0];
-            if(data > hoje) return alert("Data futura não permitida!");
-
             const linhas = document.querySelectorAll('#lista-tbody tr');
-            if(linhas.length === 0) return alert("Sem alunos.");
+            if(!linhas.length) return alert("Sem alunos.");
             loading(true);
-            const idDoc = usuarioAtual.turma.replace(/\s/g, '') + "_" + data;
-            
-            const detalhes = [];
-            let presentes = 0;
+            const detalhes = []; let presentes = 0;
             linhas.forEach(tr => {
                 const nome = tr.cells[0].innerText;
-                const presente = tr.cells[1].querySelector('button').classList.contains('presente');
-                if(presente) presentes++;
-                detalhes.push({ nome, presente });
+                const p = tr.cells[1].querySelector('button').classList.contains('presente');
+                if(p) presentes++; detalhes.push({ nome, presente: p });
             });
-
             try {
-                await setDoc(doc(db, "frequencia", idDoc), {
-                    data, turma: usuarioAtual.turma, detalhes,
-                    resumo: `${presentes} Presentes / ${linhas.length - presentes} Ausentes`
-                });
-                alert("Frequência salva!");
-            } catch(e) { alert("Erro ao salvar."); } finally { loading(false); }
+                await setDoc(doc(db, "frequencia", usuarioAtual.turma.replace(/\s/g,'')+"_"+data), { data, turma: usuarioAtual.turma, detalhes, resumo: `${presentes} Presentes / ${linhas.length-presentes} Ausentes` });
+                alert("Salvo!");
+            } catch(e) { alert("Erro."); } finally { loading(false); }
         }
 
         window.carregarPlanejamento = async () => {
-            const data = document.getElementById('data-plan').value;
+            const dt = document.getElementById('data-plan').value;
             window.limparTelaPlanejamento(false);
-            toggleCamposEdicao(true); 
-            document.getElementById('btn-editar-plan').style.display = 'none';
-
+            toggleCamposEdicao(true); document.getElementById('btn-editar-plan').style.display = 'none';
             try {
-                const docSnap = await getDocs(query(collection(db, "planejamentos"), where("turma", "==", usuarioAtual.turma), where("data", "==", data)));
-                if(!docSnap.empty) {
-                    const salvo = docSnap.docs[0].data();
-                    document.getElementById('plan-disciplina').value = salvo.disciplina || "";
-                    document.getElementById('plan-tema').value = salvo.tema || "";
-                    document.getElementById('plan-objetivos').value = salvo.objetivos || "";
-                    document.getElementById('plan-metodologia').value = salvo.metodologia || "";
-                    document.getElementById('plan-avaliacao').value = salvo.avaliacao || "";
-                    toggleCamposEdicao(false);
-                    document.getElementById('btn-editar-plan').style.display = 'inline-block';
-                } else {
-                    toggleCamposEdicao(true); 
+                const snap = await getDocs(query(collection(db, "planejamentos"), where("turma", "==", usuarioAtual.turma), where("data", "==", dt)));
+                if(!snap.empty) {
+                    const s = snap.docs[0].data();
+                    document.getElementById('plan-disciplina').value = s.disciplina||""; document.getElementById('plan-tema').value = s.tema||"";
+                    document.getElementById('plan-objetivos').value = s.objetivos||""; document.getElementById('plan-metodologia').value = s.metodologia||"";
+                    document.getElementById('plan-avaliacao').value = s.avaliacao||"";
+                    toggleCamposEdicao(false); document.getElementById('btn-editar-plan').style.display = 'inline-block';
                 }
-            } catch(e) { toggleCamposEdicao(true); }
+            } catch(e) {}
         }
 
-        function toggleCamposEdicao(ativo) {
-            const inputs = document.querySelectorAll('.input-plan');
-            inputs.forEach(el => el.disabled = !ativo);
-        }
-
-        window.desbloquearEdicao = () => {
-            const senha = prompt("Digite a senha para editar este planejamento:");
-            if(senha === SENHA_EDICAO) {
-                toggleCamposEdicao(true);
-                document.getElementById('btn-editar-plan').style.display = 'none';
-            } else {
-                alert("Senha incorreta.");
-            }
-        }
-
+        function toggleCamposEdicao(ativo) { document.querySelectorAll('.input-plan').forEach(el => el.disabled = !ativo); }
+        window.desbloquearEdicao = () => { if(prompt("Senha edição:") === SENHA_EDICAO) { toggleCamposEdicao(true); document.getElementById('btn-editar-plan').style.display = 'none'; } else alert("Senha incorreta"); }
+        
         window.salvarPlanejamento = async () => {
             const data = document.getElementById('data-plan').value;
-            const idDoc = usuarioAtual.turma.replace(/\s/g, '') + "_" + data;
             const plano = {
                 data, turma: usuarioAtual.turma,
-                disciplina: document.getElementById('plan-disciplina').value,
-                tema: document.getElementById('plan-tema').value,
-                objetivos: document.getElementById('plan-objetivos').value,
-                metodologia: document.getElementById('plan-metodologia').value,
+                disciplina: document.getElementById('plan-disciplina').value, tema: document.getElementById('plan-tema').value,
+                objetivos: document.getElementById('plan-objetivos').value, metodologia: document.getElementById('plan-metodologia').value,
                 avaliacao: document.getElementById('plan-avaliacao').value
             };
             loading(true);
-            try {
-                await setDoc(doc(db, "planejamentos", idDoc), plano);
-                alert("Salvo!");
-                toggleCamposEdicao(false);
-                document.getElementById('btn-editar-plan').style.display = 'inline-block';
-            } catch(e) { alert("Erro ao salvar."); } finally { loading(false); }
+            try { await setDoc(doc(db, "planejamentos", usuarioAtual.turma.replace(/\s/g,'')+"_"+data), plano); alert("Salvo!"); toggleCamposEdicao(false); document.getElementById('btn-editar-plan').style.display='inline-block'; } 
+            catch(e) { alert("Erro."); } finally { loading(false); }
         }
 
-        window.limparTelaPlanejamento = (confirmar = true) => {
-            if(!confirmar || confirm("Limpar campos?")) {
-                document.querySelectorAll('.input-plan').forEach(el => el.value = "");
-                if(confirmar) {
-                    toggleCamposEdicao(true);
-                    document.getElementById('btn-editar-plan').style.display = 'none';
-                }
-            }
-        }
-
+        window.limparTelaPlanejamento = (c=true) => { if(!c || confirm("Limpar?")) { document.querySelectorAll('.input-plan').forEach(e=>e.value=""); if(c) { toggleCamposEdicao(true); document.getElementById('btn-editar-plan').style.display='none'; } } }
+        
         window.abrirHistorico = async (tipo) => {
-            const modal = document.getElementById('modal-historico');
-            const lista = document.getElementById('modal-lista');
-            lista.innerHTML = "Carregando...";
-            modal.style.display = 'flex';
+            const m = document.getElementById('modal-historico'); const l = document.getElementById('modal-lista');
+            l.innerHTML = "Carregando..."; m.style.display = 'flex';
             try {
-                let colecao = tipo === 'freq' ? "frequencia" : "planejamentos";
-                const q = query(collection(db, colecao), where("turma", "==", usuarioAtual.turma));
-                const snapshot = await getDocs(q);
-                const itens = [];
-                snapshot.forEach(doc => itens.push(doc.data()));
-                itens.sort((a,b) => new Date(b.data) - new Date(a.data));
-                lista.innerHTML = "";
-                if(itens.length === 0) lista.innerHTML = "<p>Nenhum registro.</p>";
-                itens.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = 'hist-item';
-                    const desc = tipo === 'freq' ? item.resumo : (item.tema || 'Sem tema');
-                    div.innerHTML = `<span class="hist-date">${formatarData(item.data)}</span><span>${desc}</span><button onclick="window.carregarDataHistorico('${item.data}', '${tipo}')" style="width: auto; padding: 5px 10px;">Abrir</button>`;
-                    lista.appendChild(div);
+                const snap = await getDocs(query(collection(db, tipo==='freq'?"frequencia":"planejamentos"), where("turma", "==", usuarioAtual.turma)));
+                const i = []; snap.forEach(d=>i.push(d.data())); i.sort((a,b)=>new Date(b.data)-new Date(a.data));
+                l.innerHTML = i.length ? "" : "Nenhum registro.";
+                i.forEach(item => {
+                    const d = document.createElement('div'); d.className='hist-item';
+                    d.innerHTML = `<span>${formatarData(item.data)}</span><span>${tipo==='freq'?item.resumo:(item.tema||'Sem tema')}</span><button onclick="window.carregarDataHistorico('${item.data}','${tipo}')" style="width:auto;padding:5px 10px;">Abrir</button>`;
+                    l.appendChild(d);
                 });
-            } catch(e) { console.error(e); }
+            } catch(e) {}
         }
+        window.carregarDataHistorico = (d,t) => { window.fecharHistorico(); document.getElementById(t==='freq'?'data-freq':'data-plan').value=d; t==='freq'?window.verificarChamadaDia():window.carregarPlanejamento(); }
+        window.fecharHistorico = () => document.getElementById('modal-historico').style.display = 'none';
 
-        window.carregarDataHistorico = (data, tipo) => {
-            window.fecharHistorico();
-            if(tipo === 'freq') {
-                document.getElementById('data-freq').value = data;
-                window.verificarChamadaDia();
-            } else {
-                document.getElementById('data-plan').value = data;
-                window.carregarPlanejamento();
-            }
+        window.toggleImport = () => { const a = document.getElementById('area-importacao'); a.style.display = a.style.display==='none'?'block':'none'; }
+        window.processarImportacao = async () => {
+            const t = document.getElementById('lista-import').value; if(!t.trim()) return;
+            loading(true);
+            const ps = []; t.split('\n').forEach(l => { const p=l.split(','); if(p.length>=2) ps.push(addDoc(collection(db, "alunos"), {nome:p[0].trim(), turma:p[1].trim()})); });
+            await Promise.all(ps); alert("Importado!"); loading(false); window.carregarAlunosNaTela();
         }
-        window.fecharHistorico = () => { document.getElementById('modal-historico').style.display = 'none'; }
+        window.removerAluno = async (id) => { if(confirm("Remover?")) { await deleteDoc(doc(db, "alunos", id)); window.carregarAlunosNaTela(); } }
+
     </script>
 </body>
 </html>
