@@ -30,6 +30,8 @@
             box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
             width: 400px; 
             text-align: center; 
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .logo-login {
@@ -51,6 +53,21 @@
         .success-btn { background: var(--success); }
         .warning-btn { background: var(--warning); color: white; }
         .link-text { margin-top: 15px; font-size: 0.9rem; color: #666; cursor: pointer; text-decoration: underline; }
+
+        /* --- SELEÇÃO DE TURMAS (NOVO) --- */
+        .checklist-container {
+            text-align: left;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+            margin: 8px 0;
+            display: none; /* Escondido por padrão */
+        }
+        .check-item { display: block; margin-bottom: 5px; font-size: 0.9rem; }
+        .check-item input { width: auto; margin-right: 8px; }
 
         /* --- PAINEL COORDENAÇÃO --- */
         #view-coord { display: none; padding: 2rem; max-width: 1000px; margin: 0 auto; width: 100%; }
@@ -112,13 +129,14 @@
     <div id="view-login" class="auth-container">
         <div class="card">
             <img src="logo.png" alt="Logo Escola" class="logo-login">
-            <h2>CASA+</h2>
-            <p style="color: #777; margin-bottom: 20px;">Acesso Restrito</p>
+            <h2>CASA+ </h2>
+            <p style="color: #777; margin-bottom: 20px;">Controle Acadêmico de Sala de Aula</p>
+            <p style="color: #777; margin-bottom: 20px;">Acesso Professor</p>
             <input type="email" id="login-email" placeholder="E-mail">
             <input type="password" id="login-senha" placeholder="Senha">
             <button onclick="window.fazerLogin()">Entrar</button>
-            <p class="link-text" onclick="window.showView('cadastro')">Cadastrar Professor</p>
-            <p class="link-text" style="color: #999; font-size: 0.8rem; margin-top: 30px;" onclick="window.abrirAreaAdmin()">⚙️ Secretaria (Gestão de Acessos)</p>
+            <p class="link-text" onclick="window.validarAcessoCadastro()">Cadastrar Novo Usuário</p>
+            <p class="link-text" style="color: #999; font-size: 0.8rem; margin-top: 30px;" onclick="window.abrirAreaAdmin()">⚙️ Secretaria (Acesso Mestre)</p>
         </div>
     </div>
 
@@ -127,11 +145,28 @@
             <img src="logo.png" alt="Logo Escola" class="logo-login">
             <h2>Novo Cadastro</h2>
             <input type="text" id="cad-nome" placeholder="Nome Completo">
-            <select id="cad-turma">
-                <option value="" disabled selected>Selecione Turma ou Cargo</option>
-            </select>
             <input type="email" id="cad-email" placeholder="E-mail">
             <input type="password" id="cad-senha" placeholder="Senha">
+            
+            <label style="text-align:left; margin-top:10px;">Tipo de Usuário:</label>
+            <select id="cad-tipo" onchange="window.alternarTipoCadastro()">
+                <option value="professor">Professor (1 Turma)</option>
+                <option value="coordenador">Coordenador (Várias Turmas)</option>
+            </select>
+
+            <div id="area-select-unica">
+                <select id="cad-turma-unica">
+                    <option value="" disabled selected>Selecione a Turma</option>
+                </select>
+            </div>
+
+            <div id="area-select-multipla" style="display:none;">
+                <p style="font-size:0.85rem; color:#666; margin:5px 0;">Marque as turmas que este coordenador acessa:</p>
+                <div class="check-item"><label><input type="checkbox" id="check-todas" onchange="window.toggleTodas(this)"> <strong>SELECIONAR TODAS (Geral)</strong></label></div>
+                <div id="container-checkboxes" class="checklist-container">
+                    </div>
+            </div>
+
             <button onclick="window.fazerCadastro()">Cadastrar</button>
             <button class="secondary-btn" onclick="window.showView('login')">Voltar</button>
         </div>
@@ -141,14 +176,13 @@
         <header style="border-radius: 8px; margin-bottom: 20px;">
             <div style="display: flex; align-items: center;">
                 <span class="logo" style="font-weight: bold; font-size: 1.2rem;">Painel Coordenação</span>
-                <span id="coord-badge" class="turma-badge" style="background: var(--primary);">Geral</span>
+                <span id="coord-badge" class="turma-badge" style="background: var(--primary);">Gestão</span>
             </div>
             <button onclick="window.fazerLogout()" class="secondary-btn" style="width: auto; padding: 8px 20px; margin: 0;">Sair</button>
         </header>
 
-        <h3 style="color: #555;">Selecione uma turma para gerenciar:</h3>
-        <div id="container-turmas" class="grid-turmas">
-            </div>
+        <h3 style="color: #555;">Turmas sob sua responsabilidade:</h3>
+        <div id="container-turmas" class="grid-turmas"></div>
     </div>
 
     <div id="app-painel">
@@ -231,15 +265,9 @@
 
     <div id="modal-admin" class="modal-overlay">
         <div class="modal-content">
-            <div style="display: flex; justify-content: space-between;"><h3>Secretaria - Acessos</h3><button onclick="window.fecharAdmin()" style="width:auto; background:none; color:black;">&times;</button></div>
+            <div style="display: flex; justify-content: space-between;"><h3>Secretaria (Importação)</h3><button onclick="window.fecharAdmin()" style="width:auto; background:none; color:black;">&times;</button></div>
             <div class="import-area" style="display: block; background: #e3f2fd; border-color: #90caf9;">
-                <p><strong>Formato de Importação:</strong></p>
-                <p>Nome, Turma/Cargo, Email, Senha</p>
-                <p style="font-size: 0.8rem; color: #555;">
-                    Ex. Professor: <code>Ana, Infantil 1 A, ana@x.com, 123</code><br>
-                    Ex. Coord Nível: <code>Bia, Educação Infantil, bia@x.com, 123</code><br>
-                    Ex. Coord Geral: <code>Carla, Geral, carla@x.com, 123</code>
-                </p>
+                <p>Formato: <strong>Nome, Turma, Email, Senha</strong></p>
                 <textarea id="lista-profs-import" rows="6" placeholder="Nome, Turma, Email, Senha"></textarea>
                 <button onclick="window.processarImportacaoProfs()">🚀 Criar Contas</button>
             </div>
@@ -263,11 +291,14 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- ESTRUTURA E VARIÁVEIS ---
+        // --- SENHAS DE SEGURANÇA ---
+        const SENHA_CADASTRO = "1992"; // SENHA PARA ABRIR TELA DE CADASTRO
+        const SENHA_SECRETARIA = "1992";   // SENHA PARA AREA DA SECRETARIA
+        const SENHA_EDICAO = "1992";        // SENHA PARA EDITAR PLANEJAMENTO ANTIGO
+
         let usuarioAtual = null;
-        let perfilCoord = null; // Armazena dados originais da coord
+        let perfilCoord = null;
         let listaAlunosCache = [];
-        const SENHA_EDICAO = "1234";
 
         const ESTRUTURA_TURMAS = {
             "Ensino Fundamental": [ { nome: "1º Ano", letras: ["A", "B", "C", "D", "I"] } ],
@@ -292,159 +323,102 @@
             document.getElementById('data-plan').value = hoje;
         };
 
-        // --- LÓGICA DE COORDENAÇÃO ---
-        
-        function verificarNivelAcesso(turmaUsuario) {
-            // Se for "Geral", é Coord Geral
-            if (turmaUsuario === "Geral") return "COORD_GERAL";
-            
-            // Se for o nome de um grupo (Ex: Educação Infantil), é Coord de Nível
-            if (ESTRUTURA_TURMAS[turmaUsuario]) return "COORD_NIVEL";
-            
-            // Senão, é Professor
-            return "PROFESSOR";
-        }
+        // --- CADASTRO INTELIGENTE E PROTEGIDO ---
 
-        window.logar = async (user) => {
-            const nivel = verificarNivelAcesso(user.turma);
-            
-            if (nivel === "PROFESSOR") {
-                // FLUXO NORMAL DE PROFESSOR
-                usuarioAtual = user;
-                perfilCoord = null;
-                document.getElementById('btn-voltar-coord').style.display = 'none';
-                window.abrirPainelTurma(user.turma, user.nome);
-            
+        window.validarAcessoCadastro = () => {
+            const pwd = prompt("Digite a senha de segurança da escola para cadastrar:");
+            if(pwd === SENHA_CADASTRO) {
+                window.showView('cadastro');
             } else {
-                // FLUXO DE COORDENAÇÃO
-                usuarioAtual = user; 
-                perfilCoord = user; // Salva quem é a coordenadora
-                document.getElementById('display-turma').innerText = "Modo Visualização";
-                window.showView('coord');
-                window.renderizarPainelCoord(user.turma, nivel);
+                alert("Senha incorreta. Acesso negado.");
             }
         }
 
-        window.renderizarPainelCoord = (filtroTurma, nivel) => {
-            const container = document.getElementById('container-turmas');
-            container.innerHTML = "";
-            document.getElementById('coord-badge').innerText = filtroTurma;
+        window.alternarTipoCadastro = () => {
+            const tipo = document.getElementById('cad-tipo').value;
+            if(tipo === 'professor') {
+                document.getElementById('area-select-unica').style.display = 'block';
+                document.getElementById('area-select-multipla').style.display = 'none';
+            } else {
+                document.getElementById('area-select-unica').style.display = 'none';
+                document.getElementById('area-select-multipla').style.display = 'block';
+                document.getElementById('container-checkboxes').style.display = 'block';
+            }
+        }
 
+        window.toggleTodas = (check) => {
+            document.querySelectorAll('#container-checkboxes input').forEach(el => el.checked = check.checked);
+        }
+
+        function carregarOpcoesTurma() {
+            const selectUnico = document.getElementById('cad-turma-unica');
+            const containerCheck = document.getElementById('container-checkboxes');
+            
             for (const [grupo, listaSeries] of Object.entries(ESTRUTURA_TURMAS)) {
-                // Filtro: Se for Coord Nível, só mostra o grupo dela. Se for Geral, mostra tudo.
-                if (nivel === "COORD_NIVEL" && grupo !== filtroTurma) continue;
-
-                // Título do Grupo
-                const titulo = document.createElement('div');
-                titulo.className = 'grupo-titulo';
-                titulo.innerText = grupo;
-                container.appendChild(titulo);
+                // Para o Select (Professor)
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = grupo;
+                
+                // Para o Checkbox (Coordenador)
+                const divGrupo = document.createElement('div');
+                divGrupo.innerHTML = `<strong style='display:block; margin-top:5px; color:#004aad'>${grupo}</strong>`;
+                containerCheck.appendChild(divGrupo);
 
                 listaSeries.forEach(serie => {
                     serie.letras.forEach(letra => {
                         const nomeTurma = `${serie.nome} ${letra}`;
-                        const btn = document.createElement('div');
-                        btn.className = 'btn-turma';
-                        btn.innerHTML = `<strong>${serie.nome}</strong><span>Turma ${letra}</span>`;
-                        btn.onclick = () => window.entrarComoCoord(nomeTurma);
-                        container.appendChild(btn);
-                    });
-                });
-            }
-        }
-
-        window.entrarComoCoord = async (turmaAlvo) => {
-            // "Impersonate": A coord vira professora temporariamente
-            usuarioAtual = { nome: perfilCoord.nome + " (Coord)", turma: turmaAlvo };
-            
-            document.getElementById('btn-voltar-coord').style.display = 'block'; // Mostra botão voltar
-            window.abrirPainelTurma(turmaAlvo, usuarioAtual.nome);
-        }
-
-        window.voltarParaCoord = () => {
-            // Restaura o usuário coord e volta pro painel
-            usuarioAtual = perfilCoord;
-            window.showView('coord');
-        }
-
-        window.abrirPainelTurma = async (turma, nomeUsuario) => {
-            document.getElementById('display-turma').innerText = `${turma} | ${nomeUsuario}`;
-            window.showView('app');
-            await window.carregarAlunosNaTela();
-            await window.carregarPlanejamento();
-        }
-
-        // --- FUNÇÕES GERAIS ---
-
-        window.showView = (view) => {
-            document.getElementById('view-login').style.display = 'none';
-            document.getElementById('view-cadastro').style.display = 'none';
-            document.getElementById('app-painel').style.display = 'none';
-            document.getElementById('view-coord').style.display = 'none';
-
-            if(view === 'login') document.getElementById('view-login').style.display = 'flex';
-            if(view === 'cadastro') document.getElementById('view-cadastro').style.display = 'flex';
-            if(view === 'app') document.getElementById('app-painel').style.display = 'flex';
-            if(view === 'coord') document.getElementById('view-coord').style.display = 'block';
-        }
-
-        function carregarOpcoesTurma() {
-            const select = document.getElementById('cad-turma');
-            
-            // Opções especiais para Coordenação
-            const grpAdm = document.createElement('optgroup');
-            grpAdm.label = "Coordenação";
-            const optGeral = document.createElement('option');
-            optGeral.value = "Geral"; optGeral.innerText = "Coordenação Geral (Todas)";
-            grpAdm.appendChild(optGeral);
-            
-            for (const grupo of Object.keys(ESTRUTURA_TURMAS)) {
-                const optNivel = document.createElement('option');
-                optNivel.value = grupo; optNivel.innerText = `Coord. ${grupo}`;
-                grpAdm.appendChild(optNivel);
-            }
-            select.appendChild(grpAdm);
-
-            // Opções de Turmas
-            for (const [grupo, listaSeries] of Object.entries(ESTRUTURA_TURMAS)) {
-                const optgroup = document.createElement('optgroup');
-                optgroup.label = grupo;
-                listaSeries.forEach(serie => {
-                    serie.letras.forEach(letra => {
+                        
+                        // Option
                         const option = document.createElement('option');
-                        option.value = `${serie.nome} ${letra}`;
-                        option.innerText = `${serie.nome} ${letra}`;
+                        option.value = nomeTurma; option.innerText = nomeTurma;
                         optgroup.appendChild(option);
+
+                        // Checkbox
+                        const divCheck = document.createElement('div');
+                        divCheck.className = 'check-item';
+                        divCheck.innerHTML = `<label><input type="checkbox" value="${nomeTurma}" class="turma-check"> ${nomeTurma}</label>`;
+                        containerCheck.appendChild(divCheck);
                     });
                 });
-                select.appendChild(optgroup);
+                selectUnico.appendChild(optgroup);
             }
         }
 
-        // --- SISTEMA ADMIN / SECRETARIA (IMPORTAÇÃO) ---
-        window.abrirAreaAdmin = () => {
-            if(prompt("Senha Mestra:") === "admin") document.getElementById('modal-admin').style.display = 'flex';
-            else alert("Senha incorreta.");
-        }
-        window.fecharAdmin = () => document.getElementById('modal-admin').style.display = 'none';
+        window.fazerCadastro = async () => {
+            const nome = document.getElementById('cad-nome').value;
+            const email = document.getElementById('cad-email').value;
+            const senha = document.getElementById('cad-senha').value;
+            const tipo = document.getElementById('cad-tipo').value;
+            
+            let turmaFinal = "";
+            let acessos = [];
 
-        window.processarImportacaoProfs = async () => {
-            const texto = document.getElementById('lista-profs-import').value;
-            if(!texto.trim()) return;
-            loading(true);
-            const linhas = texto.split('\n');
-            const batchPromises = [];
-            for (let linha of linhas) {
-                const [nome, turma, email, senha] = linha.split(',').map(s => s?.trim());
-                if(nome && turma && email && senha) {
-                    batchPromises.push(addDoc(collection(db, "professores"), { nome, turma, email, senha }));
+            if(!nome || !email || !senha) return alert("Preencha todos os campos.");
+
+            if(tipo === 'professor') {
+                turmaFinal = document.getElementById('cad-turma-unica').value;
+                if(!turmaFinal) return alert("Selecione a turma.");
+            } else {
+                turmaFinal = "COORD";
+                if(document.getElementById('check-todas').checked) {
+                    acessos = ["TODAS"];
+                } else {
+                    document.querySelectorAll('.turma-check:checked').forEach(c => acessos.push(c.value));
+                    if(acessos.length === 0) return alert("Selecione ao menos uma turma para a coordenação.");
                 }
             }
-            await Promise.all(batchPromises);
-            alert("Contas criadas!"); loading(false); window.fecharAdmin();
+
+            loading(true);
+            try {
+                await addDoc(collection(db, "professores"), { nome, turma: turmaFinal, acessos: acessos, email, senha });
+                alert("Usuário Cadastrado com Sucesso!");
+                window.showView('login');
+            } catch(e) { alert("Erro ao cadastrar."); } 
+            finally { loading(false); }
         }
 
-        // --- LÓGICA DE DADOS (DB) ---
+        // --- LOGIN E ACESSOS ---
+
         window.fazerLogin = async () => {
             const email = document.getElementById('login-email').value;
             const senha = document.getElementById('login-senha').value;
@@ -457,26 +431,95 @@
             } catch(e) { alert("Erro conexão."); } finally { loading(false); }
         }
 
-        window.fazerCadastro = async () => {
-            const nome = document.getElementById('cad-nome').value;
-            const turma = document.getElementById('cad-turma').value;
-            const email = document.getElementById('cad-email').value;
-            const senha = document.getElementById('cad-senha').value;
-            if(!nome || !turma || !email || !senha) return alert("Preencha tudo!");
-            loading(true);
-            try {
-                await addDoc(collection(db, "professores"), { nome, turma, email, senha });
-                alert("Cadastrado!"); window.logar({ nome, turma, email, senha });
-            } catch(e) { alert("Erro."); } finally { loading(false); }
+        window.logar = async (user) => {
+            // Verifica se é Coordenador (tem acessos múltiplos ou turma marcada como COORD)
+            if (user.turma === "COORD" || (user.acessos && user.acessos.length > 0) || user.turma === "Geral") {
+                // MODO COORDENADOR
+                usuarioAtual = user;
+                perfilCoord = user;
+                window.showView('coord');
+                window.renderizarPainelCoord(user.acessos || []);
+            } else {
+                // MODO PROFESSOR
+                usuarioAtual = user;
+                perfilCoord = null;
+                document.getElementById('btn-voltar-coord').style.display = 'none';
+                window.abrirPainelTurma(user.turma, user.nome);
+            }
         }
-        
-        window.fazerLogout = () => { usuarioAtual = null; perfilCoord = null; window.showView('login'); }
+
+        window.renderizarPainelCoord = (listaAcessos) => {
+            const container = document.getElementById('container-turmas');
+            container.innerHTML = "";
+            const isGeral = listaAcessos.includes("TODAS") || listaAcessos.includes("Geral");
+
+            for (const [grupo, listaSeries] of Object.entries(ESTRUTURA_TURMAS)) {
+                // Cria titulo do grupo
+                let temTurmaNesseGrupo = false;
+                const divGrupo = document.createElement('div');
+                divGrupo.className = 'grid-turmas';
+                
+                // Prepara os botões deste grupo
+                listaSeries.forEach(serie => {
+                    serie.letras.forEach(letra => {
+                        const nomeTurma = `${serie.nome} ${letra}`;
+                        
+                        // Se for Geral, mostra tudo. Se não, verifica se está na lista de acessos
+                        if (isGeral || listaAcessos.includes(nomeTurma)) {
+                            temTurmaNesseGrupo = true;
+                            const btn = document.createElement('div');
+                            btn.className = 'btn-turma';
+                            btn.innerHTML = `<strong>${serie.nome}</strong><span>Turma ${letra}</span>`;
+                            btn.onclick = () => window.entrarComoCoord(nomeTurma);
+                            divGrupo.appendChild(btn);
+                        }
+                    });
+                });
+
+                if(temTurmaNesseGrupo) {
+                    const titulo = document.createElement('div');
+                    titulo.className = 'grupo-titulo';
+                    titulo.innerText = grupo;
+                    container.appendChild(titulo);
+                    container.appendChild(divGrupo);
+                }
+            }
+        }
+
+        window.entrarComoCoord = async (turmaAlvo) => {
+            usuarioAtual = { nome: perfilCoord.nome + " (Coord)", turma: turmaAlvo };
+            document.getElementById('btn-voltar-coord').style.display = 'block';
+            window.abrirPainelTurma(turmaAlvo, usuarioAtual.nome);
+        }
+
+        window.voltarParaCoord = () => { usuarioAtual = perfilCoord; window.showView('coord'); }
+        window.abrirPainelTurma = async (turma, nomeUsuario) => {
+            document.getElementById('display-turma').innerText = `${turma} | ${nomeUsuario}`;
+            window.showView('app');
+            await window.carregarAlunosNaTela();
+            await window.carregarPlanejamento();
+        }
+
+        // --- SISTEMA PADRÃO (MANTIDO) ---
+
+        window.showView = (view) => {
+            ['view-login','view-cadastro','app-painel','view-coord'].forEach(v => document.getElementById(v).style.display = 'none');
+            if(view === 'login') document.getElementById('view-login').style.display = 'flex';
+            if(view === 'cadastro') document.getElementById('view-cadastro').style.display = 'flex';
+            if(view === 'app') document.getElementById('app-painel').style.display = 'flex';
+            if(view === 'coord') document.getElementById('view-coord').style.display = 'block';
+        }
+
+        window.fazerLogout = () => { usuarioAtual = null; window.showView('login'); }
         window.mudarAba = (aba) => {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + aba).classList.add('active');
             document.getElementById('btn-tab-' + aba).classList.add('active');
         }
+
+        window.abrirAreaAdmin = () => { if(prompt("Senha Mestra:") === SENHA_SECRETARIA) document.getElementById('modal-admin').style.display = 'flex'; else alert("Senha incorreta."); }
+        window.fecharAdmin = () => document.getElementById('modal-admin').style.display = 'none';
 
         window.verificarChamadaDia = async () => {
             const dt = document.getElementById('data-freq').value;
@@ -597,6 +640,11 @@
             await Promise.all(ps); alert("Importado!"); loading(false); window.carregarAlunosNaTela();
         }
         window.removerAluno = async (id) => { if(confirm("Remover?")) { await deleteDoc(doc(db, "alunos", id)); window.carregarAlunosNaTela(); } }
+        window.processarImportacaoProfs = async () => {
+            const t = document.getElementById('lista-profs-import').value; if(!t.trim()) return; loading(true);
+            const ps = []; t.split('\n').forEach(l => { const [n,tr,e,s]=l.split(',').map(x=>x?.trim()); if(n&&tr&&e&&s) ps.push(addDoc(collection(db, "professores"), {nome:n, turma:tr, email:e, senha:s})); });
+            await Promise.all(ps); alert("Contas criadas!"); loading(false); window.fecharAdmin();
+        }
 
     </script>
 </body>
