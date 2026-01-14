@@ -9,8 +9,30 @@
         :root { --primary: #004aad; --sec: #0097b2; --bg: #f4f6f8; --text: #333; --success: #27ae60; --danger: #c0392b; --warning: #f39c12; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; }
         
-        .auth-container { display: flex; justify-content: center; align-items: center; height: 100%; background: linear-gradient(135deg, var(--primary), var(--sec)); }
-        .card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 400px; text-align: center; }
+        /* --- TELA DE LOGIN COM FUNDO --- */
+        .auth-container { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            width: 100%;
+            /* Fundo com imagem e uma máscara escura (0.6) para melhorar leitura */
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fundo_escola.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        .card { 
+            background: rgba(255, 255, 255, 0.95); /* Leve transparência para integrar com o fundo */
+            padding: 2.5rem; 
+            border-radius: 12px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
+            width: 400px; 
+            text-align: center; 
+        }
+
         h2 { color: var(--primary); margin-bottom: 10px; }
         
         input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 1rem; }
@@ -85,7 +107,6 @@
                 font-size: 11pt;
                 font-family: 'Times New Roman', serif;
                 width: 100%; 
-                /* Truque para tentar expandir na impressão ou quebrar linha */
                 white-space: pre-wrap;
                 overflow: visible;
                 height: auto;
@@ -232,7 +253,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, setDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // CONFIG (Mantida)
         const firebaseConfig = {
             apiKey: "AIzaSyBjtXXfchJQO4vxeI_Vqw1QhV_1CLwB6jc",
             authDomain: "escoladigital-79997.firebaseapp.com",
@@ -245,12 +265,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // VARIÁVEIS GLOBAIS
         let usuarioAtual = null;
         let listaAlunosCache = [];
-        
-        // --- NOVIDADE: Senha de edição (Configure aqui) ---
-        const SENHA_EDICAO = "1234"; 
+        const SENHA_EDICAO = "1234"; // Senha para editar
 
         const ESTRUTURA_TURMAS = {
             "Ensino Fundamental": [ { nome: "1º Ano", letras: ["A", "B", "C", "D", "I"] } ],
@@ -269,18 +286,16 @@
 
         window.onload = function() {
             carregarOpcoesTurma();
-            
-            // --- NOVIDADE: Trava de Data (Frequência) ---
             const hoje = new Date().toISOString().split('T')[0];
+            
+            // Trava de Data
             const inputFreq = document.getElementById('data-freq');
             inputFreq.value = hoje;
-            inputFreq.max = hoje; // Define a data máxima como hoje no HTML
+            inputFreq.max = hoje;
             
             document.getElementById('data-plan').value = hoje;
         };
 
-        // --- SISTEMA DE DATA SEGURA ---
-        // Verifica se o usuário tentou burlar via inspeção ou digitando
         window.verificarChamadaDia = async () => {
             const inputFreq = document.getElementById('data-freq');
             const dataSelecionada = inputFreq.value;
@@ -289,18 +304,15 @@
             if (dataSelecionada > hoje) {
                 alert("Não é permitido preencher frequência de datas futuras.");
                 inputFreq.value = hoje;
-                return window.verificarChamadaDia(); // Recarrega com data de hoje
+                return window.verificarChamadaDia();
             }
 
-            // Lógica padrão de carregar presença
             document.querySelectorAll('.status-btn').forEach(btn => {
                 btn.className = 'status-btn presente'; btn.innerText = 'Presente';
             });
 
             try {
-                const idDoc = usuarioAtual.turma.replace(/\s/g, '') + "_" + inputFreq.value;
                 const docSnap = await getDocs(query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma), where("data", "==", inputFreq.value)));
-                
                 if(!docSnap.empty) {
                     const dados = docSnap.docs[0].data();
                     const rows = document.querySelectorAll('#lista-tbody tr');
@@ -317,8 +329,6 @@
             } catch(e) { console.log("Erro carregar freq", e); }
         }
 
-        // ... [Resto das funções carregarOpcoesTurma, showView, mudarAba igual] ...
-        
         function carregarOpcoesTurma() {
             const select = document.getElementById('cad-turma');
             for (const [grupo, listaSeries] of Object.entries(ESTRUTURA_TURMAS)) {
@@ -352,7 +362,6 @@
             document.getElementById('btn-tab-' + aba).classList.add('active');
         }
 
-        // --- AUTH ---
         window.fazerLogin = async () => {
             const email = document.getElementById('login-email').value;
             const senha = document.getElementById('login-senha').value;
@@ -367,7 +376,6 @@
         }
 
         window.fazerCadastro = async () => {
-            // Lógica igual a anterior
             const nome = document.getElementById('cad-nome').value;
             const turma = document.getElementById('cad-turma').value;
             const email = document.getElementById('cad-email').value;
@@ -392,7 +400,6 @@
 
         window.fazerLogout = () => { usuarioAtual = null; window.showView('login'); }
 
-        // --- ALUNOS ---
         window.carregarAlunosNaTela = async () => {
             loading(true);
             const tbody = document.getElementById('lista-tbody');
@@ -430,9 +437,8 @@
             }
         }
 
-        // Funções de importação e remoção (Mantidas iguais)
         window.toggleImport = () => { const a = document.getElementById('area-importacao'); a.style.display = a.style.display==='none'?'block':'none'; }
-        window.processarImportacao = async () => { /* Mesma lógica anterior */ 
+        window.processarImportacao = async () => {
              const texto = document.getElementById('lista-import').value;
             if(!texto.trim()) return;
             loading(true);
@@ -451,7 +457,6 @@
 
         window.salvarChamada = async () => {
             const data = document.getElementById('data-freq').value;
-            // Validação extra de data ao salvar
             const hoje = new Date().toISOString().split('T')[0];
             if(data > hoje) return alert("Data futura não permitida!");
 
@@ -478,20 +483,14 @@
             } catch(e) { alert("Erro ao salvar."); } finally { loading(false); }
         }
 
-        // --- PLANEJAMENTO COM SENHA ---
-        
         window.carregarPlanejamento = async () => {
             const data = document.getElementById('data-plan').value;
             window.limparTelaPlanejamento(false);
-            
-            // Bloqueia campos por padrão
             toggleCamposEdicao(true); 
             document.getElementById('btn-editar-plan').style.display = 'none';
 
             try {
-                const idDoc = usuarioAtual.turma.replace(/\s/g, '') + "_" + data;
                 const docSnap = await getDocs(query(collection(db, "planejamentos"), where("turma", "==", usuarioAtual.turma), where("data", "==", data)));
-
                 if(!docSnap.empty) {
                     const salvo = docSnap.docs[0].data();
                     document.getElementById('plan-disciplina').value = salvo.disciplina || "";
@@ -499,18 +498,14 @@
                     document.getElementById('plan-objetivos').value = salvo.objetivos || "";
                     document.getElementById('plan-metodologia').value = salvo.metodologia || "";
                     document.getElementById('plan-avaliacao').value = salvo.avaliacao || "";
-                    
-                    // Se achou um plano salvo, bloqueia e mostra botão editar
-                    toggleCamposEdicao(false); // false = desabilita inputs (readonly)
+                    toggleCamposEdicao(false);
                     document.getElementById('btn-editar-plan').style.display = 'inline-block';
                 } else {
-                    // Se não tem plano, libera para escrever
                     toggleCamposEdicao(true); 
                 }
-            } catch(e) { console.log("Sem plano"); toggleCamposEdicao(true); }
+            } catch(e) { toggleCamposEdicao(true); }
         }
 
-        // Função auxiliar para habilitar/desabilitar inputs
         function toggleCamposEdicao(ativo) {
             const inputs = document.querySelectorAll('.input-plan');
             inputs.forEach(el => el.disabled = !ativo);
@@ -519,7 +514,7 @@
         window.desbloquearEdicao = () => {
             const senha = prompt("Digite a senha para editar este planejamento:");
             if(senha === SENHA_EDICAO) {
-                toggleCamposEdicao(true); // Habilita
+                toggleCamposEdicao(true);
                 document.getElementById('btn-editar-plan').style.display = 'none';
             } else {
                 alert("Senha incorreta.");
@@ -541,7 +536,6 @@
             try {
                 await setDoc(doc(db, "planejamentos", idDoc), plano);
                 alert("Salvo!");
-                // Após salvar, bloqueia novamente para proteger
                 toggleCamposEdicao(false);
                 document.getElementById('btn-editar-plan').style.display = 'inline-block';
             } catch(e) { alert("Erro ao salvar."); } finally { loading(false); }
@@ -550,7 +544,6 @@
         window.limparTelaPlanejamento = (confirmar = true) => {
             if(!confirmar || confirm("Limpar campos?")) {
                 document.querySelectorAll('.input-plan').forEach(el => el.value = "");
-                // Se limpar, libera edição
                 if(confirmar) {
                     toggleCamposEdicao(true);
                     document.getElementById('btn-editar-plan').style.display = 'none';
@@ -558,9 +551,7 @@
             }
         }
 
-        // Histórico (Mantido)
         window.abrirHistorico = async (tipo) => {
-            /* Mesma lógica de histórico */
             const modal = document.getElementById('modal-historico');
             const lista = document.getElementById('modal-lista');
             lista.innerHTML = "Carregando...";
@@ -598,4 +589,3 @@
     </script>
 </body>
 </html>
-
