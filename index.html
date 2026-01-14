@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDC Digital - Sistema Online</title>
+    <style>
+        /* --- CSS GERAL (Mantido da v4.2) --- */
+        :root { --primary: #004aad; --sec: #0097b2; --bg: #f4f6f8; --text: #333; --success: #27ae60; --danger: #c0392b; --warning: #f39c12; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        
+        .auth-container { display: flex; justify-content: center; align-items: center; height: 100%; background: linear-gradient(135deg, var(--primary), var(--sec)); }
+        .card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 400px; text-align: center; }
+        h2 { color: var(--primary); margin-bottom: 10px; }
+        
+        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 1rem; }
+        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.2s; font-size: 1rem; }
+        button:hover { filter: brightness(90%); }
+        .secondary-btn { background: #7f8c8d; }
+        .success-btn { background: var(--success); }
+        .warning-btn { background: var(--warning); color: white; }
+        .link-text { margin-top: 15px; font-size: 0.9rem; color: #666; cursor: pointer; text-decoration: underline; }
+        
+        #app-painel { display: none; height: 100%; flex-direction: column; }
+        header { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); }
+        .turma-badge { background: var(--sec); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin-left: 15px; }
+        
+        .tabs { display: flex; justify-content: center; background: white; border-bottom: 1px solid #ddd; }
+        .tab-btn { background: white; color: #7f8c8d; padding: 15px 40px; border-bottom: 4px solid transparent; width: auto; }
+        .tab-btn.active { color: var(--primary); border-bottom: 4px solid var(--primary); background: #f9fbfd; }
+        
+        .main-content { padding: 2rem; max-width: 1000px; margin: 0 auto; width: 100%; overflow-y: auto; flex: 1; }
+        .view-section { display: none; } 
+        .view-section.active { display: block; }
+        .import-area { background: #fff8e1; padding: 20px; border-radius: 8px; border: 1px solid #ffe082; display: none; margin-bottom: 20px; }
+        
+        .control-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; gap: 10px; flex-wrap: wrap; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: var(--primary); color: white; }
+        .status-btn { padding: 6px 16px; border-radius: 20px; border: none; cursor: pointer; color: white; font-weight: bold; width: 100px; }
+        .presente { background: var(--success); }
+        .ausente { background: var(--danger); opacity: 0.8; }
+
+        .plan-card { background: white; padding: 30px; border-radius: 8px; }
+        label { display: block; margin-top: 15px; font-weight: bold; font-size: 0.9rem; color: #555; }
+        textarea { height: 80px; resize: vertical; border: 1px solid #ddd; background: #fafafa; }
+
+        /* Loader */
+        #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 2000; justify-content: center; align-items: center; font-size: 1.5rem; color: var(--primary); font-weight: bold; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto; }
+        .hist-item { border-bottom: 1px solid #eee; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #tab-plan, #tab-plan * { visibility: visible; }
+            #tab-plan { position: absolute; left: 0; top: 0; width: 100%; }
+            button, .control-bar, header, .tabs { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">Carregando...</div>
+
+    <div id="view-login" class="auth-container">
+        <div class="card">
+            <h2>CDC Digital Cloud</h2>
+            <p style="color: #777; margin-bottom: 20px;">Acesso Professor</p>
+            <input type="email" id="login-email" placeholder="E-mail">
+            <input type="password" id="login-senha" placeholder="Senha">
+            <button onclick="window.fazerLogin()">Entrar</button>
+            <p class="link-text" onclick="window.showView('cadastro')">Cadastrar novo professor</p>
+        </div>
+    </div>
+
+    <div id="view-cadastro" class="auth-container" style="display: none;">
+        <div class="card">
+            <h2>Novo Cadastro</h2>
+            <input type="text" id="cad-nome" placeholder="Nome Completo">
+            <select id="cad-turma">
+                <option value="" disabled selected>Selecione a Turma</option>
+            </select>
+            <input type="email" id="cad-email" placeholder="E-mail">
+            <input type="password" id="cad-senha" placeholder="Senha">
+            <button onclick="window.fazerCadastro()">Cadastrar</button>
+            <button class="secondary-btn" onclick="window.showView('login')">Voltar</button>
+        </div>
+    </div>
+
+    <div id="app-painel">
+        <header>
+            <div style="display: flex; align-items: center;">
+                <span class="logo">CDC Digital</span>
+                <span id="display-turma" class="turma-badge">...</span>
+            </div>
+            <button onclick="window.fazerLogout()" class="secondary-btn" style="width: auto; padding: 8px 20px; margin: 0;">Sair</button>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="window.mudarAba('freq')" id="btn-tab-freq">Frequência</button>
+            <button class="tab-btn" onclick="window.mudarAba('plan')" id="btn-tab-plan">Planejamento</button>
+        </div>
+
+        <div class="main-content">
+            <div id="tab-freq" class="view-section active">
+                <div class="control-bar">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-weight: bold;">Data:</span>
+                        <input type="date" id="data-freq" style="width: auto; margin: 0;" onchange="window.verificarChamadaDia()">
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="window.salvarChamada()" class="success-btn" style="width: auto; margin: 0;">💾 Salvar</button>
+                        <button onclick="window.abrirHistorico('freq')" class="secondary-btn" style="width: auto; margin: 0;">📅 Histórico</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px; text-align: right;">
+                     <button onclick="window.toggleImport()" style="background: #f39c12; width: auto; font-size: 0.9rem; padding: 6px 15px;">📥 Importar Lista</button>
+                </div>
+
+                <div id="area-importacao" class="import-area">
+                    <h4>Importação em Massa</h4>
+                    <p>Cole: <strong>Nome, Turma</strong></p>
+                    <textarea id="lista-import" rows="5" placeholder="Maria Silva, Infantil 1 A"></textarea>
+                    <button onclick="window.processarImportacao()">Processar Lista</button>
+                </div>
+                
+                <table id="tabela-alunos">
+                    <thead>
+                        <tr>
+                            <th>Aluno</th>
+                            <th style="width: 150px; text-align: center;">Presença</th>
+                            <th style="width: 50px; text-align: center;">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-tbody"></tbody>
+                </table>
+                <p id="msg-vazia" style="text-align: center; color: #777; margin-top: 40px;">Carregando ou sem alunos...</p>
+            </div>
+
+            <div id="tab-plan" class="view-section">
+                <div class="control-bar">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-weight: bold;">Data:</span>
+                        <input type="date" id="data-plan" style="width: auto; margin: 0;" onchange="window.carregarPlanejamento()">
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="window.salvarPlanejamento()" class="success-btn" style="width: auto; margin: 0;">💾 Salvar</button>
+                        <button onclick="window.abrirHistorico('plan')" class="secondary-btn" style="width: auto; margin: 0;">📅 Ver Salvos</button>
+                        <button onclick="window.print()" style="background-color: #2c3e50; width: auto; margin: 0;">🖨️ Imprimir</button>
+                        <button onclick="window.limparTelaPlanejamento()" class="warning-btn" style="width: auto; margin: 0;">🗑️ Limpar Tela</button>
+                    </div>
+                </div>
+
+                <div class="plan-card">
+                    <h3 style="margin-top: 0; color: var(--primary);">Registro Diário</h3>
+                    <label>Componente Curricular / Disciplina:</label>
+                    <input type="text" id="plan-disciplina">
+                    <label>Tema da Aula:</label>
+                    <input type="text" id="plan-tema">
+                    <label>Objetivos de Aprendizagem (BNCC):</label>
+                    <textarea id="plan-objetivos"></textarea>
+                    <label>Metodologia / Desenvolvimento:</label>
+                    <textarea id="plan-metodologia" style="height: 120px;"></textarea>
+                    <label>Avaliação / Observações:</label>
+                    <textarea id="plan-avaliacao"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-historico" class="modal-overlay">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 id="modal-titulo">Histórico</h3>
+                <button onclick="window.fecharHistorico()" style="width: auto; background: none; color: #333; font-size: 1.5rem; margin: 0;">&times;</button>
+            </div>
+            <div id="modal-lista"></div>
+            <button onclick="window.fecharHistorico()" class="secondary-btn" style="margin-top: 20px;">Fechar</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importando Firebase do CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, setDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // CONFIGURAÇÃO (Seus dados)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBjtXXfchJQO4vxeI_Vqw1QhV_1CLwB6jc",
+            authDomain: "escoladigital-79997.firebaseapp.com",
+            projectId: "escoladigital-79997", // Deduzido do authDomain
+            storageBucket: "escoladigital-79997.appspot.com",
+            messagingSenderId: "system",
+            appId: "system"
+        };
+
+        // Inicializa Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // VARIÁVEIS GLOBAIS
+        let usuarioAtual = null;
+        let listaAlunosCache = [];
+
+        // ESTRUTURA TURMAS (v4.2)
+        const ESTRUTURA_TURMAS = {
+            "Ensino Fundamental": [ { nome: "1º Ano", letras: ["A", "B", "C", "D", "I"] } ],
+            "Educação Infantil": [
+                { nome: "Berçário", letras: ["A"] },
+                { nome: "Infantil 1", letras: ["A", "B", "C", "D", "E", "I"] },
+                { nome: "Infantil 2", letras: ["A", "B", "C", "D", "E", "F", "G", "I", "J"] },
+                { nome: "Infantil 3", letras: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"] },
+                { nome: "Infantil 4", letras: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"] },
+                { nome: "Infantil 5", letras: ["A", "B", "C", "D", "E", "F", "G", "I"] }
+            ]
+        };
+
+        // --- FUNÇÕES AUXILIARES ---
+        function loading(status) {
+            document.getElementById('loader').style.display = status ? 'flex' : 'none';
+        }
+        function formatarData(d) { if(!d) return ""; return d.split('-').reverse().join('/'); }
+
+        // --- INICIALIZAÇÃO DA TELA ---
+        window.onload = function() {
+            carregarOpcoesTurma();
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('data-freq').value = hoje;
+            document.getElementById('data-plan').value = hoje;
+        };
+
+        function carregarOpcoesTurma() {
+            const select = document.getElementById('cad-turma');
+            for (const [grupo, listaSeries] of Object.entries(ESTRUTURA_TURMAS)) {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = grupo;
+                listaSeries.forEach(serie => {
+                    serie.letras.forEach(letra => {
+                        const option = document.createElement('option');
+                        option.value = `${serie.nome} ${letra}`;
+                        option.innerText = `${serie.nome} ${letra}`;
+                        optgroup.appendChild(option);
+                    });
+                });
+                select.appendChild(optgroup);
+            }
+        }
+
+        // --- SISTEMA DE TELAS ---
+        window.showView = (view) => {
+            document.getElementById('view-login').style.display = 'none';
+            document.getElementById('view-cadastro').style.display = 'none';
+            document.getElementById('app-painel').style.display = 'none';
+            if(view === 'login') document.getElementById('view-login').style.display = 'flex';
+            if(view === 'cadastro') document.getElementById('view-cadastro').style.display = 'flex';
+            if(view === 'app') document.getElementById('app-painel').style.display = 'flex';
+        }
+
+        window.mudarAba = (aba) => {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + aba).classList.add('active');
+            document.getElementById('btn-tab-' + aba).classList.add('active');
+        }
+
+        // --- AUTENTICAÇÃO COM FIRESTORE ---
+        window.fazerCadastro = async () => {
+            const nome = document.getElementById('cad-nome').value;
+            const turma = document.getElementById('cad-turma').value;
+            const email = document.getElementById('cad-email').value;
+            const senha = document.getElementById('cad-senha').value;
+
+            if(!nome || !turma || !email || !senha) return alert("Preencha tudo!");
+
+            loading(true);
+            try {
+                // Verifica duplicidade
+                const q = query(collection(db, "professores"), where("email", "==", email));
+                const querySnapshot = await getDocs(q);
+                
+                if(!querySnapshot.empty) {
+                    loading(false);
+                    return alert("E-mail já cadastrado!");
+                }
+
+                const novoUser = { nome, turma, email, senha }; // Nota: Senha texto puro (protótipo)
+                await addDoc(collection(db, "professores"), novoUser);
+                
+                alert("Cadastro realizado!");
+                window.logar(novoUser);
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao cadastrar: " + e.message);
+            } finally {
+                loading(false);
+            }
+        }
+
+        window.fazerLogin = async () => {
+            const email = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-senha').value;
+            
+            loading(true);
+            try {
+                const q = query(collection(db, "professores"), where("email", "==", email), where("senha", "==", senha));
+                const querySnapshot = await getDocs(q);
+
+                if(querySnapshot.empty) {
+                    alert("Dados incorretos.");
+                } else {
+                    const userData = querySnapshot.docs[0].data();
+                    window.logar(userData);
+                }
+            } catch(e) {
+                console.error(e);
+                alert("Erro conexão.");
+            } finally {
+                loading(false);
+            }
+        }
+
+        window.logar = async (user) => {
+            usuarioAtual = user;
+            document.getElementById('display-turma').innerText = `${user.turma} | ${user.nome}`;
+            document.getElementById('login-email').value = "";
+            document.getElementById('login-senha').value = "";
+            
+            window.showView('app');
+            await window.carregarAlunosNaTela();
+            await window.carregarPlanejamento();
+        }
+
+        window.fazerLogout = () => {
+            usuarioAtual = null;
+            listaAlunosCache = [];
+            window.showView('login');
+        }
+
+        // --- ALUNOS (FIRESTORE) ---
+        window.carregarAlunosNaTela = async () => {
+            loading(true);
+            const tbody = document.getElementById('lista-tbody');
+            tbody.innerHTML = "";
+            
+            try {
+                // Busca alunos apenas da turma do professor
+                const q = query(collection(db, "alunos"), where("turma", "==", usuarioAtual.turma));
+                const snapshot = await getDocs(q);
+                
+                listaAlunosCache = [];
+                snapshot.forEach(doc => {
+                    listaAlunosCache.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Ordenar alfabeticamente
+                listaAlunosCache.sort((a,b) => a.nome.localeCompare(b.nome));
+
+                if(listaAlunosCache.length === 0) {
+                    document.getElementById('msg-vazia').innerText = "Nenhum aluno cadastrado nesta turma.";
+                    document.getElementById('msg-vazia').style.display = 'block';
+                } else {
+                    document.getElementById('msg-vazia').style.display = 'none';
+                    listaAlunosCache.forEach(aluno => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${aluno.nome}</td>
+                            <td style="text-align: center;"><button class="status-btn presente" onclick="window.toggleStatus(this)">Presente</button></td>
+                            <td style="text-align: center;"><button style="border:none; background:none; cursor:pointer;" onclick="window.removerAluno('${aluno.id}')">🗑️</button></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                    // Verifica se já existe chamada salva hoje
+                    await window.verificarChamadaDia();
+                }
+
+            } catch(e) {
+                console.error(e);
+                alert("Erro ao buscar alunos.");
+            } finally {
+                loading(false);
+            }
+        }
+
+        window.toggleStatus = (btn) => {
+            if(btn.classList.contains('presente')) {
+                btn.classList.remove('presente'); btn.classList.add('ausente'); btn.innerText = "Ausente";
+            } else {
+                btn.classList.remove('ausente'); btn.classList.add('presente'); btn.innerText = "Presente";
+            }
+        }
+
+        window.toggleImport = () => {
+            const area = document.getElementById('area-importacao');
+            area.style.display = area.style.display === 'none' ? 'block' : 'none';
+        }
+
+        window.processarImportacao = async () => {
+            const texto = document.getElementById('lista-import').value;
+            if(!texto.trim()) return;
+            const linhas = texto.split('\n');
+            let contagem = 0;
+            
+            loading(true);
+            try {
+                const batchPromises = [];
+                linhas.forEach(linha => {
+                    const partes = linha.split(',');
+                    if(partes.length >= 2) {
+                        const nome = partes[0].trim();
+                        const turma = partes[1].trim();
+                        if(nome && turma) {
+                            // Adiciona promessa de salvar no banco
+                            batchPromises.push(addDoc(collection(db, "alunos"), { nome, turma }));
+                            contagem++;
+                        }
+                    }
+                });
+                
+                await Promise.all(batchPromises);
+                alert(`${contagem} alunos enviados para a nuvem!`);
+                document.getElementById('lista-import').value = "";
+                window.toggleImport();
+                await window.carregarAlunosNaTela(); // Recarrega
+            } catch(e) {
+                alert("Erro na importação: " + e.message);
+            } finally {
+                loading(false);
+            }
+        }
+
+        window.removerAluno = async (id) => {
+            if(confirm("Remover este aluno permanentemente?")) {
+                loading(true);
+                try {
+                    await deleteDoc(doc(db, "alunos", id));
+                    await window.carregarAlunosNaTela();
+                } catch(e) {
+                    alert("Erro ao remover.");
+                } finally {
+                    loading(false);
+                }
+            }
+        }
+
+        // --- FREQUÊNCIA (FIRESTORE) ---
+        window.salvarChamada = async () => {
+            const data = document.getElementById('data-freq').value;
+            const tbody = document.getElementById('lista-tbody');
+            const linhas = tbody.querySelectorAll('tr');
+
+            if(linhas.length === 0) return alert("Sem alunos.");
+
+            loading(true);
+            const idDoc = usuarioAtual.turma.replace(/\s/g, '') + "_" + data; // ID Customizado: "1ºAnoA_2024-01-01"
+            
+            const detalhes = [];
+            let presentes = 0;
+
+            linhas.forEach(tr => {
+                const nome = tr.cells[0].innerText;
+                const statusBtn = tr.cells[1].querySelector('button');
+                const presente = statusBtn.classList.contains('presente');
+                if(presente) presentes++;
+                detalhes.push({ nome, presente });
+            });
+
+            const registro = {
+                data: data,
+                turma: usuarioAtual.turma,
+                detalhes: detalhes,
+                resumo: `${presentes} Presentes / ${linhas.length - presentes} Ausentes`
+            };
+
+            try {
+                // setDoc com ID específico sobrescreve se já existir naquele dia/turma
+                await setDoc(doc(db, "frequencia", idDoc), registro);
+                alert("Chamada salva na nuvem!");
+            } catch(e) {
+                console.error(e);
+                alert("Erro ao salvar.");
+            } finally {
+                loading(false);
+            }
+        }
+
+        window.verificarChamadaDia = async () => {
+            const data = document.getElementById('data-freq').value;
+            // Reseta visual primeiro
+            document.querySelectorAll('.status-btn').forEach(btn => {
+                btn.className = 'status-btn presente'; btn.innerText = 'Presente';
+            });
+
+            // Não ativa loader aqui para não piscar demais, faz em background
+            try {
+                const idDoc = usuarioAtual.turma.replace(/\s/g, '') + "_" + data;
+                const docRef = doc(db, "frequencia", idDoc);
+                const docSnap = await getDocs(query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma), where("data", "==", data)));
+                
+                // Firestore query por ID ou Where. Aqui usaremos query pra garantir
+                if(!docSnap.empty) {
+                    const dados = docSnap.docs[0].data();
+                    const rows = document.querySelectorAll('#lista-tbody tr');
+                    rows.forEach(row => {
+                        const nome = row.cells[0].innerText;
+                        const btn = row.cells[1].querySelector('button');
+                        const info = dados.detalhes.find(d => d.nome === nome);
+                        if(info) {
+                            btn.className = info.presente ? 'status-btn presente' : 'status-btn ausente';
+                            btn.innerText = info.presente ? 'Presente' : 'Ausente';
+                        }
+                    });
+                }
+            } catch(e) { console.log("Sem chamada salva ou erro conexao"); }
+        }
+
+        // --- PLANEJAMENTO (FIRESTORE) ---
+        window.salvarPlanejamento = async () => {
+            const data = document.getElementById('data-plan').value;
+            const idDoc = usuarioAtual.turma.replace(/\s/g, '') + "_" + data;
+
+            const plano = {
+                data: data,
+                turma: usuarioAtual.turma,
+                disciplina: document.getElementById('plan-disciplina').value,
+                tema: document.getElementById('plan-tema').value,
+                objetivos: document.getElementById('plan-objetivos').value,
+                metodologia: document.getElementById('plan-metodologia').value,
+                avaliacao: document.getElementById('plan-avaliacao').value
+            };
+
+            loading(true);
+            try {
+                await setDoc(doc(db, "planejamentos", idDoc), plano);
+                alert("Planejamento salvo!");
+            } catch(e) {
+                alert("Erro ao salvar.");
+            } finally {
+                loading(false);
+            }
+        }
+
+        window.carregarPlanejamento = async () => {
+            const data = document.getElementById('data-plan').value;
+            // Limpa campos antes de buscar
+            window.limparTelaPlanejamento(false); // False = sem confirmacao
+
+            try {
+                const idDoc = usuarioAtual.turma.replace(/\s/g, '') + "_" + data;
+                const docSnap = await getDocs(query(collection(db, "planejamentos"), where("turma", "==", usuarioAtual.turma), where("data", "==", data)));
+
+                if(!docSnap.empty) {
+                    const salvo = docSnap.docs[0].data();
+                    document.getElementById('plan-disciplina').value = salvo.disciplina || "";
+                    document.getElementById('plan-tema').value = salvo.tema || "";
+                    document.getElementById('plan-objetivos').value = salvo.objetivos || "";
+                    document.getElementById('plan-metodologia').value = salvo.metodologia || "";
+                    document.getElementById('plan-avaliacao').value = salvo.avaliacao || "";
+                }
+            } catch(e) { console.log("Sem plano"); }
+        }
+
+        window.limparTelaPlanejamento = (confirmar = true) => {
+            if(!confirmar || confirm("Limpar campos da tela?")) {
+                document.getElementById('plan-disciplina').value = "";
+                document.getElementById('plan-tema').value = "";
+                document.getElementById('plan-objetivos').value = "";
+                document.getElementById('plan-metodologia').value = "";
+                document.getElementById('plan-avaliacao').value = "";
+            }
+        }
+
+        // --- HISTÓRICO (GERAL) ---
+        window.abrirHistorico = async (tipo) => {
+            const modal = document.getElementById('modal-historico');
+            const lista = document.getElementById('modal-lista');
+            const titulo = document.getElementById('modal-titulo');
+            lista.innerHTML = "Carregando...";
+            modal.style.display = 'flex';
+
+            try {
+                let colecao = tipo === 'freq' ? "frequencia" : "planejamentos";
+                const q = query(collection(db, colecao), where("turma", "==", usuarioAtual.turma));
+                const snapshot = await getDocs(q);
+                
+                const itens = [];
+                snapshot.forEach(doc => itens.push(doc.data()));
+                itens.sort((a,b) => new Date(b.data) - new Date(a.data)); // Mais recente primeiro
+
+                lista.innerHTML = "";
+                if(itens.length === 0) lista.innerHTML = "<p>Nenhum registro encontrado.</p>";
+
+                itens.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'hist-item';
+                    const desc = tipo === 'freq' ? item.resumo : (item.tema || 'Sem tema');
+                    
+                    div.innerHTML = `
+                        <span class="hist-date">${formatarData(item.data)}</span>
+                        <span>${desc}</span>
+                        <button onclick="window.carregarDataHistorico('${item.data}', '${tipo}')" style="width: auto; padding: 5px 10px; font-size: 0.8rem;">Abrir</button>
+                    `;
+                    lista.appendChild(div);
+                });
+
+            } catch(e) {
+                lista.innerHTML = "Erro ao carregar histórico.";
+                console.error(e);
+            }
+        }
+
+        window.carregarDataHistorico = (data, tipo) => {
+            window.fecharHistorico();
+            if(tipo === 'freq') {
+                document.getElementById('data-freq').value = data;
+                window.verificarChamadaDia();
+            } else {
+                document.getElementById('data-plan').value = data;
+                window.carregarPlanejamento();
+            }
+        }
+
+        window.fecharHistorico = () => { document.getElementById('modal-historico').style.display = 'none'; }
+    </script>
+</body>
+</html>
