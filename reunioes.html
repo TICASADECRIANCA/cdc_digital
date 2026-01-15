@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casa de Criança - Agendamento</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #area-impressao, #area-impressao * { visibility: visible; }
+            #area-impressao { position: absolute; left: 0; top: 0; width: 100%; }
+            @page { margin: 2cm; }
+        }
+        .click-anim { animation: pulse 0.2s; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        
+        .data-ativa { background-color: #2563eb !important; color: white !important; border-color: #2563eb !important; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800">
+
+    <header class="bg-blue-900 text-white shadow-lg sticky top-0 z-50 print:hidden">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center relative">
+            <div id="logo-secret" class="flex items-center gap-3 cursor-pointer select-none transition" onclick="tentarAcessoAdmin()">
+                <i class="fas fa-shapes text-2xl text-yellow-400"></i>
+                <h1 class="text-xl font-bold">Casa de Criança</h1>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="btn-login-prof" onclick="acessoProfessor()" class="text-xs md:text-sm bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-2 rounded-lg text-white transition flex items-center gap-2">
+                    <i class="fas fa-chart-line"></i> 
+                    <span class="hidden md:inline">Reunião</span>
+                </button>
+
+                <button id="btn-sair-admin" onclick="sairAdmin()" class="hidden text-sm bg-red-500/80 hover:bg-red-600 px-3 py-2 rounded-lg text-white transition flex items-center gap-2">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto mt-8 p-4 mb-20 max-w-6xl print:hidden">
+        
+        <section id="view-pais" class="block animate-fade-in">
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 text-center mb-8">
+                <div class="inline-block p-3 rounded-full bg-blue-50 text-blue-600 mb-4">
+                    <i class="fas fa-calendar-check text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Agendamento de Reuniões</h2>
+                <p class="text-slate-500 mb-6">Selecione a turma, depois o dia e o horário.</p>
+                
+                <div class="relative max-w-md mx-auto mb-8">
+                    <select id="filtro-turma-pais" onchange="selecionarTurma()" class="w-full p-4 pl-12 text-lg border-2 border-slate-200 rounded-xl focus:border-blue-600 outline-none bg-white cursor-pointer hover:border-blue-400 transition shadow-sm appearance-none">
+                        <option value="" disabled selected>Carregando turmas...</option>
+                    </select>
+                    <i class="fas fa-chalkboard-user absolute left-4 top-5 text-blue-600 text-xl pointer-events-none"></i>
+                    <i class="fas fa-chevron-down absolute right-4 top-5 text-slate-400 pointer-events-none"></i>
+                </div>
+
+                <div id="area-datas" class="hidden text-left max-w-4xl mx-auto">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">1. Escolha uma Data</h3>
+                    <div id="lista-datas" class="flex flex-wrap gap-3 justify-center md:justify-start mb-8"></div>
+                </div>
+
+                <div id="area-horarios" class="hidden text-left max-w-4xl mx-auto border-t border-slate-100 pt-6 fade-in">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">2. Escolha um Horário</h3>
+                    <div id="grid-horarios" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3"></div>
+                </div>
+
+                <div id="msg-vazia" class="hidden text-center text-slate-500 py-10 bg-slate-50 rounded-xl border border-slate-200 mt-6">
+                    <i class="fas fa-calendar-times text-4xl text-slate-300 mb-2 block"></i>
+                    Nenhuma agenda aberta para esta turma.
+                </div>
+            </div>
+        </section>
+
+        <section id="view-admin" class="hidden space-y-8">
+            
+            <div class="bg-teal-50 border border-teal-200 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="flex-1">
+                    <h3 class="font-bold text-teal-900 text-lg flex items-center gap-2"><i class="fas fa-share-alt"></i> Link para os Pais</h3>
+                    <p class="text-teal-700 text-sm mt-1 mb-4">Compartilhe o link de agendamento via:</p>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="compartilharZap()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
+                            <i class="fab fa-whatsapp text-lg"></i> WhatsApp
+                        </button>
+                        <button onclick="compartilharTelegram()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
+                            <i class="fab fa-telegram text-lg"></i> Telegram
+                        </button>
+                        <button onclick="copiarLink()" class="bg-white border border-teal-300 text-teal-700 hover:bg-teal-100 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition">
+                            <i class="fas fa-copy"></i> Copiar
+                        </button>
+                    </div>
+                </div>
+                <div class="flex flex-col items-center gap-3">
+                    <div id="qrcode" class="bg-white p-2 rounded shadow-sm"></div>
+                    <p class="text-xs text-teal-600 font-mono" id="link-atual">...</p>
+                </div>
+            </div>
+
+            <div class="bg-white border-l-4 border-blue-600 p-6 rounded-2xl shadow-md">
+                <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fas fa-magic text-blue-600 mr-2"></i> Criar Agenda</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                    <div class="lg:col-span-1">
+                        <label class="block text-xs font-bold text-slate-500 mb-1">TURMA</label>
+                        <select id="gen-turma" class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="" disabled selected>Selecione...</option>
+                            <optgroup label="Infantil 1"><option value="Infantil 1A">Infantil 1A</option><option value="Infantil 1B">Infantil 1B</option><option value="Infantil 1C">Infantil 1C</option><option value="Infantil 1D">Infantil 1D</option><option value="Infantil 1E">Infantil 1E</option><option value="Infantil 1F">Infantil 1F</option><option value="Infantil 1G">Infantil 1G</option></optgroup>
+                            <optgroup label="Infantil 2"><option value="Infantil 2A">Infantil 2A</option><option value="Infantil 2B">Infantil 2B</option><option value="Infantil 2C">Infantil 2C</option><option value="Infantil 2D">Infantil 2D</option><option value="Infantil 2E">Infantil 2E</option><option value="Infantil 2F">Infantil 2F</option><option value="Infantil 2G">Infantil 2G</option><option value="Infantil 2I">Infantil 2I</option><option value="Infantil 2J">Infantil 2J</option></optgroup>
+                            <optgroup label="Infantil 3"><option value="Infantil 3A">Infantil 3A</option><option value="Infantil 3B">Infantil 3B</option><option value="Infantil 3C">Infantil 3C</option><option value="Infantil 3D">Infantil 3D</option><option value="Infantil 3E">Infantil 3E</option><option value="Infantil 3F">Infantil 3F</option><option value="Infantil 3G">Infantil 3G</option><option value="Infantil 3H">Infantil 3H</option><option value="Infantil 3I">Infantil 3I</option><option value="Infantil 3J">Infantil 3J</option></optgroup>
+                            <optgroup label="Infantil 4"><option value="Infantil 4A">Infantil 4A</option><option value="Infantil 4B">Infantil 4B</option><option value="Infantil 4C">Infantil 4C</option><option value="Infantil 4D">Infantil 4D</option><option value="Infantil 4E">Infantil 4E</option><option value="Infantil 4F">Infantil 4F</option><option value="Infantil 4I">Infantil 4I</option><option value="Infantil 4J">Infantil 4J</option></optgroup>
+                            <optgroup label="Infantil 5"><option value="Infantil 5A">Infantil 5A</option><option value="Infantil 5B">Infantil 5B</option><option value="Infantil 5C">Infantil 5C</option><option value="Infantil 5D">Infantil 5D</option><option value="Infantil 5E">Infantil 5E</option><option value="Infantil 5F">Infantil 5F</option><option value="Infantil 5G">Infantil 5G</option><option value="Infantil 5I">Infantil 5I</option></optgroup>
+                            <optgroup label="1 Ano"><option value="1 Ano A">1 Ano A</option><option value="1 Ano B">1 Ano B</option><option value="1 Ano C">1 Ano C</option><option value="1 Ano D">1 Ano D</option><option value="1 Ano I">1 Ano I</option></optgroup>
+                        </select>
+                    </div>
+                    <div class="lg:col-span-1">
+                        <label class="block text-xs font-bold text-slate-500 mb-1">DATA</label>
+                        <input type="date" id="gen-data" class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div class="lg:col-span-2">
+                        <label class="block text-xs font-bold text-slate-500 mb-1">INTERVALO</label>
+                        <div class="flex items-center gap-2">
+                            <input type="time" id="gen-inicio" value="08:00" class="w-full border p-2 rounded text-center">
+                            <span class="text-slate-400">às</span>
+                            <input type="time" id="gen-fim" value="11:00" class="w-full border p-2 rounded text-center">
+                        </div>
+                    </div>
+                    <div class="lg:col-span-1">
+                        <label class="block text-xs font-bold text-slate-500 mb-1">DURAÇÃO (MIN)</label>
+                        <input type="number" id="gen-duracao" value="20" class="w-full border p-2 rounded text-center font-bold text-blue-900">
+                    </div>
+                </div>
+                <div class="mt-4 flex justify-end">
+                    <button onclick="gerarAutomatico()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow transition">Gerar Horários</button>
+                </div>
+            </div>
+
+            <div class="bg-purple-50 border border-purple-200 p-6 rounded-2xl shadow-sm">
+                <div class="flex flex-col md:flex-row justify-between items-end gap-4">
+                    <div class="w-full md:w-auto">
+                        <h3 class="font-bold text-purple-900 text-lg mb-1"><i class="fas fa-print mr-2"></i>Centro de Impressão</h3>
+                        <div class="flex gap-2 items-center">
+                            <div class="relative w-full md:w-64">
+                                <select id="select-impressao" class="w-full p-2.5 pl-9 border border-purple-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-purple-500 outline-none">
+                                    <option value="" disabled selected>Escolha a turma...</option>
+                                </select>
+                                <i class="fas fa-users absolute left-3 top-3 text-purple-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 w-full md:w-auto">
+                        <button onclick="imprimirSelecionado()" class="flex-1 md:flex-none bg-purple-700 hover:bg-purple-800 text-white font-bold py-2.5 px-6 rounded-lg shadow transition flex items-center justify-center gap-2">
+                            <i class="fas fa-file-pdf"></i> Imprimir Turma
+                        </button>
+                        <button onclick="imprimirRelatorio(null)" class="bg-white border border-purple-200 text-purple-700 hover:bg-purple-50 font-bold py-2.5 px-4 rounded-lg shadow-sm transition flex items-center justify-center" title="Imprimir Todas">
+                            <i class="fas fa-globe"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 border-b flex justify-between items-center bg-slate-50">
+                    <h3 class="font-bold text-slate-700 text-sm">Status Geral</h3>
+                    <button onclick="limparTudo()" class="text-red-600 text-[10px] font-bold hover:bg-red-100 px-2 py-1 rounded border border-red-200">LIMPAR TUDO</button>
+                </div>
+                <div class="overflow-x-auto max-h-[400px] overflow-y-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-slate-100 sticky top-0 text-slate-600 uppercase text-[10px]">
+                            <tr>
+                                <th class="p-3">Turma</th>
+                                <th class="p-3">Data/Hora</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3">Detalhes</th>
+                                <th class="p-3 text-center">Del</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-admin" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="area-impressao" class="hidden bg-white p-8"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, query, orderBy, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // FIREBASE CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyDBWADP0CJMbIg5dlU_F4U-LSUbZ_KGngo",
+            authDomain: "agendacdc-7c58a.firebaseapp.com",
+            projectId: "agendacdc-7c58a",
+            storageBucket: "agendacdc-7c58a.firebasestorage.app",
+            messagingSenderId: "695482072180",
+            appId: "1:695482072180:web:574479422e33dcfd3b6521"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const colRef = collection(db, "agendamentos");
+
+        // URL DO GOOGLE SCRIPT
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkCfZOtgj54l47hwmyzcvqP8muTX8dtojcOS4MQ3N1ZKqmbEhJKR7BdYPdajQVNLiVvQ/exec";
+        
+        // CONFIGURAÇÃO DOS E-MAILS
+        const EMAILS_PROFESSORES = {
+            "Infantil 1A": "gabrielsimao@casadecrianca.com.br",
+            "Infantil 1B": "email@escola.com",
+            "Infantil 1C": "joaopaiva@casadecrianca.com.br",
+            "Infantil 1D": "email@escola.com",
+            "Infantil 1E": "email@escola.com",
+            "Infantil 1F": "email@escola.com",
+            "Infantil 1G": "email@escola.com",
+            "Infantil 2A": "girlanemelo@casadecriancaec.com.br",
+            "Infantil 2B": "vildeniabalreira@casadecriancaec.com.br",
+            "Infantil 2C": "gracamagalhaes@casadecriancaec.com.br",
+            "Infantil 2D": "kilviabatista@casadecriancaec.com.br",
+            "Infantil 2E": "brenaoliveira@casadecriancaec.com.br",
+            "Infantil 2F": "marialuiza@casadecriancaec.com.br",
+            "Infantil 2G": "anaveronicaqueiroz@casadecriancaec.com.br",
+            "Infantil 2I": "joanacarlos@casadecriancaec.com.br",
+            "Infantil 2J": "kilviabatista@casadecriancaec.com.br",
+            "Infantil 3A": "camilareis@casadecriancaec.com.br",
+            "Infantil 3B": "gabrielakatriny@casadecriancaec.com.brom",
+            "Infantil 3C": "mikaelybezerra@casadecriancaec.com.br",
+            "Infantil 3D": "camilaquirino@casadecriancaec.com.br",
+            "Infantil 3E": "fabianesantiago@casadecriancaec.com.br",
+            "Infantil 3F": "brunaferreira@casadecriancaec.com.br",
+            "Infantil 3G": "anapaula@casadecriancaec.com.br",
+            "Infantil 3H": "alinebranco@casadecriancaec.com.br",
+            "Infantil 3I": "luizafreitas@casadecriancaec.com.br",
+            "Infantil 3J": "brunaferreira@casadecriancaec.com.br",
+            "Infantil 4A": "margotmodesto@casadecriancaec.com.br",
+            "Infantil 4B": "joycevalente@casadecriancaec.com.br",
+            "Infantil 4C": "rogenyaandrade@casadecriancaec.com.br",
+            "Infantil 4D": "anabrandao@casadecriancaec.com.br",
+            "Infantil 4E": "willianesilva@casadecriancaec.com.br",
+            "Infantil 4F": "raquelsanders@casadecriancaec.com.br",
+            "Infantil 4I": "tacianabatista@casadecriancaec.com.br",
+            "Infantil 4J": "tainarasilveira@casadecriancaec.com.br",
+            "Infantil 5A": "midiamendes@casadecriancaec.com.br",
+            "Infantil 5B": "leticyaribeiro@casadecriancaec.com.br",
+            "Infantil 5C": "daniellesouza@casadecriancaec.com.br",
+            "Infantil 5D": "gerlanemendes@casadecriancaec.com.br",
+            "Infantil 5E": "joanasilva@casadecriancaec.com.br",
+            "Infantil 5F": "anaoliveira@casadecriancaec.com.br",
+            "Infantil 5G": "nubiaconceicao@casadecriancaec.com.br",
+            "Infantil 5I": "daniellesouza@casadecriancaec.com.b",
+            "1 Ano A": "rosangelasaraiva@casadecriancaec.com.br",
+            "1 Ano B": "thaissantana@casadecriancaec.com.br",
+            "1 Ano C": "aniellesantos@casadecriancaec.com.br",
+            "1 Ano D": "helizabetycastro@casadecriancaec.com.br",
+            "1 Ano I": "michellecruz@casadecriancaec.com.br",
+            "PADRAO": "Tecnologia@casadecrianca.com.br"
+        };
+
+        let todosDados = [];
+        let isAdmin = false;
+        let horariosTurmaSelecionada = [];
+
+        // ADMIN LOGIN
+        let logoClicks = 0;
+        
+        window.acessoProfessor = () => logarAdmin(); // Função ligada ao botão novo
+
+        window.tentarAcessoAdmin = async () => {
+            logoClicks++;
+            const logo = document.getElementById('logo-secret');
+            logo.classList.add('click-anim');
+            setTimeout(() => logo.classList.remove('click-anim'), 200);
+            if(logoClicks >= 5) { logoClicks = 0; await logarAdmin(); }
+        };
+
+        async function logarAdmin() {
+            const { value: senha } = await Swal.fire({
+                title: 'Acesso Restrito',
+                input: 'password',
+                inputPlaceholder: 'Senha do professor/admin',
+                showCancelButton: true
+            });
+            if (senha === '1992') ativarModoAdmin();
+            else if (senha) Swal.fire('Erro', 'Senha incorreta.', 'error');
+        }
+
+        function ativarModoAdmin() {
+            isAdmin = true;
+            document.getElementById('view-pais').classList.add('hidden');
+            document.getElementById('view-admin').classList.remove('hidden');
+            document.getElementById('btn-sair-admin').classList.remove('hidden');
+            document.getElementById('btn-login-prof').classList.add('hidden'); // Esconde o botão de login
+            renderAdminTable();
+            gerarQRCode();
+            
+            const selectGen = document.getElementById('gen-turma');
+            const selectPrint = document.getElementById('select-impressao');
+            if(selectGen && selectPrint) selectPrint.innerHTML = '<option value="" disabled selected>Escolha a turma...</option>' + selectGen.innerHTML;
+        }
+
+        window.sairAdmin = () => {
+            isAdmin = false;
+            document.getElementById('view-admin').classList.add('hidden');
+            document.getElementById('btn-sair-admin').classList.add('hidden');
+            document.getElementById('btn-login-prof').classList.remove('hidden'); // Mostra o botão de login de volta
+            document.getElementById('view-pais').classList.remove('hidden');
+            const url = new URL(window.location);
+            url.searchParams.delete('modo');
+            window.history.pushState({}, '', url);
+        };
+
+        window.onload = () => {
+            if(new URLSearchParams(window.location.search).get('modo') === 'admin') logarAdmin();
+            gerarQRCode();
+        };
+
+        // QR CODE E COMPARTILHAMENTO
+        function gerarQRCode() {
+            const urlLimpa = window.location.href.split('?')[0]; 
+            const divQR = document.getElementById("qrcode");
+            divQR.innerHTML = "";
+            new QRCode(divQR, { text: urlLimpa, width: 100, height: 100, colorDark : "#115e59", colorLight : "#ffffff" });
+            document.getElementById('link-atual').innerText = urlLimpa;
+        }
+
+        window.compartilharZap = () => {
+            const url = window.location.href.split('?')[0];
+            const texto = `Olá! Segue o link para o agendamento da reunião escolar: ${url}`;
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+        };
+
+        window.compartilharTelegram = () => {
+            const url = window.location.href.split('?')[0];
+            const texto = `Olá! Segue o link para o agendamento da reunião escolar:`;
+            window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(texto)}`, '_blank');
+        };
+        
+        window.copiarLink = () => {
+            const url = window.location.href.split('?')[0];
+            navigator.clipboard.writeText(url).then(() => {
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Link copiado!', showConfirmButton: false, timer: 1500 });
+            });
+        };
+
+        // DATABASE LISTENER
+        const q = query(colRef, orderBy("timestamp", "asc"));
+        onSnapshot(q, (snapshot) => {
+            todosDados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            atualizarDropdownTurmas();
+            if(isAdmin) renderAdminTable();
+            const turmaAtual = document.getElementById('filtro-turma-pais').value;
+            if(turmaAtual) selecionarTurma();
+        });
+
+        // VIEW PAIS
+        function atualizarDropdownTurmas() {
+            const turmasUnicas = [...new Set(todosDados.map(item => item.turma))].sort();
+            const select = document.getElementById('filtro-turma-pais');
+            const valorSalvo = select.value;
+            let html = '<option value="" disabled selected>Clique para selecionar a turma...</option>';
+            turmasUnicas.forEach(t => html += `<option value="${t}">${t}</option>`);
+            select.innerHTML = html;
+            if(turmasUnicas.includes(valorSalvo)) select.value = valorSalvo;
+        }
+
+        window.selecionarTurma = () => {
+            const turma = document.getElementById('filtro-turma-pais').value;
+            if(!turma) return;
+            horariosTurmaSelecionada = todosDados.filter(i => i.turma === turma && i.disponivel);
+            
+            document.getElementById('area-horarios').classList.add('hidden');
+            const areaDatas = document.getElementById('area-datas');
+            const listaDatas = document.getElementById('lista-datas');
+            const msg = document.getElementById('msg-vazia');
+
+            if(horariosTurmaSelecionada.length === 0) {
+                areaDatas.classList.add('hidden');
+                msg.classList.remove('hidden');
+                return;
+            }
+
+            msg.classList.add('hidden');
+            areaDatas.classList.remove('hidden');
+
+            const datasUnicas = [...new Set(horariosTurmaSelecionada.map(i => i.data))].sort();
+            listaDatas.innerHTML = "";
+            datasUnicas.forEach(dataIso => {
+                const partes = dataIso.split('-').reverse().join('/').split('/');
+                const btn = document.createElement('button');
+                btn.className = "px-6 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-600 hover:border-blue-400 hover:text-blue-600 transition flex flex-col items-center min-w-[100px]";
+                btn.innerHTML = `<span class="text-lg">${partes[0]}/${partes[1]}</span><span class="text-[10px] text-slate-400 font-normal">Ver horários</span>`;
+                btn.onclick = () => carregarHorariosDaData(dataIso, btn);
+                listaDatas.appendChild(btn);
+            });
+        };
+
+        window.carregarHorariosDaData = (dataIso, btnElement) => {
+            document.querySelectorAll('#lista-datas button').forEach(b => b.className = b.className.replace('data-ativa', ''));
+            btnElement.classList.add('data-ativa');
+
+            const grid = document.getElementById('grid-horarios');
+            document.getElementById('area-horarios').classList.remove('hidden');
+            grid.innerHTML = "";
+
+            horariosTurmaSelecionada.filter(i => i.data === dataIso).forEach(item => {
+                grid.innerHTML += `
+                    <button onclick="reservarComEmail('${item.id}', '${item.horario}', '${item.data}', '${item.turma}')" 
+                        class="bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 font-bold py-3 px-4 rounded-xl border border-blue-100 transition shadow-sm flex justify-center items-center gap-2 group">
+                        <i class="far fa-clock text-blue-300 group-hover:text-white"></i>
+                        ${item.horario}
+                    </button>`;
+            });
+        };
+
+        // ============================================
+        //  RESERVA FINAL (COM EMAIL PAI + SEM ARQUIVO ICS)
+        // ============================================
+        window.reservarComEmail = async (id, hora, dataIso, turma) => {
+            const dataBr = dataIso.split('-').reverse().join('/');
+            
+            const { value: formValues } = await Swal.fire({
+                title: 'Confirmar Agendamento',
+                html: `
+                    <div class="mb-4 text-sm text-slate-500">
+                        Agendando para <b>${dataBr}</b> às <b>${hora}</b>
+                    </div>
+                    <div class="text-left space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1 ml-1">Nome do Responsável</label>
+                            <input id="swal-responsavel" class="w-full p-2 border rounded" placeholder="Nome Completo">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1 ml-1">Nome do Aluno(a)</label>
+                            <input id="swal-aluno" class="w-full p-2 border rounded" placeholder="Nome do Aluno">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1 ml-1">E-mail para Confirmação</label>
+                            <input id="swal-email" type="email" class="w-full p-2 border rounded" placeholder="exemplo@gmail.com">
+                        </div>
+                    </div>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonColor: '#2563eb',
+                confirmButtonText: 'Confirmar',
+                preConfirm: () => {
+                    const r = document.getElementById('swal-responsavel').value;
+                    const a = document.getElementById('swal-aluno').value;
+                    const e = document.getElementById('swal-email').value;
+                    if (!r || !a || !e) Swal.showValidationMessage('Preencha todos os campos!');
+                    if (!e.includes('@')) Swal.showValidationMessage('E-mail inválido!');
+                    return { r, a, e };
+                }
+            });
+
+            if (formValues) {
+                Swal.fire({ 
+                    title: 'Processando...', 
+                    html: 'Salvando e enviando e-mail de confirmação.', 
+                    didOpen: () => Swal.showLoading(),
+                    allowOutsideClick: false
+                });
+
+                try {
+                    // 1. Salva no Firebase
+                    await updateDoc(doc(db, "agendamentos", id), { 
+                        disponivel: false, 
+                        pai: `${formValues.r} (Aluno: ${formValues.a})` 
+                    });
+
+                    // 2. Prepara envio para Google Sheets + Email
+                    const emailProfessora = EMAILS_PROFESSORES[turma] || EMAILS_PROFESSORES["PADRAO"];
+
+                    const dadosParaEnvio = {
+                        nomeResponsavel: formValues.r,
+                        nomeAluno: formValues.a,
+                        turma: turma,
+                        nomeProfessor: "Professora da " + turma, 
+                        emailProfessor: emailProfessora,
+                        emailResponsavel: formValues.e, // <--- CAMPO DO EMAIL DO PAI
+                        data: dataBr,
+                        horario: hora
+                    };
+
+                    // Envia para o Google Script
+                    await fetch(GOOGLE_SCRIPT_URL, {
+                        method: "POST",
+                        mode: "no-cors", 
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(dadosParaEnvio)
+                    });
+                    
+                    // Sucesso na tela (Sem baixar ICS)
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Confirmado!',
+                        text: `Agendamento realizado! Um e-mail foi enviado para ${formValues.e} e para a escola.`,
+                        confirmButtonColor: '#2563eb'
+                    });
+
+                    // Limpa a tela
+                    document.getElementById('area-horarios').classList.add('hidden');
+                    document.getElementById('area-datas').classList.add('hidden');
+                    document.getElementById('filtro-turma-pais').value = "";
+
+                } catch(e) { 
+                    console.error(e);
+                    Swal.fire('Erro', 'Este horário já foi ocupado ou houve um erro de conexão.', 'error'); 
+                }
+            }
+        };
+
+        // ADMIN FUNÇÕES
+        window.gerarAutomatico = async () => {
+            const t = document.getElementById('gen-turma').value;
+            const d = document.getElementById('gen-data').value;
+            const inicio = document.getElementById('gen-inicio').value;
+            const fim = document.getElementById('gen-fim').value;
+            const duracao = parseInt(document.getElementById('gen-duracao').value);
+
+            if (!t || !d || !inicio || !fim) return Swal.fire('Erro', 'Preencha todos os campos!', 'error');
+
+            Swal.fire({ title: 'Gerando...', didOpen: () => Swal.showLoading() });
+
+            let atual = new Date(`2000-01-01T${inicio}`);
+            let limite = new Date(`2000-01-01T${fim}`);
+            const batch = writeBatch(db);
+            let count = 0;
+
+            while (atual < limite) {
+                const h = atual.toTimeString().substring(0, 5);
+                const ref = doc(collection(db, "agendamentos"));
+                
+                // COMPLETADO A PARTIR DAQUI (O código anterior estava cortado)
+                batch.set(ref, {
+                    turma: t,
+                    data: d,
+                    horario: h,
+                    disponivel: true,
+                    pai: "",
+                    timestamp: new Date(`${d}T${h}`).getTime()
+                });
+                atual.setMinutes(atual.getMinutes() + duracao);
+                count++;
+            }
+            
+            await batch.commit();
+            Swal.fire('Sucesso', `${count} horários gerados!`, 'success');
+        };
+
+        // FUNÇÃO ADICIONADA: Renderiza a tabela de status (Faltava no seu código)
+        function renderAdminTable() {
+            const tbody = document.getElementById('tabela-admin');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            
+            // Ordena por data e horário
+            const sorted = [...todosDados].sort((a,b) => a.timestamp - b.timestamp);
+
+            sorted.forEach(item => {
+                const statusHtml = item.disponivel 
+                    ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">Livre</span>' 
+                    : '<span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-[10px] font-bold">Agendado</span>';
+                
+                const dataFormatada = item.data.split('-').reverse().join('/');
+
+                const row = `
+                    <tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0">
+                        <td class="p-3 font-bold text-slate-700 text-xs">${item.turma}</td>
+                        <td class="p-3 text-xs">
+                            <div class="font-bold">${dataFormatada}</div>
+                            <div class="text-slate-400">${item.horario}</div>
+                        </td>
+                        <td class="p-3">${statusHtml}</td>
+                        <td class="p-3 text-xs text-slate-500 max-w-[150px] truncate" title="${item.pai || ''}">
+                            ${item.pai || '-'}
+                        </td>
+                        <td class="p-3 text-center">
+                            <button onclick="deletarAgendamento('${item.id}')" class="text-red-400 hover:text-red-600 transition p-1">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        window.deletarAgendamento = async (id) => {
+            const result = await Swal.fire({
+                title: 'Tem certeza?',
+                text: "Isso apagará este horário permanentemente.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Sim, apagar'
+            });
+
+            if (result.isConfirmed) {
+                await deleteDoc(doc(db, "agendamentos", id));
+                Swal.fire('Deletado!', 'O horário foi removido.', 'success');
+            }
+        };
+
+        window.limparTudo = async () => {
+            const { value: confirmacao } = await Swal.fire({
+                title: 'PERIGO!',
+                text: "Digite 'DELETAR' para apagar TODOS os agendamentos de todas as turmas.",
+                input: 'text',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33'
+            });
+
+            if (confirmacao === 'DELETAR') {
+                Swal.fire({ title: 'Apagando...', didOpen: () => Swal.showLoading() });
+                const querySnapshot = await getDocs(collection(db, "agendamentos"));
+                const batch = writeBatch(db);
+                querySnapshot.forEach((doc) => batch.delete(doc.ref));
+                await batch.commit();
+                Swal.fire('Limpo!', 'Todos os dados foram apagados.', 'success');
+            }
+        };
+
+        window.imprimirSelecionado = () => {
+            const turma = document.getElementById('select-impressao').value;
+            if(!turma) return Swal.fire('Atenção', 'Selecione uma turma para imprimir.', 'warning');
+            imprimirRelatorio(turma);
+        };
+
+        window.imprimirRelatorio = (turmaFiltro) => {
+            const area = document.getElementById('area-impressao');
+            const dadosPrint = turmaFiltro 
+                ? todosDados.filter(i => i.turma === turmaFiltro) 
+                : todosDados;
+
+            if(dadosPrint.length === 0) return Swal.fire('Vazio', 'Não há dados para imprimir.', 'info');
+
+            // Ordenar
+            dadosPrint.sort((a,b) => {
+                if(a.turma !== b.turma) return a.turma.localeCompare(b.turma);
+                return a.timestamp - b.timestamp;
+            });
+
+            let html = `
+                <div class="text-center mb-8 border-b pb-4">
+                    <h1 class="text-2xl font-bold text-blue-900">Relatório de Agendamentos</h1>
+                    <p class="text-slate-500">${turmaFiltro ? 'Turma: ' + turmaFiltro : 'Todas as Turmas'}</p>
+                    <p class="text-xs text-slate-400 mt-2">Gerado em: ${new Date().toLocaleString()}</p>
+                </div>
+                <table class="w-full text-sm text-left border-collapse">
+                    <thead>
+                        <tr class="border-b-2 border-slate-800">
+                            <th class="py-2">Turma</th>
+                            <th class="py-2">Data</th>
+                            <th class="py-2">Hora</th>
+                            <th class="py-2">Responsável / Aluno</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            dadosPrint.forEach(item => {
+                if(!item.disponivel) { // Só imprime os agendados
+                    html += `
+                        <tr class="border-b border-slate-200">
+                            <td class="py-3 font-bold">${item.turma}</td>
+                            <td class="py-3">${item.data.split('-').reverse().join('/')}</td>
+                            <td class="py-3">${item.horario}</td>
+                            <td class="py-3">${item.pai}</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            html += `</tbody></table>`;
+            area.innerHTML = html;
+            window.print();
+        };
+
+    </script>
+</body>
+</html>
+
+
+
