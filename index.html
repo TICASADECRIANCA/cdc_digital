@@ -7,22 +7,23 @@
     <style>
         /* --- CSS GERAL --- */
         :root { --primary: #004aad; --sec: #0097b2; --bg: #f4f6f8; --text: #333; --success: #27ae60; --danger: #c0392b; --warning: #f39c12; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        /* --- TELA DE LOGIN --- */
+        .hidden { display: none !important; }
+        
+        /* LOGIN & CADASTRO */
         .auth-container { 
-            display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%;
+            display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%; position: absolute; top:0; left:0; z-index: 10;
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fundo_escola.jpg');
-            background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed;
+            background-size: cover; 
         }
         .card { 
             background: rgba(255, 255, 255, 0.95); padding: 2.5rem; border-radius: 12px; 
             box-shadow: 0 15px 35px rgba(0,0,0,0.5); width: 400px; text-align: center; max-height: 90vh; overflow-y: auto;
         }
-        .logo-login { max-width: 150px; width: 100%; height: auto; margin-bottom: 15px; display: block; margin-left: auto; margin-right: auto; }
-        h2 { color: var(--primary); margin-bottom: 10px; margin-top: 0; }
+        .logo-login { max-width: 150px; width: 100%; height: auto; margin-bottom: 15px; display: block; margin: 0 auto 15px auto; }
         
-        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 1rem; }
+        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
         button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.2s; font-size: 1rem; }
         button:hover { filter: brightness(90%); }
         .secondary-btn { background: #7f8c8d; }
@@ -30,103 +31,71 @@
         .warning-btn { background: var(--warning); color: white; }
         .link-text { margin-top: 15px; font-size: 0.9rem; color: #666; cursor: pointer; text-decoration: underline; }
 
-        /* --- SELEÇÃO DE TURMAS --- */
-        .checklist-container { text-align: left; background: #fff; border: 1px solid #ccc; border-radius: 6px; padding: 10px; max-height: 150px; overflow-y: auto; margin: 8px 0; display: none; }
-        .check-item { display: block; margin-bottom: 5px; font-size: 0.9rem; }
-        .check-item input { width: auto; margin-right: 8px; }
-
-        /* --- PAINEL GERAL --- */
-        #view-coord { display: none; padding: 2rem; max-width: 1000px; margin: 0 auto; width: 100%; }
-        .grid-turmas { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
-        .btn-turma { background: white; color: var(--primary); border: 2px solid var(--primary); padding: 20px; border-radius: 8px; font-size: 1.1rem; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; }
-        .btn-turma:hover { background: var(--primary); color: white; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .grupo-titulo { grid-column: 1 / -1; margin-top: 20px; border-bottom: 2px solid #ddd; padding-bottom: 5px; color: #555; }
+        /* PAINEL PRINCIPAL */
+        #app-painel, #view-coord { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
         
-        #app-painel { display: none; height: 100%; flex-direction: column; }
-        
-        /* HEADER COM LOGO */
-        header { background: white; padding: 0.8rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        header { background: white; padding: 0.8rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); flex-shrink: 0; }
         .header-left { display: flex; align-items: center; gap: 15px; }
-        .header-logo { height: 45px; width: auto; } /* Logo no Header */
-        .logo-text { font-weight: bold; font-size: 1.3rem; color: var(--primary); }
-        .turma-badge { background: var(--sec); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; }
+        .header-logo { height: 50px; width: auto; }
+        .turma-badge { background: var(--sec); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+
+        .main-content { padding: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; overflow-y: auto; flex: 1; }
         
-        .tabs { display: flex; justify-content: center; background: white; border-bottom: 1px solid #ddd; }
-        .tab-btn { background: white; color: #7f8c8d; padding: 15px 40px; border-bottom: 4px solid transparent; width: auto; }
+        .tabs { display: flex; justify-content: center; background: white; border-bottom: 1px solid #ddd; flex-shrink: 0; }
+        .tab-btn { background: white; color: #7f8c8d; padding: 15px 40px; border-bottom: 4px solid transparent; width: auto; cursor: pointer; }
         .tab-btn.active { color: var(--primary); border-bottom: 4px solid var(--primary); background: #f9fbfd; }
-        
-        .main-content { padding: 2rem; max-width: 1000px; margin: 0 auto; width: 100%; overflow-y: auto; flex: 1; }
-        .view-section { display: none; } 
-        .view-section.active { display: block; }
-        .import-area { background: #fff8e1; padding: 20px; border-radius: 8px; border: 1px solid #ffe082; display: none; margin-bottom: 20px; }
-        
+
         .control-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; gap: 10px; flex-wrap: wrap; border: 1px solid #eee; }
-        
-        /* TABELA */
+
+        /* TABELAS */
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
         th { background: var(--primary); color: white; }
-        .col-num { width: 40px; text-align: center; color: #666; font-weight: bold; }
-        
-        .status-btn { padding: 6px 16px; border-radius: 20px; border: none; cursor: pointer; color: white; font-weight: bold; width: 100px; font-size: 0.85rem; }
+        .status-btn { padding: 6px 16px; border-radius: 20px; border: none; cursor: pointer; color: white; font-weight: bold; width: 100px; }
         .presente { background: var(--success); }
         .ausente { background: var(--danger); opacity: 0.9; }
 
         .plan-card { background: white; padding: 30px; border-radius: 8px; border: 1px solid #eee; }
         label { display: block; margin-top: 15px; font-weight: bold; font-size: 0.9rem; color: #555; }
-        textarea { height: 80px; resize: vertical; border: 1px solid #ddd; background: #fafafa; line-height: 1.5; }
+        textarea { height: 80px; resize: vertical; border: 1px solid #ddd; background: #fafafa; line-height: 1.5; font-family: inherit; }
 
+        /* GRID COORDENAÇÃO (LADO A LADO) */
+        .grid-turmas { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Responsivo */
+            gap: 20px; 
+            padding: 10px;
+        }
+        .btn-turma { 
+            background: white; color: var(--primary); border: 2px solid var(--primary); 
+            padding: 15px; border-radius: 10px; cursor: pointer; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+            height: 110px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .btn-turma strong { font-size: 1.1rem; display: block; margin-bottom: 5px; }
+        .btn-turma span { font-size: 0.9rem; color: #666; background: #f0f0f0; padding: 2px 8px; border-radius: 10px; }
+        .btn-turma:hover { background: var(--primary); color: white; transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }
+        .btn-turma:hover span { background: rgba(255,255,255,0.2); color: white; }
+
+        /* OUTROS */
         #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 2000; justify-content: center; align-items: center; font-size: 1.5rem; color: var(--primary); font-weight: bold; }
-
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto; }
-        .hist-item { border-bottom: 1px solid #eee; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; }
-
-        /* CABEÇALHO ESCONDIDO (SÓ APARECE NA IMPRESSÃO) */
-        #print-header { display: none; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-        #print-header img { height: 60px; float: left; margin-right: 15px; }
-        #print-header h1 { margin: 0; font-size: 1.5rem; color: #000; }
-        #print-header p { margin: 5px 0 0; font-size: 1rem; color: #000; }
-
-        /* --- ESTILOS DE IMPRESSÃO --- */
+        .modal-content { background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 600px; }
+        
+        /* IMPRESSÃO */
+        #print-container { display: none; }
         @media print {
-            body * { visibility: hidden; } /* Esconde tudo */
-            
-            /* Mostra apenas a seção ativa e o cabeçalho de impressão */
-            .view-section.active, .view-section.active * { visibility: visible; }
-            #print-header, #print-header * { visibility: visible; display: block; }
-            
-            .view-section.active { position: absolute; left: 0; top: 100px; width: 100%; padding: 0; margin: 0; }
-            #print-header { position: absolute; left: 0; top: 0; width: 100%; }
-
-            /* Esconde botões de ação e navegação */
-            button, .control-bar, header, .tabs, #area-importacao, #container-btn-import, .no-print { display: none !important; }
-
-            /* Ajuste de Tabela para Impressão */
-            table { width: 100%; border: 2px solid #000; box-shadow: none; }
-            th { background-color: #ccc !important; color: #000 !important; border: 1px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            td { border: 1px solid #000; color: #000; padding: 8px; }
-            
-            /* Ajuste dos Botões de Status para Impressão (Forçar Cor) */
-            .status-btn { 
-                border: 1px solid #000; 
-                -webkit-print-color-adjust: exact; 
-                print-color-adjust: exact;
-                color: #000 !important; /* Texto preto para contraste */
-                background: white !important; /* Fundo branco pra economizar */
-                font-weight: bold;
-                text-transform: uppercase;
-                box-shadow: none;
-                width: auto;
-            }
-            /* Se quiser manter a cor de fundo, use estas regras: */
-            .status-btn.presente { background-color: #ddd !important; } 
-            .status-btn.ausente { background-color: #555 !important; color: white !important; text-decoration: line-through; }
-
-            /* Ajuste Planejamento */
-            .plan-card { box-shadow: none; border: none; padding: 0; width: 100%; }
-            textarea { border: 1px solid #000; background: white !important; color: black; font-family: 'Times New Roman', serif; width: 100%; height: auto; min-height: 100px; resize: none; overflow: visible; }
-            .input-plan { border: none; border-bottom: 1px solid #000; margin-bottom: 10px; }
+            @page { margin: 1cm; size: A4; }
+            body, html { height: auto; overflow: visible; background: white; }
+            #view-login, #view-cadastro, #view-coord, #app-painel, #loader, .modal-overlay, header, .tabs { display: none !important; }
+            #print-container { display: block !important; width: 100%; font-family: 'Times New Roman', serif; color: black; }
+            .print-header { border-bottom: 2px solid black; padding-bottom: 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; }
+            .print-logo { height: 80px; }
+            .print-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            .print-table th, .print-table td { border: 1px solid black; padding: 6px; font-size: 11pt; }
+            .print-block { margin-bottom: 20px; }
+            .print-label { font-weight: bold; display: block; text-decoration: underline; }
+            .print-text { display: block; border: 1px solid #ccc; padding: 10px; text-align: justify; white-space: pre-wrap; }
         }
     </style>
 </head>
@@ -134,51 +103,63 @@
 
     <div id="loader">Carregando...</div>
 
-    <div id="print-header">
-        <img src="logo.png" alt="Logo Escola">
-        <h1>CASA+ Gestão Escolar</h1>
-        <p><strong>Turma:</strong> <span id="print-turma"></span></p>
-        <p><strong>Data de Referência:</strong> <span id="print-data"></span></p>
+    <div id="print-container">
+        <div class="print-header">
+            <img src="logo.png" alt="Logo" class="print-logo">
+            <div class="print-info">
+                <h1 style="margin:0;">CASA+ Gestão Escolar</h1>
+                <p><strong>Turma:</strong> <span id="p-turma"></span> | <strong>Prof:</strong> <span id="p-prof"></span></p>
+                <p><strong>Data:</strong> <span id="p-data"></span></p>
+            </div>
+        </div>
+        <div id="print-content-body"></div>
     </div>
 
     <div id="view-login" class="auth-container">
         <div class="card">
-            <img src="logo.png" alt="Logo Escola" class="logo-login">
-            <!--<h2>CASA+</h2>-->
-            <p style="color: #777; margin-bottom: 20px;">Controle Acadêmico de Sala de Aula</p>
+            <img src="logo.png" alt="Logo" class="logo-login">
             <p style="color: #777; margin-bottom: 20px;">Acesso Professor / Coordenação</p>
             <input type="email" id="login-email" placeholder="E-mail">
             <input type="password" id="login-senha" placeholder="Senha">
             <button onclick="window.fazerLogin()">Entrar</button>
             <p class="link-text" onclick="window.validarAcessoCadastro()">Cadastrar Novo Usuário</p>
-            <p class="link-text" style="color: #999; font-size: 0.8rem; margin-top: 30px;" onclick="window.abrirAreaAdmin()">⚙️ Secretaria (Acesso Mestre)</p>
+            <p class="link-text" style="color: #999; font-size: 0.8rem; margin-top: 30px;" onclick="window.abrirAreaAdmin()">⚙️ Secretaria</p>
         </div>
     </div>
 
-    <div id="view-cadastro" class="auth-container" style="display: none;">
+    <div id="view-cadastro" class="auth-container hidden">
         <div class="card">
-            <img src="logo.png" alt="Logo Escola" class="logo-login">
+            <img src="logo.png" alt="Logo" class="logo-login">
             <h2>Novo Cadastro</h2>
             <input type="text" id="cad-nome" placeholder="Nome Completo">
             <input type="email" id="cad-email" placeholder="E-mail">
             <input type="password" id="cad-senha" placeholder="Senha">
             
-            <label style="text-align:left; margin-top:10px;">Tipo de Usuário:</label>
+            <label style="text-align:left; margin-top:10px; font-weight:bold;">Função:</label>
             <select id="cad-tipo" onchange="window.alternarTipoCadastro()">
                 <option value="professor">Professor (1 Turma)</option>
-                <option value="coordenador">Coordenador (Várias Turmas)</option>
+                <option value="coordenador">Coordenador / Gestão</option>
             </select>
 
             <div id="area-select-unica">
-                <select id="cad-turma-unica">
-                    <option value="" disabled selected>Selecione a Turma</option>
-                </select>
+                <select id="cad-turma-unica"><option value="" disabled selected>Selecione a Turma</option></select>
             </div>
 
-            <div id="area-select-multipla" style="display:none;">
-                <p style="font-size:0.85rem; color:#666; margin:5px 0;">Marque as turmas:</p>
-                <div class="check-item"><label><input type="checkbox" id="check-todas" onchange="window.toggleTodas(this)"> <strong>SELECIONAR TODAS (Geral)</strong></label></div>
-                <div id="container-checkboxes" class="checklist-container"></div>
+            <div id="area-select-coord" class="hidden" style="text-align: left;">
+                <label style="margin-top:10px; display:block;">Perfil de Acesso:</label>
+                <select id="cad-perfil-coord" onchange="window.verificarPerfilCustomizado()">
+                    <option value="" disabled selected>Selecione o Coordenador...</option>
+                    <option value="GERAL">Direção Geral (Todas as Turmas)</option>
+                    <option value="CRISTIANE">Cristiane (Berçário e Infantil 1)</option>
+                    <option value="ADNA">Adna (Infantil 2 - Manhã/Tarde)</option>
+                    <option value="NAYARA">Nayara (Infantil 3 - Manhã)</option>
+                    <option value="LUDMILLA">Ludmilla (Inf 3/4 Tarde, Inf 5, 1º Ano Tarde)</option>
+                    <option value="ELIONEIDE">Elioneide (Infantil 4 - Manhã)</option>
+                    <option value="SAVIA">Savia (1º Ano - Manhã)</option>
+                    <option value="CUSTOM">Outro (Selecionar Manualmente)</option>
+                </select>
+                
+                <div id="container-checkboxes" class="checklist-container hidden" style="margin-top:10px; max-height: 120px; overflow-y:auto; border:1px solid #ccc; padding:5px;"></div>
             </div>
 
             <button onclick="window.fazerCadastro()">Cadastrar</button>
@@ -186,31 +167,29 @@
         </div>
     </div>
 
-    <div id="view-coord">
+    <div id="view-coord" class="hidden">
         <header>
             <div class="header-left">
-                <img src="logo.png" alt="Logo" class="header-logo">
-                <span class="logo-text">CASA+ Coordenação</span>
+                <img src="logo.png" class="header-logo">
+                <span class="logo-text">Painel Coordenação</span>
             </div>
-            <div style="display: flex; align-items: center;">
-                 <span id="coord-badge" class="turma-badge" style="background: var(--primary); margin-right: 10px;">Gestão</span>
-                 <button onclick="window.fazerLogout()" class="secondary-btn" style="width: auto; padding: 8px 20px; margin: 0;">Sair</button>
-            </div>
+            <button onclick="window.fazerLogout()" class="secondary-btn" style="width:auto;">Sair</button>
         </header>
-
-        <h3 style="color: #555;">Turmas sob sua responsabilidade:</h3>
-        <div id="container-turmas" class="grid-turmas"></div>
+        
+        <div class="main-content">
+            <h3 style="color: #555; border-bottom: 2px solid #eee; padding-bottom: 10px;">Turmas sob sua responsabilidade:</h3>
+            <div id="container-turmas" class="grid-turmas"></div>
+        </div>
     </div>
 
-    <div id="app-painel">
+    <div id="app-painel" class="hidden">
         <header>
             <div class="header-left">
-                <button id="btn-voltar-coord" onclick="window.voltarParaCoord()" style="display:none; width: auto; padding: 5px 15px; background: #666; color: white;">⬅</button>
-                <img src="logo.png" alt="Logo" class="header-logo">
-                <span class="logo-text">CASA+</span>
+                <button id="btn-voltar-coord" onclick="window.voltarParaCoord()" style="display:none;margin-right:10px;background:#666;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">⬅ Voltar</button>
+                <img src="logo.png" class="header-logo">
                 <span id="display-turma" class="turma-badge">...</span>
             </div>
-            <button onclick="window.fazerLogout()" class="secondary-btn" style="width: auto; padding: 8px 20px; margin: 0;">Sair</button>
+            <button onclick="window.fazerLogout()" class="secondary-btn" style="width:auto;">Sair</button>
         </header>
 
         <div class="tabs">
@@ -222,61 +201,41 @@
         <div class="main-content">
             <div id="tab-freq" class="view-section active">
                 <div class="control-bar">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span>Data:</span>
-                        <input type="date" id="data-freq" style="width: auto; margin: 0;" onchange="window.verificarChamadaDia()">
-                    </div>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button onclick="window.salvarChamada()" class="success-btn" style="width: auto;">💾 Salvar</button>
-                        <button onclick="window.abrirHistorico('freq')" class="secondary-btn" style="width: auto;">📅 Histórico</button>
-                        <button onclick="window.imprimirTela('freq')" style="background: #2c3e50; width: auto;">🖨️ Imprimir</button>
+                    <div>Data: <input type="date" id="data-freq" style="width:auto;" onchange="window.verificarChamadaDia()"></div>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="window.salvarChamada()" class="success-btn" style="width:auto;">💾 Salvar</button>
+                        <button onclick="window.abrirHistorico('freq')" class="secondary-btn" style="width:auto;">📅 Histórico</button>
+                        <button onclick="window.imprimirTela('freq')" style="background:#2c3e50; width:auto; color:white;">🖨️ Imprimir</button>
                     </div>
                 </div>
-
-                <div id="container-btn-import" style="margin-bottom: 15px; text-align: right; display: none;">
-                     <button onclick="window.toggleImport()" style="background: #f39c12; width: auto; font-size: 0.9rem; padding: 6px 15px;">📥 Importar Lista</button>
+                <div id="container-btn-import" style="display:none; text-align:right;"><button onclick="window.toggleImport()" style="background:var(--warning);width:auto;">📥 Importar Lista</button></div>
+                <div id="area-importacao" class="import-area hidden">
+                    <textarea id="lista-import" rows="3" placeholder="Cole nomes aqui..."></textarea>
+                    <button onclick="window.processarImportacao()">Processar</button>
                 </div>
-                
-                <div id="area-importacao" class="import-area">
-                    <p style="margin-top:0; font-size:0.9rem; color:#666;">Cole os nomes (um por linha).</p>
-                    <textarea id="lista-import" rows="5" placeholder="Maria Silva, Infantil 1 A"></textarea>
-                    <button onclick="window.processarImportacao()">Processar Lista</button>
-                </div>
-                
                 <table id="tabela-alunos">
-                    <thead>
-                        <tr>
-                            <th class="col-num">Nº</th>
-                            <th>Aluno</th>
-                            <th style="text-align: center;">Presença</th>
-                            <th style="text-align: center;" class="no-print">Ação</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th style="width:50px;">Nº</th><th>Aluno</th><th style="text-align:center;">Presença</th><th class="no-print">Ação</th></tr></thead>
                     <tbody id="lista-tbody"></tbody>
                 </table>
-                <p id="msg-vazia" style="text-align: center; color: #777; margin-top: 40px;">Carregando...</p>
             </div>
 
             <div id="tab-plan" class="view-section">
                 <div class="control-bar">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span>Data:</span>
-                        <input type="date" id="data-plan" style="width: auto; margin: 0;" onchange="window.carregarPlanejamento()">
-                    </div>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button onclick="window.salvarPlanejamento()" class="success-btn" style="width: auto;">💾 Salvar</button>
-                        <button id="btn-editar-plan" onclick="window.desbloquearEdicao()" class="warning-btn" style="width: auto; display:none;">🔓 Editar</button>
-                        <button onclick="window.abrirHistorico('plan')" class="secondary-btn" style="width: auto;">📅 Ver Salvos</button>
-                        <button onclick="window.imprimirTela('plan')" style="background: #2c3e50; width: auto;">🖨️ Imprimir</button>
-                        <button onclick="window.limparTelaPlanejamento()" class="warning-btn" style="width: auto;">🗑️ Limpar</button>
+                    <div>Data: <input type="date" id="data-plan" style="width:auto;" onchange="window.carregarPlanejamento()"></div>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="window.salvarPlanejamento()" class="success-btn" style="width:auto;">💾 Salvar</button>
+                        <button id="btn-editar-plan" onclick="window.desbloquearEdicao()" class="warning-btn" style="width:auto; display:none;">🔓 Editar</button>
+                        <button onclick="window.abrirHistorico('plan')" class="secondary-btn" style="width:auto;">📅 Ver Salvos</button>
+                        <button onclick="window.imprimirTela('plan')" style="background:#2c3e50; width:auto; color:white;">🖨️ Imprimir</button>
+                        <button onclick="window.limparTelaPlanejamento()" class="warning-btn" style="width:auto;">🗑️ Limpar</button>
                     </div>
                 </div>
                 <div class="plan-card">
-                    <h3 style="margin-top: 0; color: var(--primary);">Registro Diário</h3>
+                    <h3 style="margin-top:0; color:var(--primary);">Registro Diário</h3>
                     <label>Disciplina:</label><input type="text" id="plan-disciplina" class="input-plan">
-                    <label>Tema da Aula:</label><input type="text" id="plan-tema" class="input-plan">
-                    <label>Descrição do Conteúdo</label><textarea id="plan-objetivos" class="input-plan"></textarea>
-                    <label>Descrição da atividade</label><textarea id="plan-metodologia" style="height: 120px;" class="input-plan"></textarea>
+                    <label>Tema:</label><input type="text" id="plan-tema" class="input-plan">
+                    <label>Objetivos (BNCC):</label><textarea id="plan-objetivos" class="input-plan"></textarea>
+                    <label>Metodologia:</label><textarea id="plan-metodologia" style="height:120px;" class="input-plan"></textarea>
                     <label>Avaliação:</label><textarea id="plan-avaliacao" class="input-plan"></textarea>
                 </div>
             </div>
@@ -285,19 +244,15 @@
 
     <div id="modal-historico" class="modal-overlay">
         <div class="modal-content">
-            <div style="display: flex; justify-content: space-between;"><h3>Histórico</h3><button onclick="window.fecharHistorico()" style="width:auto; background:none; color:black;">&times;</button></div>
+            <div style="display:flex; justify-content:space-between;"><h3>Histórico</h3><button onclick="window.fecharHistorico()" style="background:none;color:black;width:auto;">&times;</button></div>
             <div id="modal-lista"></div>
-            <button onclick="window.fecharHistorico()" class="secondary-btn">Fechar</button>
         </div>
     </div>
     <div id="modal-admin" class="modal-overlay">
         <div class="modal-content">
-            <div style="display: flex; justify-content: space-between;"><h3>Secretaria (Importação)</h3><button onclick="window.fecharAdmin()" style="width:auto; background:none; color:black;">&times;</button></div>
-            <div class="import-area" style="display: block; background: #e3f2fd; border-color: #90caf9;">
-                <p>Formato: <strong>Nome, Turma, Email, Senha</strong></p>
-                <textarea id="lista-profs-import" rows="6" placeholder="Nome, Turma, Email, Senha"></textarea>
-                <button onclick="window.processarImportacaoProfs()">🚀 Criar Contas</button>
-            </div>
+            <h3>Secretaria (Importação em Massa)</h3>
+            <textarea id="lista-profs-import" rows="5" placeholder="Nome, Turma, Email, Senha"></textarea>
+            <button onclick="window.processarImportacaoProfs()">Criar Contas</button>
             <button onclick="window.fecharAdmin()" class="secondary-btn">Fechar</button>
         </div>
     </div>
@@ -310,25 +265,30 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const SENHA_CADASTRO = "1992"; 
-        const SENHA_SECRETARIA = "1992";   
-        const SENHA_EDICAO = "1992";        
-
-        let usuarioAtual = null;
-        let perfilCoord = null;
-        let listaAlunosCache = [];
-
-        const ESTRUTURA_TURMAS = {
-            "Ensino Fundamental": [ { nome: "1º Ano", letras: ["A", "B", "C", "D", "I"] } ],
-            "Educação Infantil": [
-                { nome: "Berçário", letras: ["A"] },
-                { nome: "Infantil 1", letras: ["A", "B", "C", "D", "E", "I"] },
-                { nome: "Infantil 2", letras: ["A", "B", "C", "D", "E", "F", "G", "I", "J"] },
-                { nome: "Infantil 3", letras: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"] },
-                { nome: "Infantil 4", letras: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"] },
-                { nome: "Infantil 5", letras: ["A", "B", "C", "D", "E", "F", "G", "I"] }
-            ]
+        // --- DEFINIÇÃO DAS TURMAS ---
+        // Adicionei todas as letras conforme seu pedido
+        const ESTRUTURA_TURMAS = { 
+            "Berçário": [ { nome: "Berçário", letras: ["A"] } ],
+            "Infantil 1": [ { nome: "Infantil 1", letras: ["A", "B", "C", "D", "E", "F", "G"] } ],
+            "Infantil 2": [ { nome: "Infantil 2", letras: ["A", "B", "C", "D", "E", "F", "G", "I", "J"] } ], 
+            "Infantil 3": [ { nome: "Infantil 3", letras: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"] } ], 
+            "Infantil 4": [ { nome: "Infantil 4", letras: ["A", "B", "C", "D", "E", "F", "I", "J"] } ], 
+            "Infantil 5": [ { nome: "Infantil 5", letras: ["A", "B", "C", "D", "E", "F", "G", "I"] } ],
+            "Ensino Fundamental": [ { nome: "1º Ano", letras: ["A", "B", "C", "D", "I"] } ]
         };
+
+        // --- REGRAS DE COORDENAÇÃO (SEU PEDIDO) ---
+        const REGRAS_COORDENACAO = {
+            "CRISTIANE": ["Berçário A", "Infantil 1 A", "Infantil 1 B", "Infantil 1 C", "Infantil 1 D", "Infantil 1 E", "Infantil 1 F", "Infantil 1 G"],
+            "ADNA": ["Infantil 2 A", "Infantil 2 B", "Infantil 2 C", "Infantil 2 D", "Infantil 2 E", "Infantil 2 F", "Infantil 2 G", "Infantil 2 I", "Infantil 2 J"],
+            "NAYARA": ["Infantil 3 A", "Infantil 3 B", "Infantil 3 C", "Infantil 3 D", "Infantil 3 E", "Infantil 3 F", "Infantil 3 G", "Infantil 3 H"],
+            "LUDMILLA": ["Infantil 3 I", "Infantil 3 J", "Infantil 4 I", "Infantil 4 J", "Infantil 5 A", "Infantil 5 B", "Infantil 5 C", "Infantil 5 D", "Infantil 5 E", "Infantil 5 F", "Infantil 5 G", "Infantil 5 I", "1º Ano I"],
+            "ELIONEIDE": ["Infantil 4 A", "Infantil 4 B", "Infantil 4 C", "Infantil 4 D", "Infantil 4 E", "Infantil 4 F"],
+            "SAVIA": ["1º Ano A", "1º Ano B", "1º Ano C", "1º Ano D"]
+        };
+
+        const SENHAS = { CADASTRO: "1992", SECRETARIA: "1992", EDICAO: "1992" };
+        let usuarioAtual = null; let perfilCoord = null; let listaAlunosCache = [];
 
         function loading(status) { document.getElementById('loader').style.display = status ? 'flex' : 'none'; }
         function formatarData(d) { if(!d) return ""; return d.split('-').reverse().join('/'); }
@@ -337,23 +297,74 @@
             carregarOpcoesTurma();
             const hoje = new Date().toISOString().split('T')[0];
             document.getElementById('data-freq').value = hoje;
-            document.getElementById('data-freq').max = hoje;
             document.getElementById('data-plan').value = hoje;
         };
 
-        // --- NOVA FUNÇÃO DE IMPRESSÃO INTELIGENTE ---
-        window.imprimirTela = (tipo) => {
-            // Preenche o cabeçalho de impressão com dados reais antes de abrir a caixa de diálogo
-            const dataInput = tipo === 'freq' ? document.getElementById('data-freq').value : document.getElementById('data-plan').value;
-            const turma = usuarioAtual ? usuarioAtual.turma : "";
-            
-            document.getElementById('print-turma').innerText = turma;
-            document.getElementById('print-data').innerText = formatarData(dataInput);
-            
-            window.print();
+        // --- SISTEMA DE CADASTRO ATUALIZADO ---
+        window.validarAcessoCadastro = () => { if(prompt("Senha:") === SENHAS.CADASTRO) window.showView('cadastro'); else alert("Senha incorreta."); }
+        
+        window.alternarTipoCadastro = () => { 
+            const t = document.getElementById('cad-tipo').value; 
+            document.getElementById('area-select-unica').classList.toggle('hidden', t !== 'professor');
+            document.getElementById('area-select-coord').classList.toggle('hidden', t !== 'coordenador');
         }
 
-        // --- LÓGICA DE ACESSO ---
+        window.verificarPerfilCustomizado = () => {
+            const perfil = document.getElementById('cad-perfil-coord').value;
+            const checkContainer = document.getElementById('container-checkboxes');
+            // Mostra checkboxes manuais apenas se for "CUSTOM"
+            if (perfil === 'CUSTOM') checkContainer.classList.remove('hidden');
+            else checkContainer.classList.add('hidden');
+        }
+
+        function carregarOpcoesTurma() {
+            // Preenche o Select de Professor e os Checkboxes manuais
+            const s = document.getElementById('cad-turma-unica'); 
+            const c = document.getElementById('container-checkboxes');
+            for (const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) {
+                const og = document.createElement('optgroup'); og.label = g;
+                const dg = document.createElement('div'); dg.innerHTML=`<strong style='display:block;margin-top:5px;color:#004aad'>${g}</strong>`; c.appendChild(dg);
+                ls.forEach(se => se.letras.forEach(l => {
+                    const n = `${se.nome} ${l}`;
+                    const o = document.createElement('option'); o.value=n; o.innerText=n; og.appendChild(o);
+                    const dc = document.createElement('div'); dc.className='check-item'; 
+                    dc.innerHTML=`<label><input type="checkbox" value="${n}" class="turma-check"> ${n}</label>`; 
+                    c.appendChild(dc);
+                })); s.appendChild(og);
+            }
+        }
+
+        window.fazerCadastro = async () => {
+            const n=document.getElementById('cad-nome').value, e=document.getElementById('cad-email').value, s=document.getElementById('cad-senha').value, t=document.getElementById('cad-tipo').value;
+            let tf="", ac=[];
+
+            if(t==='professor') { 
+                tf=document.getElementById('cad-turma-unica').value; 
+                if(!tf) return alert("Selecione turma"); 
+            } else { 
+                // LÓGICA DO COORDENADOR
+                tf="COORD"; 
+                const perfil = document.getElementById('cad-perfil-coord').value;
+                if (!perfil) return alert("Selecione o perfil do coordenador.");
+
+                if (perfil === 'GERAL') ac = ["TODAS"];
+                else if (perfil === 'CUSTOM') {
+                    document.querySelectorAll('.turma-check:checked').forEach(x=>ac.push(x.value));
+                    if(!ac.length) return alert("Selecione ao menos uma turma.");
+                } else {
+                    // Pega as turmas da lista REGRAS_COORDENACAO
+                    ac = REGRAS_COORDENACAO[perfil];
+                }
+            }
+
+            loading(true); 
+            try { 
+                await addDoc(collection(db,"professores"),{nome:n, turma:tf, acessos:ac, email:e, senha:s}); 
+                alert("Usuário Cadastrado!"); window.showView('login'); 
+            } catch(x){alert("Erro");} finally{loading(false);}
+        }
+
+        // --- SISTEMA DE LOGIN E RENDERIZAÇÃO ---
         window.fazerLogin = async () => {
             const email = document.getElementById('login-email').value;
             const senha = document.getElementById('login-senha').value;
@@ -361,70 +372,87 @@
             try {
                 const q = query(collection(db, "professores"), where("email", "==", email), where("senha", "==", senha));
                 const snap = await getDocs(q);
-                if(snap.empty) alert("Dados incorretos.");
+                if(snap.empty) alert("Login inválido.");
                 else window.logar(snap.docs[0].data());
-            } catch(e) { alert("Erro conexão."); } finally { loading(false); }
+            } catch(e) { alert("Erro de conexão."); } finally { loading(false); }
         }
 
-        window.logar = async (user) => {
-            if (user.turma === "COORD" || (user.acessos && user.acessos.length > 0) || user.turma === "Geral") {
-                usuarioAtual = user;
-                perfilCoord = user; 
-                window.showView('coord');
+        window.logar = (user) => {
+            if (user.turma === "COORD" || (user.acessos && user.acessos.length > 0)) {
+                usuarioAtual = user; perfilCoord = user; 
+                window.showView('coord'); 
                 window.renderizarPainelCoord(user.acessos || []);
             } else {
-                usuarioAtual = user;
-                perfilCoord = null; 
-                document.getElementById('btn-voltar-coord').style.display = 'none';
+                usuarioAtual = user; perfilCoord = null; 
+                document.getElementById('btn-voltar-coord').style.display = 'none'; 
                 window.abrirPainelTurma(user.turma, user.nome);
             }
         }
 
-        window.entrarComoCoord = async (turmaAlvo) => {
-            usuarioAtual = { nome: perfilCoord.nome + " (Coord)", turma: turmaAlvo };
-            document.getElementById('btn-voltar-coord').style.display = 'inline-block';
-            window.abrirPainelTurma(turmaAlvo, usuarioAtual.nome);
+        // --- GRID UNIFICADO PARA COORDENAÇÃO ---
+        window.renderizarPainelCoord = (acessos) => {
+            const ct = document.getElementById('container-turmas'); ct.innerHTML="";
+            const isGeral = acessos.includes("TODAS");
+            
+            // Itera todas as turmas e joga direto no grid único
+            for (const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) {
+                ls.forEach(se => se.letras.forEach(l => {
+                    const n = `${se.nome} ${l}`;
+                    if(isGeral || acessos.includes(n)) {
+                        const b=document.createElement('div'); 
+                        b.className='btn-turma'; 
+                        // Cria o card da turma
+                        b.innerHTML=`<strong>${se.nome}</strong><span>Turma ${l}</span>`; 
+                        b.onclick=()=>window.entrarComoCoord(n); 
+                        ct.appendChild(b);
+                    }
+                }));
+            }
         }
 
-        window.abrirPainelTurma = async (turma, nomeUsuario) => {
-            document.getElementById('display-turma').innerText = `${turma} | ${nomeUsuario}`;
-            if(perfilCoord !== null) {
-                document.getElementById('container-btn-import').style.display = 'block';
-            } else {
-                document.getElementById('container-btn-import').style.display = 'none';
-            }
-            document.getElementById('area-importacao').style.display = 'none'; 
+        window.entrarComoCoord = (t) => { 
+            usuarioAtual = {nome: perfilCoord.nome+" (Coord)", turma: t}; 
+            document.getElementById('btn-voltar-coord').style.display='inline-block'; 
+            window.abrirPainelTurma(t, usuarioAtual.nome); 
+        }
+        window.voltarParaCoord = () => { usuarioAtual=perfilCoord; window.showView('coord'); }
+
+        window.showView = (v) => {
+            ['view-login','view-cadastro','app-painel','view-coord'].forEach(x=>document.getElementById(x).classList.add('hidden'));
+            document.getElementById(v==='login'?'view-login': v==='cadastro'?'view-cadastro': v==='app'?'app-painel':'view-coord').classList.remove('hidden');
+            if(v==='app') document.getElementById('app-painel').style.display = 'flex';
+            if(v==='coord') document.getElementById('view-coord').style.display = 'flex';
+        }
+
+        window.abrirPainelTurma = async (turma, nome) => {
+            document.getElementById('display-turma').innerText = `${turma} | ${nome}`;
+            document.getElementById('container-btn-import').style.display = perfilCoord ? 'block' : 'none';
             window.showView('app');
             await window.carregarAlunosNaTela();
             await window.carregarPlanejamento();
         }
 
-        // --- ALUNOS E CHAMADA ---
+        // --- FUNÇÕES DE ALUNO / FREQUENCIA (PADRÃO) ---
         window.carregarAlunosNaTela = async () => {
-            loading(true);
-            const tbody = document.getElementById('lista-tbody'); tbody.innerHTML = "";
+            loading(true); const tbody = document.getElementById('lista-tbody'); tbody.innerHTML = "";
             try {
                 const snap = await getDocs(query(collection(db, "alunos"), where("turma", "==", usuarioAtual.turma)));
-                listaAlunosCache = [];
-                snap.forEach(d => listaAlunosCache.push({ id: d.id, ...d.data() }));
+                listaAlunosCache = []; snap.forEach(d => listaAlunosCache.push({ id: d.id, ...d.data() }));
                 listaAlunosCache.sort((a,b) => a.nome.localeCompare(b.nome));
-                document.getElementById('msg-vazia').style.display = listaAlunosCache.length ? 'none' : 'block';
                 
                 listaAlunosCache.forEach((aluno, index) => {
-                    const numero = index + 1;
                     const tr = document.createElement('tr');
-                    const btnDelete = perfilCoord ? `<button style="border:none;background:none;cursor:pointer;" onclick="window.removerAluno('${aluno.id}')">🗑️</button>` : '';
-
-                    tr.innerHTML = `
-                        <td class="col-num">${numero}</td>
-                        <td>${aluno.nome}</td>
-                        <td style="text-align:center;"><button class="status-btn presente" onclick="window.toggleStatus(this)">Presente</button></td>
-                        <td class="no-print" style="text-align:center;">${btnDelete}</td>
-                    `;
+                    const btnDel = perfilCoord ? `<button onclick="window.removerAluno('${aluno.id}')" style="background:none;color:red;border:none;cursor:pointer;">🗑️</button>` : '';
+                    tr.innerHTML = `<td style="text-align:center">${index+1}</td><td>${aluno.nome}</td><td style="text-align:center;"><button class="status-btn presente" onclick="window.toggleStatus(this)">Presente</button></td><td class="no-print" style="text-align:center;">${btnDel}</td>`;
                     tbody.appendChild(tr);
                 });
                 await window.verificarChamadaDia();
-            } catch(e) {} finally { loading(false); }
+            } catch(e){} finally { loading(false); }
+        }
+
+        window.toggleStatus = (btn) => {
+            if(btn.classList.contains('presente')) { btn.className = 'status-btn ausente'; btn.innerText = "Ausente"; }
+            else { btn.className = 'status-btn presente'; btn.innerText = "Presente"; }
         }
 
         window.verificarChamadaDia = async () => {
@@ -444,16 +472,11 @@
                         }
                     });
                 }
-            } catch(e) {}
-        }
-
-        window.toggleStatus = (btn) => {
-            if(btn.classList.contains('presente')) { btn.className = 'status-btn ausente'; btn.innerText = "Ausente"; }
-            else { btn.className = 'status-btn presente'; btn.innerText = "Presente"; }
+            } catch(e){}
         }
 
         window.salvarChamada = async () => {
-            const data = document.getElementById('data-freq').value;
+            const dt = document.getElementById('data-freq').value;
             const linhas = document.querySelectorAll('#lista-tbody tr');
             if(!linhas.length) return alert("Sem alunos.");
             loading(true);
@@ -464,90 +487,106 @@
                 if(p) presentes++; detalhes.push({ nome, presente: p });
             });
             try {
-                await setDoc(doc(db, "frequencia", usuarioAtual.turma.replace(/\s/g,'')+"_"+data), { data, turma: usuarioAtual.turma, detalhes, resumo: `${presentes} Presentes / ${linhas.length-presentes} Ausentes` });
-                alert("Salvo!");
-            } catch(e) { alert("Erro."); } finally { loading(false); }
+                await setDoc(doc(db, "frequencia", usuarioAtual.turma.replace(/\s/g,'')+"_"+dt), { data:dt, turma: usuarioAtual.turma, detalhes, resumo: `${presentes} Presentes / ${linhas.length-presentes} Faltas` });
+                alert("Chamada Salva!");
+            } catch(e) { alert("Erro ao salvar."); } finally { loading(false); }
         }
 
-        // --- SISTEMA GERAL ---
-        window.toggleImport = () => { const a = document.getElementById('area-importacao'); a.style.display = a.style.display==='none'?'block':'none'; }
-        window.processarImportacao = async () => {
-            const t = document.getElementById('lista-import').value; if(!t.trim()) return;
-            loading(true);
-            const ps = []; 
-            t.split('\n').forEach(l => { 
-                const p=l.split(','); const nome = p[0].trim();
-                const turmaAlvo = p.length >= 2 ? p[1].trim() : usuarioAtual.turma;
-                if(nome) ps.push(addDoc(collection(db, "alunos"), {nome, turma: turmaAlvo})); 
-            });
-            await Promise.all(ps); alert("Importado!"); loading(false); window.carregarAlunosNaTela();
-        }
-        window.removerAluno = async (id) => { if(confirm("Remover aluno?")) { await deleteDoc(doc(db, "alunos", id)); window.carregarAlunosNaTela(); } }
-
-        window.validarAcessoCadastro = () => { if(prompt("Senha:") === SENHA_CADASTRO) window.showView('cadastro'); else alert("Senha incorreta."); }
-        window.alternarTipoCadastro = () => { const t = document.getElementById('cad-tipo').value; document.getElementById('area-select-unica').style.display = t==='professor'?'block':'none'; document.getElementById('area-select-multipla').style.display = t==='professor'?'none':'block'; }
-        window.toggleTodas = (c) => document.querySelectorAll('#container-checkboxes input').forEach(el => el.checked = c.checked);
-        
-        function carregarOpcoesTurma() {
-            const s = document.getElementById('cad-turma-unica'); const c = document.getElementById('container-checkboxes');
-            for (const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) {
-                const og = document.createElement('optgroup'); og.label = g;
-                const dg = document.createElement('div'); dg.innerHTML=`<strong style='display:block;margin-top:5px;color:#004aad'>${g}</strong>`; c.appendChild(dg);
-                ls.forEach(se => se.letras.forEach(l => {
-                    const n = `${se.nome} ${l}`;
-                    const o = document.createElement('option'); o.value=n; o.innerText=n; og.appendChild(o);
-                    const dc = document.createElement('div'); dc.className='check-item'; dc.innerHTML=`<label><input type="checkbox" value="${n}" class="turma-check"> ${n}</label>`; c.appendChild(dc);
-                })); s.appendChild(og);
-            }
-        }
-
-        window.fazerCadastro = async () => {
-            const n=document.getElementById('cad-nome').value, e=document.getElementById('cad-email').value, s=document.getElementById('cad-senha').value, t=document.getElementById('cad-tipo').value;
-            let tf="", ac=[];
-            if(t==='professor') { tf=document.getElementById('cad-turma-unica').value; if(!tf) return alert("Selecione turma"); }
-            else { tf="COORD"; if(document.getElementById('check-todas').checked) ac=["TODAS"]; else document.querySelectorAll('.turma-check:checked').forEach(x=>ac.push(x.value)); if(!ac.length) return alert("Selecione turmas"); }
-            loading(true); try { await addDoc(collection(db,"professores"),{nome:n, turma:tf, acessos:ac, email:e, senha:s}); alert("Sucesso!"); window.showView('login'); } catch(x){alert("Erro");} finally{loading(false);}
-        }
-
-        window.renderizarPainelCoord = (acessos) => {
-            const ct = document.getElementById('container-turmas'); ct.innerHTML="";
-            const isGeral = acessos.includes("TODAS") || acessos.includes("Geral");
-            for (const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) {
-                let tem=false; const dg=document.createElement('div'); dg.className='grid-turmas';
-                ls.forEach(se => se.letras.forEach(l => {
-                    const n = `${se.nome} ${l}`;
-                    if(isGeral || acessos.includes(n)) {
-                        tem=true; const b=document.createElement('div'); b.className='btn-turma'; b.innerHTML=`<strong>${se.nome}</strong><span>Turma ${l}</span>`; b.onclick=()=>window.entrarComoCoord(n); dg.appendChild(b);
-                    }
-                }));
-                if(tem) { const ti=document.createElement('div'); ti.className='grupo-titulo'; ti.innerText=g; ct.appendChild(ti); ct.appendChild(dg); }
-            }
-        }
-
-        window.voltarParaCoord = () => { usuarioAtual=perfilCoord; window.showView('coord'); }
-        window.showView = (v) => { ['view-login','view-cadastro','app-painel','view-coord'].forEach(x=>document.getElementById(x).style.display='none'); if(v==='login')document.getElementById('view-login').style.display='flex'; if(v==='cadastro')document.getElementById('view-cadastro').style.display='flex'; if(v==='app')document.getElementById('app-painel').style.display='flex'; if(v==='coord')document.getElementById('view-coord').style.display='block'; }
-        window.fazerLogout = () => { usuarioAtual=null; perfilCoord=null; window.showView('login'); }
-        window.mudarAba = (a) => { document.querySelectorAll('.view-section').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active')); document.getElementById('tab-'+a).classList.add('active'); document.getElementById('btn-tab-'+a).classList.add('active'); }
-        
-        // Planejamento
+        // --- PLANEJAMENTO ---
         window.carregarPlanejamento = async () => {
-            const dt=document.getElementById('data-plan').value; window.limparTelaPlanejamento(false); toggleCamposEdicao(true); document.getElementById('btn-editar-plan').style.display='none';
-            try{ const s=await getDocs(query(collection(db,"planejamentos"),where("turma","==",usuarioAtual.turma),where("data","==",dt))); if(!s.empty){const d=s.docs[0].data(); document.getElementById('plan-disciplina').value=d.disciplina||""; document.getElementById('plan-tema').value=d.tema||""; document.getElementById('plan-objetivos').value=d.objetivos||""; document.getElementById('plan-metodologia').value=d.metodologia||""; document.getElementById('plan-avaliacao').value=d.avaliacao||""; toggleCamposEdicao(false); document.getElementById('btn-editar-plan').style.display='inline-block'; } }catch(e){}
+            const dt = document.getElementById('data-plan').value; window.limparTelaPlanejamento(false);
+            try {
+                const s = await getDocs(query(collection(db,"planejamentos"),where("turma","==",usuarioAtual.turma),where("data","==",dt)));
+                if(!s.empty) {
+                    const d = s.docs[0].data();
+                    document.getElementById('plan-disciplina').value = d.disciplina||"";
+                    document.getElementById('plan-tema').value = d.tema||"";
+                    document.getElementById('plan-objetivos').value = d.objetivos||"";
+                    document.getElementById('plan-metodologia').value = d.metodologia||"";
+                    document.getElementById('plan-avaliacao').value = d.avaliacao||"";
+                    toggleCamposEdicao(false); document.getElementById('btn-editar-plan').style.display='inline-block';
+                }
+            } catch(e){}
         }
-        function toggleCamposEdicao(a){document.querySelectorAll('.input-plan').forEach(x=>x.disabled=!a);}
-        window.desbloquearEdicao=()=>{if(prompt("Senha:")===SENHA_EDICAO){toggleCamposEdicao(true);document.getElementById('btn-editar-plan').style.display='none';}else alert("Erro");}
-        window.salvarPlanejamento=async()=>{loading(true); try{const d=document.getElementById('data-plan').value; await setDoc(doc(db,"planejamentos",usuarioAtual.turma.replace(/\s/g,'')+"_"+d),{data:d,turma:usuarioAtual.turma,disciplina:document.getElementById('plan-disciplina').value,tema:document.getElementById('plan-tema').value,objetivos:document.getElementById('plan-objetivos').value,metodologia:document.getElementById('plan-metodologia').value,avaliacao:document.getElementById('plan-avaliacao').value}); alert("Salvo!"); toggleCamposEdicao(false); document.getElementById('btn-editar-plan').style.display='inline-block';}catch(e){alert("Erro");}finally{loading(false);}}
-        window.limparTelaPlanejamento=(c=true)=>{if(!c||confirm("Limpar?")){document.querySelectorAll('.input-plan').forEach(e=>e.value=""); if(c){toggleCamposEdicao(true);document.getElementById('btn-editar-plan').style.display='none';}}}
-        window.abrirHistorico=async(t)=>{const m=document.getElementById('modal-historico'), l=document.getElementById('modal-lista'); l.innerHTML="Carregando..."; m.style.display='flex'; try{const s=await getDocs(query(collection(db,t==='freq'?"frequencia":"planejamentos"),where("turma","==",usuarioAtual.turma))); const i=[]; s.forEach(d=>i.push(d.data())); i.sort((a,b)=>new Date(b.data)-new Date(a.data)); l.innerHTML=i.length?"":"Vazio."; i.forEach(it=>{const d=document.createElement('div'); d.className='hist-item'; d.innerHTML=`<span>${formatarData(it.data)}</span><span>${t==='freq'?it.resumo:(it.tema||'')}</span><button onclick="window.carregarDataHistorico('${it.data}','${t}')" style="width:auto;padding:5px;">Ver</button>`; l.appendChild(d);}); }catch(e){}}
-        window.carregarDataHistorico=(d,t)=>{window.fecharHistorico();document.getElementById(t==='freq'?'data-freq':'data-plan').value=d; t==='freq'?window.verificarChamadaDia():window.carregarPlanejamento();}
-        window.fecharHistorico=()=>document.getElementById('modal-historico').style.display='none';
-        window.abrirAreaAdmin=()=>{if(prompt("Senha:")===SENHA_SECRETARIA)document.getElementById('modal-admin').style.display='flex';else alert("Erro");}
-        window.fecharAdmin=()=>document.getElementById('modal-admin').style.display='none';
+        function toggleCamposEdicao(ativo) { document.querySelectorAll('.input-plan').forEach(x => x.disabled = !ativo); }
+        window.desbloquearEdicao = () => { if(prompt("Senha:") === SENHAS.EDICAO) { toggleCamposEdicao(true); document.getElementById('btn-editar-plan').style.display='none'; } else alert("Senha errada"); }
+        window.salvarPlanejamento = async () => {
+            loading(true); try {
+                const dt = document.getElementById('data-plan').value;
+                await setDoc(doc(db,"planejamentos",usuarioAtual.turma.replace(/\s/g,'')+"_"+dt), {
+                    data: dt, turma: usuarioAtual.turma,
+                    disciplina: document.getElementById('plan-disciplina').value,
+                    tema: document.getElementById('plan-tema').value,
+                    objetivos: document.getElementById('plan-objetivos').value,
+                    metodologia: document.getElementById('plan-metodologia').value,
+                    avaliacao: document.getElementById('plan-avaliacao').value
+                });
+                alert("Planejamento Salvo!"); toggleCamposEdicao(false); document.getElementById('btn-editar-plan').style.display='inline-block';
+            } catch(e){ alert("Erro ao salvar."); } finally { loading(false); }
+        }
+        window.limparTelaPlanejamento = (conf=true) => { if(!conf || confirm("Limpar tela?")) { document.querySelectorAll('.input-plan').forEach(e=>e.value=""); toggleCamposEdicao(true); document.getElementById('btn-editar-plan').style.display='none'; } }
+
+        // --- IMPRESSÃO ---
+        window.imprimirTela = (tipo) => {
+            document.getElementById('p-turma').innerText = usuarioAtual.turma;
+            document.getElementById('p-prof').innerText = usuarioAtual.nome;
+            const dt = tipo === 'freq' ? document.getElementById('data-freq').value : document.getElementById('data-plan').value;
+            document.getElementById('p-data').innerText = formatarData(dt);
+
+            const corpo = document.getElementById('print-content-body');
+            corpo.innerHTML = "";
+
+            if (tipo === 'plan') {
+                const campos = [
+                    { label: "Disciplina", val: document.getElementById('plan-disciplina').value },
+                    { label: "Tema", val: document.getElementById('plan-tema').value },
+                    { label: "Objetivos", val: document.getElementById('plan-objetivos').value },
+                    { label: "Metodologia", val: document.getElementById('plan-metodologia').value },
+                    { label: "Avaliação", val: document.getElementById('plan-avaliacao').value }
+                ];
+                campos.forEach(c => {
+                    const div = document.createElement('div'); div.className = 'print-block';
+                    div.innerHTML = `<span class="print-label">${c.label}:</span><span class="print-text">${c.val || '---'}</span>`;
+                    corpo.appendChild(div);
+                });
+            } else {
+                const table = document.createElement('table'); table.className = 'print-table';
+                table.innerHTML = `<thead><tr><th width="5%">Nº</th><th>Aluno</th><th width="20%">Presença</th></tr></thead><tbody></tbody>`;
+                const tbody = table.querySelector('tbody');
+                document.querySelectorAll('#lista-tbody tr').forEach(tr => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td style="text-align:center">${tr.cells[0].innerText}</td><td>${tr.cells[1].innerText}</td><td style="text-align:center;font-weight:bold;">${tr.querySelector('.presente')?'P':'F'}</td>`;
+                    tbody.appendChild(row);
+                });
+                corpo.appendChild(table);
+            }
+            window.print();
+        }
+
+        // --- ADMIN ---
+        window.abrirAreaAdmin = () => { if(prompt("Senha Admin:") === SENHAS.SECRETARIA) document.getElementById('modal-admin').style.display='flex'; }
+        window.fecharAdmin = () => document.getElementById('modal-admin').style.display='none';
+        
+        window.abrirHistorico = async(t) => {
+            document.getElementById('modal-historico').style.display='flex'; document.getElementById('modal-lista').innerHTML="Carregando...";
+            const s = await getDocs(query(collection(db, t==='freq'?"frequencia":"planejamentos"), where("turma","==",usuarioAtual.turma)));
+            let html = ""; s.forEach(d => { const dt = d.data(); html += `<div class="hist-item"><span>${formatarData(dt.data)}</span> <button onclick="window.carregarHist('${dt.data}','${t}')" style="padding:5px;">Ver</button></div>`; });
+            document.getElementById('modal-lista').innerHTML = html || "Nada encontrado.";
+        }
+        window.fecharHistorico = () => document.getElementById('modal-historico').style.display='none';
+        window.carregarHist = (d, t) => { window.fecharHistorico(); document.getElementById(t==='freq'?'data-freq':'data-plan').value = d; if(t==='freq') window.verificarChamadaDia(); else window.carregarPlanejamento(); }
+        
+        window.toggleImport = () => { const a=document.getElementById('area-importacao'); a.classList.toggle('hidden'); }
+        window.processarImportacao = async () => { 
+            const nomes = document.getElementById('lista-import').value.split('\n');
+            loading(true); 
+            for(let n of nomes) { if(n.trim()) await addDoc(collection(db,"alunos"), {nome:n.split(',')[0], turma: usuarioAtual.turma}); }
+            loading(false); alert("Importado!"); window.carregarAlunosNaTela();
+        }
+        window.removerAluno = async (id) => { if(confirm("Apagar aluno?")) { await deleteDoc(doc(db,"alunos",id)); window.carregarAlunosNaTela(); }}
         window.processarImportacaoProfs=async()=>{const t=document.getElementById('lista-profs-import').value; if(!t.trim())return; loading(true); const p=[]; t.split('\n').forEach(l=>{const [n,tr,e,s]=l.split(',').map(x=>x?.trim()); if(n&&tr&&e&&s)p.push(addDoc(collection(db,"professores"),{nome:n,turma:tr,email:e,senha:s}));}); await Promise.all(p); alert("Feito!"); loading(false); window.fecharAdmin();}
+        window.mudarAba = (a) => { document.querySelectorAll('.view-section').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active')); document.getElementById('tab-'+a).classList.add('active'); document.getElementById('btn-tab-'+a).classList.add('active'); }
+        window.fazerLogout = () => { usuarioAtual=null; window.showView('login'); }
     </script>
 </body>
 </html>
-
-
-
-
