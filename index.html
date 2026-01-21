@@ -11,16 +11,13 @@
         
         .hidden { display: none !important; }
         
+        /* Ajuste de Abas para Separação Visual */
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+
         /* LOGIN & CADASTRO */
-        .auth-container { 
-            display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%; position: absolute; top:0; left:0; z-index: 10;
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fundo_escola.jpg');
-            background-size: cover; 
-        }
-        .card { 
-            background: rgba(255, 255, 255, 0.95); padding: 2.5rem; border-radius: 12px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5); width: 400px; text-align: center; max-height: 90vh; overflow-y: auto;
-        }
+        .auth-container { display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%; position: absolute; top:0; left:0; z-index: 10; background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fundo_escola.jpg'); background-size: cover; }
+        .card { background: rgba(255, 255, 255, 0.95); padding: 2.5rem; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); width: 400px; text-align: center; max-height: 90vh; overflow-y: auto; }
         .logo-login { max-width: 150px; width: 100%; height: auto; margin-bottom: 15px; display: block; margin: 0 auto 15px auto; }
         
         input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
@@ -33,16 +30,13 @@
 
         /* PAINEL PRINCIPAL */
         #app-painel, #view-coord { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-        
         header { background: white; padding: 0.8rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); flex-shrink: 0; }
         .header-left { display: flex; align-items: center; gap: 15px; }
         .header-logo { height: 50px; width: auto; }
         .turma-badge { background: var(--sec); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
-
         .main-content { padding: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; overflow-y: auto; flex: 1; }
-        
         .tabs { display: flex; justify-content: center; background: white; border-bottom: 1px solid #ddd; flex-shrink: 0; }
-        .tab-btn { background: white; color: #7f8c8d; padding: 15px 40px; border-bottom: 4px solid transparent; width: auto; cursor: pointer; }
+        .tab-btn { background: white; color: #7f8c8d; padding: 15px 40px; border-bottom: 4px solid transparent; width: auto; cursor: pointer; border-radius: 0; margin-top: 0; }
         .tab-btn.active { color: var(--primary); border-bottom: 4px solid var(--primary); background: #f9fbfd; }
 
         .control-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; gap: 10px; flex-wrap: wrap; border: 1px solid #eee; }
@@ -59,31 +53,18 @@
         label { display: block; margin-top: 15px; font-weight: bold; font-size: 0.9rem; color: #555; }
         textarea { height: 80px; resize: vertical; border: 1px solid #ddd; background: #fafafa; line-height: 1.5; font-family: inherit; }
 
-        /* GRID COORDENAÇÃO (LADO A LADO) */
-        .grid-turmas { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Responsivo */
-            gap: 20px; 
-            padding: 10px;
-        }
-        .btn-turma { 
-            background: white; color: var(--primary); border: 2px solid var(--primary); 
-            padding: 15px; border-radius: 10px; cursor: pointer; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-            height: 110px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
+        /* GRID COORDENAÇÃO */
+        .grid-turmas { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; padding: 10px; }
+        .btn-turma { background: white; color: var(--primary); border: 2px solid var(--primary); padding: 15px; border-radius: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 110px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .btn-turma strong { font-size: 1.1rem; display: block; margin-bottom: 5px; }
         .btn-turma span { font-size: 0.9rem; color: #666; background: #f0f0f0; padding: 2px 8px; border-radius: 10px; }
         .btn-turma:hover { background: var(--primary); color: white; transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }
         .btn-turma:hover span { background: rgba(255,255,255,0.2); color: white; }
 
-        /* OUTROS */
         #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 2000; justify-content: center; align-items: center; font-size: 1.5rem; color: var(--primary); font-weight: bold; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 600px; }
         
-        /* IMPRESSÃO */
-        #print-container { display: none; }
         @media print {
             @page { margin: 1cm; size: A4; }
             body, html { height: auto; overflow: visible; background: white; }
@@ -103,7 +84,7 @@
 
     <div id="loader">Carregando...</div>
 
-    <div id="print-container">
+    <div id="print-container" style="display:none;">
         <div class="print-header">
             <img src="logo.png" alt="Logo" class="print-logo">
             <div class="print-info">
@@ -134,17 +115,14 @@
             <input type="text" id="cad-nome" placeholder="Nome Completo">
             <input type="email" id="cad-email" placeholder="E-mail">
             <input type="password" id="cad-senha" placeholder="Senha">
-            
             <label style="text-align:left; margin-top:10px; font-weight:bold;">Função:</label>
             <select id="cad-tipo" onchange="window.alternarTipoCadastro()">
                 <option value="professor">Professor (1 Turma)</option>
                 <option value="coordenador">Coordenador / Gestão</option>
             </select>
-
             <div id="area-select-unica">
                 <select id="cad-turma-unica"><option value="" disabled selected>Selecione a Turma</option></select>
             </div>
-
             <div id="area-select-coord" class="hidden" style="text-align: left;">
                 <label style="margin-top:10px; display:block;">Perfil de Acesso:</label>
                 <select id="cad-perfil-coord" onchange="window.verificarPerfilCustomizado()">
@@ -158,10 +136,8 @@
                     <option value="SAVIA">Savia (1º Ano - Manhã)</option>
                     <option value="CUSTOM">Outro (Selecionar Manualmente)</option>
                 </select>
-                
                 <div id="container-checkboxes" class="checklist-container hidden" style="margin-top:10px; max-height: 120px; overflow-y:auto; border:1px solid #ccc; padding:5px;"></div>
             </div>
-
             <button onclick="window.fazerCadastro()">Cadastrar</button>
             <button class="secondary-btn" onclick="window.showView('login')">Voltar</button>
         </div>
@@ -169,13 +145,9 @@
 
     <div id="view-coord" class="hidden">
         <header>
-            <div class="header-left">
-                <img src="logo.png" class="header-logo">
-                <span class="logo-text">Painel Coordenação</span>
-            </div>
+            <div class="header-left"><img src="logo.png" class="header-logo"><span class="logo-text">Painel Coordenação</span></div>
             <button onclick="window.fazerLogout()" class="secondary-btn" style="width:auto;">Sair</button>
         </header>
-        
         <div class="main-content">
             <h3 style="color: #555; border-bottom: 2px solid #eee; padding-bottom: 10px;">Turmas sob sua responsabilidade:</h3>
             <div id="container-turmas" class="grid-turmas"></div>
@@ -186,8 +158,7 @@
         <header>
             <div class="header-left">
                 <button id="btn-voltar-coord" onclick="window.voltarParaCoord()" style="display:none;margin-right:10px;background:#666;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">⬅ Voltar</button>
-                <img src="logo.png" class="header-logo">
-                <span id="display-turma" class="turma-badge">...</span>
+                <img src="logo.png" class="header-logo"><span id="display-turma" class="turma-badge">...</span>
             </div>
             <button onclick="window.fazerLogout()" class="secondary-btn" style="width:auto;">Sair</button>
         </header>
@@ -201,7 +172,7 @@
         <div class="main-content">
             <div id="tab-freq" class="view-section active">
                 <div class="control-bar">
-                    <div>Data: <input type="date" id="data-freq" style="width:auto;" onchange="window.verificarChamadaDia()"></div>
+                    <div>Data: <input type="date" id="data-freq" style="width:auto;" onchange="window.validarDataFrequencia()"></div>
                     <div style="display:flex; gap:10px;">
                         <button onclick="window.salvarChamada()" class="success-btn" style="width:auto;">💾 Salvar</button>
                         <button onclick="window.abrirHistorico('freq')" class="secondary-btn" style="width:auto;">📅 Histórico</button>
@@ -265,8 +236,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- DEFINIÇÃO DAS TURMAS ---
-        // Adicionei todas as letras conforme seu pedido
         const ESTRUTURA_TURMAS = { 
             "Berçário": [ { nome: "Berçário", letras: ["A"] } ],
             "Infantil 1": [ { nome: "Infantil 1", letras: ["A", "B", "C", "D", "E", "F", "G"] } ],
@@ -276,8 +245,6 @@
             "Infantil 5": [ { nome: "Infantil 5", letras: ["A", "B", "C", "D", "E", "F", "G", "I"] } ],
             "Ensino Fundamental": [ { nome: "1º Ano", letras: ["A", "B", "C", "D", "I"] } ]
         };
-
-        // --- REGRAS DE COORDENAÇÃO (SEU PEDIDO) ---
         const REGRAS_COORDENACAO = {
             "CRISTIANE": ["Berçário A", "Infantil 1 A", "Infantil 1 B", "Infantil 1 C", "Infantil 1 D", "Infantil 1 E", "Infantil 1 F", "Infantil 1 G"],
             "ADNA": ["Infantil 2 A", "Infantil 2 B", "Infantil 2 C", "Infantil 2 D", "Infantil 2 E", "Infantil 2 F", "Infantil 2 G", "Infantil 2 I", "Infantil 2 J"],
@@ -286,7 +253,6 @@
             "ELIONEIDE": ["Infantil 4 A", "Infantil 4 B", "Infantil 4 C", "Infantil 4 D", "Infantil 4 E", "Infantil 4 F"],
             "SAVIA": ["1º Ano A", "1º Ano B", "1º Ano C", "1º Ano D"]
         };
-
         const SENHAS = { CADASTRO: "1992", SECRETARIA: "1992", EDICAO: "1992" };
         let usuarioAtual = null; let perfilCoord = null; let listaAlunosCache = [];
 
@@ -297,186 +263,32 @@
             carregarOpcoesTurma();
             const hoje = new Date().toISOString().split('T')[0];
             document.getElementById('data-freq').value = hoje;
+            document.getElementById('data-freq').max = hoje; // Trava nativa para datas futuras
             document.getElementById('data-plan').value = hoje;
         };
 
-        // --- SISTEMA DE CADASTRO ATUALIZADO ---
-        window.validarAcessoCadastro = () => { if(prompt("Senha:") === SENHAS.CADASTRO) window.showView('cadastro'); else alert("Senha incorreta."); }
-        
-        window.alternarTipoCadastro = () => { 
-            const t = document.getElementById('cad-tipo').value; 
-            document.getElementById('area-select-unica').classList.toggle('hidden', t !== 'professor');
-            document.getElementById('area-select-coord').classList.toggle('hidden', t !== 'coordenador');
-        }
-
-        window.verificarPerfilCustomizado = () => {
-            const perfil = document.getElementById('cad-perfil-coord').value;
-            const checkContainer = document.getElementById('container-checkboxes');
-            // Mostra checkboxes manuais apenas se for "CUSTOM"
-            if (perfil === 'CUSTOM') checkContainer.classList.remove('hidden');
-            else checkContainer.classList.add('hidden');
-        }
-
-        function carregarOpcoesTurma() {
-            // Preenche o Select de Professor e os Checkboxes manuais
-            const s = document.getElementById('cad-turma-unica'); 
-            const c = document.getElementById('container-checkboxes');
-            for (const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) {
-                const og = document.createElement('optgroup'); og.label = g;
-                const dg = document.createElement('div'); dg.innerHTML=`<strong style='display:block;margin-top:5px;color:#004aad'>${g}</strong>`; c.appendChild(dg);
-                ls.forEach(se => se.letras.forEach(l => {
-                    const n = `${se.nome} ${l}`;
-                    const o = document.createElement('option'); o.value=n; o.innerText=n; og.appendChild(o);
-                    const dc = document.createElement('div'); dc.className='check-item'; 
-                    dc.innerHTML=`<label><input type="checkbox" value="${n}" class="turma-check"> ${n}</label>`; 
-                    c.appendChild(dc);
-                })); s.appendChild(og);
+        window.validarDataFrequencia = () => {
+            const hoje = new Date().toISOString().split('T')[0];
+            const dataSel = document.getElementById('data-freq').value;
+            if (dataSel > hoje) {
+                alert("Não é permitido preencher frequência em datas futuras.");
+                document.getElementById('data-freq').value = hoje;
             }
-        }
+            window.verificarChamadaDia();
+        };
 
-        window.fazerCadastro = async () => {
-            const n=document.getElementById('cad-nome').value, e=document.getElementById('cad-email').value, s=document.getElementById('cad-senha').value, t=document.getElementById('cad-tipo').value;
-            let tf="", ac=[];
-
-            if(t==='professor') { 
-                tf=document.getElementById('cad-turma-unica').value; 
-                if(!tf) return alert("Selecione turma"); 
-            } else { 
-                // LÓGICA DO COORDENADOR
-                tf="COORD"; 
-                const perfil = document.getElementById('cad-perfil-coord').value;
-                if (!perfil) return alert("Selecione o perfil do coordenador.");
-
-                if (perfil === 'GERAL') ac = ["TODAS"];
-                else if (perfil === 'CUSTOM') {
-                    document.querySelectorAll('.turma-check:checked').forEach(x=>ac.push(x.value));
-                    if(!ac.length) return alert("Selecione ao menos uma turma.");
-                } else {
-                    // Pega as turmas da lista REGRAS_COORDENACAO
-                    ac = REGRAS_COORDENACAO[perfil];
-                }
-            }
-
-            loading(true); 
-            try { 
-                await addDoc(collection(db,"professores"),{nome:n, turma:tf, acessos:ac, email:e, senha:s}); 
-                alert("Usuário Cadastrado!"); window.showView('login'); 
-            } catch(x){alert("Erro");} finally{loading(false);}
-        }
-
-        // --- SISTEMA DE LOGIN E RENDERIZAÇÃO ---
-        window.fazerLogin = async () => {
-            const email = document.getElementById('login-email').value;
-            const senha = document.getElementById('login-senha').value;
-            loading(true);
-            try {
-                const q = query(collection(db, "professores"), where("email", "==", email), where("senha", "==", senha));
-                const snap = await getDocs(q);
-                if(snap.empty) alert("Login inválido.");
-                else window.logar(snap.docs[0].data());
-            } catch(e) { alert("Erro de conexão."); } finally { loading(false); }
-        }
-
-        window.logar = (user) => {
-            if (user.turma === "COORD" || (user.acessos && user.acessos.length > 0)) {
-                usuarioAtual = user; perfilCoord = user; 
-                window.showView('coord'); 
-                window.renderizarPainelCoord(user.acessos || []);
-            } else {
-                usuarioAtual = user; perfilCoord = null; 
-                document.getElementById('btn-voltar-coord').style.display = 'none'; 
-                window.abrirPainelTurma(user.turma, user.nome);
-            }
-        }
-
-        // --- GRID UNIFICADO PARA COORDENAÇÃO ---
-        window.renderizarPainelCoord = (acessos) => {
-            const ct = document.getElementById('container-turmas'); ct.innerHTML="";
-            const isGeral = acessos.includes("TODAS");
-            
-            // Itera todas as turmas e joga direto no grid único
-            for (const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) {
-                ls.forEach(se => se.letras.forEach(l => {
-                    const n = `${se.nome} ${l}`;
-                    if(isGeral || acessos.includes(n)) {
-                        const b=document.createElement('div'); 
-                        b.className='btn-turma'; 
-                        // Cria o card da turma
-                        b.innerHTML=`<strong>${se.nome}</strong><span>Turma ${l}</span>`; 
-                        b.onclick=()=>window.entrarComoCoord(n); 
-                        ct.appendChild(b);
-                    }
-                }));
-            }
-        }
-
-        window.entrarComoCoord = (t) => { 
-            usuarioAtual = {nome: perfilCoord.nome+" (Coord)", turma: t}; 
-            document.getElementById('btn-voltar-coord').style.display='inline-block'; 
-            window.abrirPainelTurma(t, usuarioAtual.nome); 
-        }
-        window.voltarParaCoord = () => { usuarioAtual=perfilCoord; window.showView('coord'); }
-
-        window.showView = (v) => {
-            ['view-login','view-cadastro','app-painel','view-coord'].forEach(x=>document.getElementById(x).classList.add('hidden'));
-            document.getElementById(v==='login'?'view-login': v==='cadastro'?'view-cadastro': v==='app'?'app-painel':'view-coord').classList.remove('hidden');
-            if(v==='app') document.getElementById('app-painel').style.display = 'flex';
-            if(v==='coord') document.getElementById('view-coord').style.display = 'flex';
-        }
-
-        window.abrirPainelTurma = async (turma, nome) => {
-            document.getElementById('display-turma').innerText = `${turma} | ${nome}`;
-            document.getElementById('container-btn-import').style.display = perfilCoord ? 'block' : 'none';
-            window.showView('app');
-            await window.carregarAlunosNaTela();
-            await window.carregarPlanejamento();
-        }
-
-        // --- FUNÇÕES DE ALUNO / FREQUENCIA (PADRÃO) ---
-        window.carregarAlunosNaTela = async () => {
-            loading(true); const tbody = document.getElementById('lista-tbody'); tbody.innerHTML = "";
-            try {
-                const snap = await getDocs(query(collection(db, "alunos"), where("turma", "==", usuarioAtual.turma)));
-                listaAlunosCache = []; snap.forEach(d => listaAlunosCache.push({ id: d.id, ...d.data() }));
-                listaAlunosCache.sort((a,b) => a.nome.localeCompare(b.nome));
-                
-                listaAlunosCache.forEach((aluno, index) => {
-                    const tr = document.createElement('tr');
-                    const btnDel = perfilCoord ? `<button onclick="window.removerAluno('${aluno.id}')" style="background:none;color:red;border:none;cursor:pointer;">🗑️</button>` : '';
-                    tr.innerHTML = `<td style="text-align:center">${index+1}</td><td>${aluno.nome}</td><td style="text-align:center;"><button class="status-btn presente" onclick="window.toggleStatus(this)">Presente</button></td><td class="no-print" style="text-align:center;">${btnDel}</td>`;
-                    tbody.appendChild(tr);
-                });
-                await window.verificarChamadaDia();
-            } catch(e){} finally { loading(false); }
-        }
-
-        window.toggleStatus = (btn) => {
-            if(btn.classList.contains('presente')) { btn.className = 'status-btn ausente'; btn.innerText = "Ausente"; }
-            else { btn.className = 'status-btn presente'; btn.innerText = "Presente"; }
-        }
-
-        window.verificarChamadaDia = async () => {
-            const dt = document.getElementById('data-freq').value;
-            document.querySelectorAll('.status-btn').forEach(b => { b.className = 'status-btn presente'; b.innerText = 'Presente'; });
-            try {
-                const snap = await getDocs(query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma), where("data", "==", dt)));
-                if(!snap.empty) {
-                    const d = snap.docs[0].data();
-                    document.querySelectorAll('#lista-tbody tr').forEach(row => {
-                        const nome = row.cells[1].innerText;
-                        const info = d.detalhes.find(x => x.nome === nome);
-                        if(info) {
-                            const btn = row.cells[2].querySelector('button');
-                            btn.className = info.presente ? 'status-btn presente' : 'status-btn ausente';
-                            btn.innerText = info.presente ? 'Presente' : 'Ausente';
-                        }
-                    });
-                }
-            } catch(e){}
-        }
+        window.mudarAba = (aba) => {
+            document.querySelectorAll('.view-section').forEach(x => x.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+            document.getElementById('tab-' + aba).classList.add('active');
+            document.getElementById('btn-tab-' + aba).classList.add('active');
+        };
 
         window.salvarChamada = async () => {
             const dt = document.getElementById('data-freq').value;
+            const hoje = new Date().toISOString().split('T')[0];
+            if(dt > hoje) return alert("Erro: Data futura detectada.");
+
             const linhas = document.querySelectorAll('#lista-tbody tr');
             if(!linhas.length) return alert("Sem alunos.");
             loading(true);
@@ -490,102 +302,106 @@
                 await setDoc(doc(db, "frequencia", usuarioAtual.turma.replace(/\s/g,'')+"_"+dt), { data:dt, turma: usuarioAtual.turma, detalhes, resumo: `${presentes} Presentes / ${linhas.length-presentes} Faltas` });
                 alert("Chamada Salva!");
             } catch(e) { alert("Erro ao salvar."); } finally { loading(false); }
+        };
+
+        // --- RESTANTE DAS FUNÇÕES (Mantidas do original conforme sua lógica) ---
+        window.validarAcessoCadastro = () => { if(prompt("Senha:") === SENHAS.CADASTRO) window.showView('cadastro'); else alert("Senha incorreta."); }
+        window.alternarTipoCadastro = () => { const t = document.getElementById('cad-tipo').value; document.getElementById('area-select-unica').classList.toggle('hidden', t !== 'professor'); document.getElementById('area-select-coord').classList.toggle('hidden', t !== 'coordenador'); }
+        window.verificarPerfilCustomizado = () => { const perfil = document.getElementById('cad-perfil-coord').value; const checkContainer = document.getElementById('container-checkboxes'); if (perfil === 'CUSTOM') checkContainer.classList.remove('hidden'); else checkContainer.classList.add('hidden'); }
+        
+        function carregarOpcoesTurma() {
+            const s = document.getElementById('cad-turma-unica'); const c = document.getElementById('container-checkboxes');
+            for (const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) {
+                const og = document.createElement('optgroup'); og.label = g;
+                const dg = document.createElement('div'); dg.innerHTML=`<strong style='display:block;margin-top:5px;color:#004aad'>${g}</strong>`; c.appendChild(dg);
+                ls.forEach(se => se.letras.forEach(l => {
+                    const n = `${se.nome} ${l}`;
+                    const o = document.createElement('option'); o.value=n; o.innerText=n; og.appendChild(o);
+                    const dc = document.createElement('div'); dc.className='check-item'; dc.innerHTML=`<label><input type="checkbox" value="${n}" class="turma-check"> ${n}</label>`; c.appendChild(dc);
+                }));
+                s.appendChild(og);
+            }
         }
 
-        // --- PLANEJAMENTO ---
+        window.fazerCadastro = async () => {
+            const n=document.getElementById('cad-nome').value, e=document.getElementById('cad-email').value, s=document.getElementById('cad-senha').value, t=document.getElementById('cad-tipo').value;
+            let tf="", ac=[];
+            if(t==='professor') { tf=document.getElementById('cad-turma-unica').value; if(!tf) return alert("Selecione turma"); } 
+            else { tf="COORD"; const perfil = document.getElementById('cad-perfil-coord').value; if (!perfil) return alert("Selecione o perfil.");
+                if (perfil === 'GERAL') ac = ["TODAS"]; else if (perfil === 'CUSTOM') { document.querySelectorAll('.turma-check:checked').forEach(x=>ac.push(x.value)); if(!ac.length) return alert("Selecione uma turma."); }
+                else ac = REGRAS_COORDENACAO[perfil];
+            }
+            loading(true); try { await addDoc(collection(db,"professores"),{nome:n, turma:tf, acessos:ac, email:e, senha:s}); alert("Usuário Cadastrado!"); window.showView('login'); } catch(x){alert("Erro");} finally{loading(false);}
+        }
+
+        window.fazerLogin = async () => {
+            const email = document.getElementById('login-email').value; const senha = document.getElementById('login-senha').value;
+            loading(true); try { const q = query(collection(db, "professores"), where("email", "==", email), where("senha", "==", senha)); const snap = await getDocs(q); if(snap.empty) alert("Login inválido."); else window.logar(snap.docs[0].data()); } catch(e) { alert("Erro de conexão."); } finally { loading(false); }
+        }
+
+        window.logar = (user) => { if (user.turma === "COORD" || (user.acessos && user.acessos.length > 0)) { usuarioAtual = user; perfilCoord = user; window.showView('coord'); window.renderizarPainelCoord(user.acessos || []); } else { usuarioAtual = user; perfilCoord = null; document.getElementById('btn-voltar-coord').style.display = 'none'; window.abrirPainelTurma(user.turma, user.nome); } }
+
+        window.renderizarPainelCoord = (acessos) => {
+            const ct = document.getElementById('container-turmas'); ct.innerHTML=""; const isGeral = acessos.includes("TODAS");
+            for (const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) { ls.forEach(se => se.letras.forEach(l => { const n = `${se.nome} ${l}`; if(isGeral || acessos.includes(n)) { const b=document.createElement('div'); b.className='btn-turma'; b.innerHTML=`<strong>${se.nome}</strong><span>Turma ${l}</span>`; b.onclick=()=>window.entrarComoCoord(n); ct.appendChild(b); } })); }
+        }
+
+        window.entrarComoCoord = (t) => { usuarioAtual = {nome: perfilCoord.nome+" (Coord)", turma: t}; document.getElementById('btn-voltar-coord').style.display='inline-block'; window.abrirPainelTurma(t, usuarioAtual.nome); }
+        window.voltarParaCoord = () => { usuarioAtual=perfilCoord; window.showView('coord'); }
+        window.showView = (v) => { ['view-login','view-cadastro','app-painel','view-coord'].forEach(x=>document.getElementById(x).classList.add('hidden')); document.getElementById(v==='login'?'view-login': v==='cadastro'?'view-cadastro': v==='app'?'app-painel':'view-coord').classList.remove('hidden'); if(v==='app') document.getElementById('app-painel').style.display = 'flex'; if(v==='coord') document.getElementById('view-coord').style.display = 'flex'; }
+        window.abrirPainelTurma = async (turma, nome) => { document.getElementById('display-turma').innerText = `${turma} | ${nome}`; document.getElementById('container-btn-import').style.display = perfilCoord ? 'block' : 'none'; window.showView('app'); await window.carregarAlunosNaTela(); await window.carregarPlanejamento(); }
+        
+        window.carregarAlunosNaTela = async () => {
+            loading(true); const tbody = document.getElementById('lista-tbody'); tbody.innerHTML = "";
+            try { const snap = await getDocs(query(collection(db, "alunos"), where("turma", "==", usuarioAtual.turma))); listaAlunosCache = []; snap.forEach(d => listaAlunosCache.push({ id: d.id, ...d.data() })); listaAlunosCache.sort((a,b) => a.nome.localeCompare(b.nome));
+                listaAlunosCache.forEach((aluno, index) => { const tr = document.createElement('tr'); const btnDel = perfilCoord ? `<button onclick="window.removerAluno('${aluno.id}')" style="background:none;color:red;border:none;cursor:pointer;">🗑️</button>` : ''; tr.innerHTML = `<td style="text-align:center">${index+1}</td><td>${aluno.nome}</td><td style="text-align:center;"><button class="status-btn presente" onclick="window.toggleStatus(this)">Presente</button></td><td class="no-print" style="text-align:center;">${btnDel}</td>`; tbody.appendChild(tr); }); await window.verificarChamadaDia();
+            } catch(e){} finally { loading(false); }
+        }
+
+        window.toggleStatus = (btn) => { if(btn.classList.contains('presente')) { btn.className = 'status-btn ausente'; btn.innerText = "Ausente"; } else { btn.className = 'status-btn presente'; btn.innerText = "Presente"; } }
+        window.verificarChamadaDia = async () => {
+            const dt = document.getElementById('data-freq').value; document.querySelectorAll('.status-btn').forEach(b => { b.className = 'status-btn presente'; b.innerText = 'Presente'; });
+            try { const snap = await getDocs(query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma), where("data", "==", dt))); if(!snap.empty) { const d = snap.docs[0].data(); document.querySelectorAll('#lista-tbody tr').forEach(row => { const nome = row.cells[1].innerText; const info = d.detalhes.find(x => x.nome === nome); if(info) { const btn = row.cells[2].querySelector('button'); btn.className = info.presente ? 'status-btn presente' : 'status-btn ausente'; btn.innerText = info.presente ? 'Presente' : 'Ausente'; } }); } } catch(e){}
+        }
+
         window.carregarPlanejamento = async () => {
             const dt = document.getElementById('data-plan').value; window.limparTelaPlanejamento(false);
-            try {
-                const s = await getDocs(query(collection(db,"planejamentos"),where("turma","==",usuarioAtual.turma),where("data","==",dt)));
-                if(!s.empty) {
-                    const d = s.docs[0].data();
-                    document.getElementById('plan-disciplina').value = d.disciplina||"";
-                    document.getElementById('plan-tema').value = d.tema||"";
-                    document.getElementById('plan-objetivos').value = d.objetivos||"";
-                    document.getElementById('plan-metodologia').value = d.metodologia||"";
-                    document.getElementById('plan-avaliacao').value = d.avaliacao||"";
-                    toggleCamposEdicao(false); document.getElementById('btn-editar-plan').style.display='inline-block';
-                }
+            try { const s = await getDocs(query(collection(db,"planejamentos"),where("turma","==",usuarioAtual.turma),where("data","==",dt)));
+                if(!s.empty) { const d = s.docs[0].data(); document.getElementById('plan-disciplina').value = d.disciplina||""; document.getElementById('plan-tema').value = d.tema||""; document.getElementById('plan-objetivos').value = d.objetivos||""; document.getElementById('plan-metodologia').value = d.metodologia||""; document.getElementById('plan-avaliacao').value = d.avaliacao||""; toggleCamposEdicao(false); document.getElementById('btn-editar-plan').style.display='inline-block'; }
             } catch(e){}
         }
         function toggleCamposEdicao(ativo) { document.querySelectorAll('.input-plan').forEach(x => x.disabled = !ativo); }
         window.desbloquearEdicao = () => { if(prompt("Senha:") === SENHAS.EDICAO) { toggleCamposEdicao(true); document.getElementById('btn-editar-plan').style.display='none'; } else alert("Senha errada"); }
         window.salvarPlanejamento = async () => {
-            loading(true); try {
-                const dt = document.getElementById('data-plan').value;
-                await setDoc(doc(db,"planejamentos",usuarioAtual.turma.replace(/\s/g,'')+"_"+dt), {
-                    data: dt, turma: usuarioAtual.turma,
-                    disciplina: document.getElementById('plan-disciplina').value,
-                    tema: document.getElementById('plan-tema').value,
-                    objetivos: document.getElementById('plan-objetivos').value,
-                    metodologia: document.getElementById('plan-metodologia').value,
-                    avaliacao: document.getElementById('plan-avaliacao').value
-                });
-                alert("Planejamento Salvo!"); toggleCamposEdicao(false); document.getElementById('btn-editar-plan').style.display='inline-block';
-            } catch(e){ alert("Erro ao salvar."); } finally { loading(false); }
+            loading(true); try { const dt = document.getElementById('data-plan').value; await setDoc(doc(db,"planejamentos",usuarioAtual.turma.replace(/\s/g,'')+"_"+dt), { data: dt, turma: usuarioAtual.turma, disciplina: document.getElementById('plan-disciplina').value, tema: document.getElementById('plan-tema').value, objetivos: document.getElementById('plan-objetivos').value, metodologia: document.getElementById('plan-metodologia').value, avaliacao: document.getElementById('plan-avaliacao').value }); alert("Planejamento Salvo!"); toggleCamposEdicao(false); document.getElementById('btn-editar-plan').style.display='inline-block'; } catch(e){ alert("Erro ao salvar."); } finally { loading(false); }
         }
         window.limparTelaPlanejamento = (conf=true) => { if(!conf || confirm("Limpar tela?")) { document.querySelectorAll('.input-plan').forEach(e=>e.value=""); toggleCamposEdicao(true); document.getElementById('btn-editar-plan').style.display='none'; } }
 
-        // --- IMPRESSÃO ---
         window.imprimirTela = (tipo) => {
-            document.getElementById('p-turma').innerText = usuarioAtual.turma;
-            document.getElementById('p-prof').innerText = usuarioAtual.nome;
-            const dt = tipo === 'freq' ? document.getElementById('data-freq').value : document.getElementById('data-plan').value;
-            document.getElementById('p-data').innerText = formatarData(dt);
-
-            const corpo = document.getElementById('print-content-body');
-            corpo.innerHTML = "";
-
+            document.getElementById('p-turma').innerText = usuarioAtual.turma; document.getElementById('p-prof').innerText = usuarioAtual.nome; const dt = tipo === 'freq' ? document.getElementById('data-freq').value : document.getElementById('data-plan').value; document.getElementById('p-data').innerText = formatarData(dt);
+            const corpo = document.getElementById('print-content-body'); corpo.innerHTML = "";
             if (tipo === 'plan') {
-                const campos = [
-                    { label: "Disciplina", val: document.getElementById('plan-disciplina').value },
-                    { label: "Tema", val: document.getElementById('plan-tema').value },
-                    { label: "Objetivos", val: document.getElementById('plan-objetivos').value },
-                    { label: "Metodologia", val: document.getElementById('plan-metodologia').value },
-                    { label: "Avaliação", val: document.getElementById('plan-avaliacao').value }
-                ];
-                campos.forEach(c => {
-                    const div = document.createElement('div'); div.className = 'print-block';
-                    div.innerHTML = `<span class="print-label">${c.label}:</span><span class="print-text">${c.val || '---'}</span>`;
-                    corpo.appendChild(div);
-                });
+                const campos = [{ label: "Disciplina", val: document.getElementById('plan-disciplina').value }, { label: "Tema", val: document.getElementById('plan-tema').value }, { label: "Objetivos", val: document.getElementById('plan-objetivos').value }, { label: "Metodologia", val: document.getElementById('plan-metodologia').value }, { label: "Avaliação", val: document.getElementById('plan-avaliacao').value }];
+                campos.forEach(c => { const div = document.createElement('div'); div.className = 'print-block'; div.innerHTML = `<span class="print-label">${c.label}:</span><span class="print-text">${c.val || '---'}</span>`; corpo.appendChild(div); });
             } else {
-                const table = document.createElement('table'); table.className = 'print-table';
-                table.innerHTML = `<thead><tr><th width="5%">Nº</th><th>Aluno</th><th width="20%">Presença</th></tr></thead><tbody></tbody>`;
-                const tbody = table.querySelector('tbody');
-                document.querySelectorAll('#lista-tbody tr').forEach(tr => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `<td style="text-align:center">${tr.cells[0].innerText}</td><td>${tr.cells[1].innerText}</td><td style="text-align:center;font-weight:bold;">${tr.querySelector('.presente')?'P':'F'}</td>`;
-                    tbody.appendChild(row);
-                });
-                corpo.appendChild(table);
+                const table = document.createElement('table'); table.className = 'print-table'; table.innerHTML = `<thead><tr><th width="5%">Nº</th><th>Aluno</th><th width="20%">Presença</th></tr></thead><tbody></tbody>`; const tbody = table.querySelector('tbody');
+                document.querySelectorAll('#lista-tbody tr').forEach(tr => { const row = document.createElement('tr'); row.innerHTML = `<td style="text-align:center">${tr.cells[0].innerText}</td><td>${tr.cells[1].innerText}</td><td style="text-align:center;font-weight:bold;">${tr.querySelector('.presente')?'P':'F'}</td>`; tbody.appendChild(row); }); corpo.appendChild(table);
             }
             window.print();
         }
 
-        // --- ADMIN ---
         window.abrirAreaAdmin = () => { if(prompt("Senha Admin:") === SENHAS.SECRETARIA) document.getElementById('modal-admin').style.display='flex'; }
         window.fecharAdmin = () => document.getElementById('modal-admin').style.display='none';
-        
         window.abrirHistorico = async(t) => {
-            document.getElementById('modal-historico').style.display='flex'; document.getElementById('modal-lista').innerHTML="Carregando...";
-            const s = await getDocs(query(collection(db, t==='freq'?"frequencia":"planejamentos"), where("turma","==",usuarioAtual.turma)));
-            let html = ""; s.forEach(d => { const dt = d.data(); html += `<div class="hist-item"><span>${formatarData(dt.data)}</span> <button onclick="window.carregarHist('${dt.data}','${t}')" style="padding:5px;">Ver</button></div>`; });
-            document.getElementById('modal-lista').innerHTML = html || "Nada encontrado.";
+            document.getElementById('modal-historico').style.display='flex'; document.getElementById('modal-lista').innerHTML="Carregando..."; const s = await getDocs(query(collection(db, t==='freq'?"frequencia":"planejamentos"), where("turma","==",usuarioAtual.turma))); let html = "";
+            s.forEach(d => { const dt = d.data(); html += `<div class="hist-item" style="margin-bottom:10px;"><span>${formatarData(dt.data)}</span> <button onclick="window.carregarHist('${dt.data}','${t}')" style="padding:5px; width:auto; margin-left:10px;">Ver</button></div>`; }); document.getElementById('modal-lista').innerHTML = html || "Nada encontrado.";
         }
         window.fecharHistorico = () => document.getElementById('modal-historico').style.display='none';
         window.carregarHist = (d, t) => { window.fecharHistorico(); document.getElementById(t==='freq'?'data-freq':'data-plan').value = d; if(t==='freq') window.verificarChamadaDia(); else window.carregarPlanejamento(); }
-        
-        window.toggleImport = () => { const a=document.getElementById('area-importacao'); a.classList.toggle('hidden'); }
-        window.processarImportacao = async () => { 
-            const nomes = document.getElementById('lista-import').value.split('\n');
-            loading(true); 
-            for(let n of nomes) { if(n.trim()) await addDoc(collection(db,"alunos"), {nome:n.split(',')[0], turma: usuarioAtual.turma}); }
-            loading(false); alert("Importado!"); window.carregarAlunosNaTela();
-        }
+        window.toggleImport = () => { document.getElementById('area-importacao').classList.toggle('hidden'); }
+        window.processarImportacao = async () => { const nomes = document.getElementById('lista-import').value.split('\n'); loading(true); for(let n of nomes) { if(n.trim()) await addDoc(collection(db,"alunos"), {nome:n.split(',')[0], turma: usuarioAtual.turma}); } loading(false); alert("Importado!"); window.carregarAlunosNaTela(); }
         window.removerAluno = async (id) => { if(confirm("Apagar aluno?")) { await deleteDoc(doc(db,"alunos",id)); window.carregarAlunosNaTela(); }}
         window.processarImportacaoProfs=async()=>{const t=document.getElementById('lista-profs-import').value; if(!t.trim())return; loading(true); const p=[]; t.split('\n').forEach(l=>{const [n,tr,e,s]=l.split(',').map(x=>x?.trim()); if(n&&tr&&e&&s)p.push(addDoc(collection(db,"professores"),{nome:n,turma:tr,email:e,senha:s}));}); await Promise.all(p); alert("Feito!"); loading(false); window.fecharAdmin();}
-        window.mudarAba = (a) => { document.querySelectorAll('.view-section').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active')); document.getElementById('tab-'+a).classList.add('active'); document.getElementById('btn-tab-'+a).classList.add('active'); }
         window.fazerLogout = () => { usuarioAtual=null; window.showView('login'); }
     </script>
 </body>
