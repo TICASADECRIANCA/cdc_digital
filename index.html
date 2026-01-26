@@ -162,6 +162,9 @@
                     <option value="LUDMILLA">Coord. Ludmilla</option>
                     <option value="ELIONEIDE">Coord. Elioneide</option>
                     <option value="SAVIA">Coord. Savia</option>
+                    
+                    <option value="COORD_ESPORTES">Coord. de Esportes/Extras</option>
+                    
                     <option value="CUSTOM">Outro</option>
                 </select>
                 <div id="container-checkboxes" class="hidden" style="max-height:100px; overflow-y:auto; border:1px solid #ccc; padding:5px; font-size:0.85rem;"></div>
@@ -308,6 +311,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // --- ATUALIZADO COM ESPORTES ---
         const ESTRUTURA_TURMAS = { 
             "Berçário": [ { nome: "Berçário", letras: ["A"] } ],
             "Infantil 1": [ { nome: "Infantil 1", letras: ["A", "B", "C", "D", "E", "F", "G"] } ],
@@ -315,16 +319,34 @@
             "Infantil 3": [ { nome: "Infantil 3", letras: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"] } ], 
             "Infantil 4": [ { nome: "Infantil 4", letras: ["A", "B", "C", "D", "E", "F", "I", "J"] } ], 
             "Infantil 5": [ { nome: "Infantil 5", letras: ["A", "B", "C", "D", "E", "F", "G", "I"] } ],
-            "Ensino Fundamental": [ { nome: "1º Ano", letras: ["A", "B", "C", "D", "I"] } ]
+            "Ensino Fundamental": [ { nome: "1º Ano", letras: ["A", "B", "C", "D", "I"] } ],
+            
+            // ESPORTES E EXTRAS
+            "Esportes e Extras": [
+                { nome: "Futsal", letras: ["A"] },
+                { nome: "Dança", letras: ["A"] },
+                { nome: "Ginástica Rítmica", letras: ["A"] },
+                { nome: "Judô", letras: ["A"] }
+            ]
         };
+
         const REGRAS_COORDENACAO = {
             "CRISTIANE": ["Berçário A", "Infantil 1 A", "Infantil 1 B", "Infantil 1 C", "Infantil 1 D", "Infantil 1 E", "Infantil 1 F", "Infantil 1 G"],
             "ADNA": ["Infantil 2 A", "Infantil 2 B", "Infantil 2 C", "Infantil 2 D", "Infantil 2 E", "Infantil 2 F", "Infantil 2 G", "Infantil 2 I", "Infantil 2 J"],
             "NAYARA": ["Infantil 3 A", "Infantil 3 B", "Infantil 3 C", "Infantil 3 D", "Infantil 3 E", "Infantil 3 F", "Infantil 3 G", "Infantil 3 H"],
             "LUDMILLA": ["Infantil 3 I", "Infantil 3 J", "Infantil 4 I", "Infantil 4 J", "Infantil 5 A", "Infantil 5 B", "Infantil 5 C", "Infantil 5 D", "Infantil 5 E", "Infantil 5 F", "Infantil 5 G", "Infantil 5 I", "1º Ano I"],
             "ELIONEIDE": ["Infantil 4 A", "Infantil 4 B", "Infantil 4 C", "Infantil 4 D", "Infantil 4 E", "Infantil 4 F"],
-            "SAVIA": ["1º Ano A", "1º Ano B", "1º Ano C", "1º Ano D"]
+            "SAVIA": ["1º Ano A", "1º Ano B", "1º Ano C", "1º Ano D"],
+            
+            // COORDENAÇÃO DE ESPORTES
+            "COORD_ESPORTES": [
+                "Futsal A",
+                "Dança A",
+                "Ginástica Rítmica A",
+                "Judô A"
+            ]
         };
+
         const SENHAS = { CADASTRO: "1992", SECRETARIA: "1992", EDICAO: "1992" };
 
         let usuarioAtual = null; 
