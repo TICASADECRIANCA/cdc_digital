@@ -21,40 +21,33 @@
         button:active { transform: scale(0.98); }
         input, select, textarea { font-family: inherit; font-size: 16px; }
 
-        /* TELAS DE AUTH (Login/Cadastro) */
+        /* AUTH COM FUNDO */
         .auth-container { 
             position: absolute; top:0; left:0; width:100%; height:100%; z-index:99; 
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fundo_escola.jpg');
-            background-size: cover;
-            background-position: center;
+            background-size: cover; background-position: center;
             display: flex; justify-content: center; align-items: center; padding: 20px; 
         }
-        
         .card-auth { background: rgba(255, 255, 255, 0.95); padding: 2rem; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); width: 100%; max-width: 380px; text-align: center; backdrop-filter: blur(5px); }
         .card-auth img { width: 120px; margin-bottom: 20px; }
         .card-auth input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
         .card-auth button { width: 100%; padding: 14px; margin-top: 15px; border: none; border-radius: 8px; background: var(--primary); color: white; font-weight: bold; font-size: 1rem; }
         .link-text { color: var(--primary); margin-top: 15px; display: block; font-size: 0.9rem; text-decoration: underline; cursor: pointer; }
 
-        /* LAYOUT PRINCIPAL (APP) */
+        /* APP LAYOUT */
         #app-painel { display: flex; flex-direction: column; height: 100%; }
-        
-        /* HEADER */
         .app-header { background: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 10; height: 60px; }
         .header-title { font-weight: bold; color: var(--primary); font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
         .turma-badge { background: var(--sec); color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; }
         .btn-logout { background: none; border: none; color: var(--danger); font-size: 0.9rem; font-weight: bold; }
-
-        /* CONTEÚDO COM SCROLL */
         .main-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 80px; }
 
-        /* MENU DE NAVEGAÇÃO */
+        /* TABS */
         .nav-tabs { display: flex; justify-content: center; background: white; border-bottom: 1px solid #eee; }
         .nav-item { padding: 15px 30px; cursor: pointer; color: var(--gray); border-bottom: 3px solid transparent; font-weight: 500; }
         .nav-item.active { color: var(--primary); border-bottom-color: var(--primary); }
-        .nav-item:hover { background: #f9f9f9; }
 
-        /* CONTROLES */
+        /* CONTROLS */
         .action-bar { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         .date-control { display: flex; align-items: center; gap: 10px; font-weight: bold; color: #555; }
         .date-control input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
@@ -64,8 +57,10 @@
         .btn-hist { background: var(--gray); }
         .btn-print { background: #2c3e50; }
         .btn-del { background: var(--danger); }
+        .btn-report { background: #8e44ad; }
+        .btn-fix { background: var(--warning); color: #fff; }
 
-        /* TABELA E CARDS */
+        /* TABLES & CARDS */
         .desktop-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .desktop-table th { background: var(--primary); color: white; padding: 12px; text-align: left; }
         .desktop-table td { padding: 12px; border-bottom: 1px solid #eee; }
@@ -81,9 +76,7 @@
         .toggle-btn.presente { background: var(--success); }
         .toggle-btn.ausente { background: var(--danger); }
 
-        /* DIÁRIO */
         .plan-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .plan-box label { display: block; margin-top: 15px; font-weight: bold; color: var(--primary); }
         .plan-box textarea { width: 100%; border: 1px solid #ddd; background: #fafafa; border-radius: 8px; padding: 10px; resize: vertical; min-height: 100px; }
 
         /* MODAIS */
@@ -95,7 +88,7 @@
         .card-turma { background: white; border: 2px solid var(--primary); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; }
         .card-turma:hover { background: var(--primary); color: white; }
 
-        /* --- MOBILE --- */
+        /* MOBILE QUERY */
         @media (max-width: 768px) {
             .nav-tabs { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #ddd; z-index: 100; justify-content: space-around; padding-bottom: env(safe-area-inset-bottom); }
             .nav-item { border: none; padding: 10px; font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
@@ -111,8 +104,6 @@
             .modal-overlay { align-items: flex-end; }
             .modal-content { border-radius: 15px 15px 0 0; margin: 0; width: 100%; }
         }
-
-        /* PRINT */
         @media print {
             .app-header, .nav-tabs, .action-bar, .no-print, #view-login, #view-cadastro, #view-coord, .btn-group { display: none !important; }
             .main-content { overflow: visible; height: auto; }
@@ -135,7 +126,7 @@
 
     <div id="view-login" class="auth-container">
         <div class="card-auth">
-            <img src="logo.png" alt="Logo"> 
+            <img src="logo.png" alt="Logo">
             <h3 style="color:var(--primary); margin:0 0 20px 0;">Acesso Professor</h3>
             <input type="email" id="login-email" placeholder="E-mail">
             <input type="password" id="login-senha" placeholder="Senha">
@@ -200,7 +191,9 @@
             </div>
             <button onclick="window.fazerLogout()" class="btn-logout">Sair</button>
         </div>
+        
         <div class="main-content">
+            
             <div id="tab-freq" class="view-section">
                 <div class="action-bar">
                     <div class="date-control">
@@ -209,6 +202,7 @@
                     </div>
                     <div class="btn-group">
                         <button onclick="window.salvarChamada()" class="btn-action btn-save">Salvar</button>
+                        <button onclick="window.abrirRelatorioMensal()" class="btn-action btn-report">📊 Relatório</button>
                         <button onclick="window.abrirHistorico('freq')" class="btn-action btn-hist">Histórico</button>
                         <button onclick="window.imprimirTela('freq')" class="btn-action btn-print">Imprimir</button>
                     </div>
@@ -255,6 +249,19 @@
         </div>
     </div>
 
+    <div id="modal-relatorio" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="color:var(--primary); margin-top:0;">📊 Relatório Mensal</h3>
+            <div style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #eee;">
+                <label>Selecione o Mês:</label>
+                <input type="month" id="mes-relatorio" style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc;">
+                <button onclick="window.gerarRelatorioFaltas()" class="btn-action btn-save" style="width:100%; margin-top:10px;">Gerar Relatório</button>
+            </div>
+            <div id="resultado-relatorio" style="max-height:300px; overflow-y:auto;"></div>
+            <button onclick="document.getElementById('modal-relatorio').style.display='none'" class="btn-action btn-hist" style="width:100%; margin-top:10px;">Fechar</button>
+        </div>
+    </div>
+
     <div id="modal-historico" class="modal-overlay" onclick="if(event.target === this) window.fecharHistorico()">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -267,20 +274,26 @@
 
     <div id="modal-admin" class="modal-overlay">
         <div class="modal-content">
-            <h2 style="color:var(--primary); margin-top:0;">Secretaria</h2>
+            <h2 style="color:var(--primary); margin-top:0;">Secretaria (Gestão)</h2>
             
             <div style="border:1px solid #ddd; padding:15px; border-radius:8px; margin-bottom:20px; background:#f9f9f9;">
                 <h4 style="margin:0 0 10px 0;">Importar Alunos (Massa)</h4>
-                <p style="font-size:0.8rem; color:#666; margin-bottom:5px;">Formato: <strong>Nome do Aluno, Nome da Turma</strong></p>
-                <textarea id="lista-alunos-massa" style="width:100%; height:100px; margin-bottom:10px;" placeholder="Ex: João Silva, Infantil 1 A&#10;Maria, Berçário A"></textarea>
+                <p style="font-size:0.8rem; color:#666; margin-bottom:5px;">Formato: <strong>Nome, Turma</strong></p>
+                <textarea id="lista-alunos-massa" style="width:100%; height:100px; margin-bottom:10px;"></textarea>
                 <button onclick="window.importarAlunosMassa()" class="btn-action btn-save" style="width:100%;">Importar Alunos</button>
             </div>
-
+            
             <div style="border:1px solid #ddd; padding:15px; border-radius:8px; margin-bottom:20px; background:#f9f9f9;">
                 <h4 style="margin:0 0 10px 0;">Criar Contas (Professores)</h4>
                 <p style="font-size:0.8rem; color:#666; margin-bottom:5px;">Formato: <strong>Nome, Turma, Email, Senha</strong></p>
-                <textarea id="lista-profs-import" style="width:100%; height:80px; margin-bottom:10px;" placeholder="Prof Ana, Infantil 1 A, ana@email.com, 1234"></textarea>
-                <button onclick="window.processarImportacaoProfs()" class="btn-action btn-save" style="width:100%; background:var(--primary);">Criar Professores</button>
+                <textarea id="lista-profs-import" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
+                <button onclick="window.processarImportacaoProfs()" class="btn-action btn-save" style="width:100%;">Criar Professores</button>
+            </div>
+            
+            <div style="border:1px solid #e67e22; padding:15px; border-radius:8px; background:#fffaf0; margin-bottom:20px;">
+                <h4 style="color:#e67e22; margin:0 0 10px 0;">🛠️ Manutenção</h4>
+                <button onclick="window.removerDuplicados()" class="btn-action btn-fix" style="width:100%; margin-bottom:10px;">Remover Alunos Duplicados</button>
+                <button onclick="window.limparBancoAlunos()" class="btn-action btn-del" style="width:100%;">Excluir TODOS os Alunos</button>
             </div>
 
             <button onclick="document.getElementById('modal-admin').style.display='none'" class="btn-action btn-hist" style="width:100%;">Fechar Painel</button>
@@ -291,12 +304,10 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, setDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // CONFIGURAÇÃO FIREBASE
         const firebaseConfig = { apiKey: "AIzaSyBjtXXfchJQO4vxeI_Vqw1QhV_1CLwB6jc", authDomain: "escoladigital-79997.firebaseapp.com", projectId: "escoladigital-79997", storageBucket: "escoladigital-79997.appspot.com", messagingSenderId: "system", appId: "system" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // CONFIGURAÇÃO ESCOLA
         const ESTRUTURA_TURMAS = { 
             "Berçário": [ { nome: "Berçário", letras: ["A"] } ],
             "Infantil 1": [ { nome: "Infantil 1", letras: ["A", "B", "C", "D", "E", "F", "G"] } ],
@@ -320,7 +331,6 @@
         let perfilCoord = null;
         let listaAlunosCache = [];
 
-        // --- UTILS ---
         const loading = (s) => document.getElementById('loader').style.display = s ? 'flex' : 'none';
         const formatData = (d) => d.split('-').reverse().join('/');
         const getHoje = () => new Date().toISOString().split('T')[0];
@@ -329,13 +339,11 @@
             carregarOpcoesTurma();
             document.getElementById('data-freq').value = getHoje();
             document.getElementById('data-plan').value = getHoje();
-            
             ['login-email', 'login-senha'].forEach(id => {
                 document.getElementById(id).addEventListener('keypress', (e) => { if(e.key === 'Enter') window.fazerLogin(); });
             });
         };
 
-        // --- NAVEGAÇÃO APP ---
         window.showView = (viewName) => {
             ['view-login', 'view-cadastro', 'view-coord', 'app-painel'].forEach(id => document.getElementById(id).classList.add('hidden'));
             const el = document.getElementById(viewName === 'login' ? 'view-login' : viewName === 'cadastro' ? 'view-cadastro' : viewName === 'coord' ? 'view-coord' : 'app-painel');
@@ -350,7 +358,6 @@
             document.getElementById('nav-' + aba).classList.add('active');
         };
 
-        // --- AUTH ---
         window.fazerLogin = async () => {
             const email = document.getElementById('login-email').value.trim();
             const senha = document.getElementById('login-senha').value.trim();
@@ -377,7 +384,6 @@
 
         window.fazerLogout = () => { usuarioAtual = null; window.showView('login'); };
 
-        // --- COORDENAÇÃO ---
         function renderCoordPainel(acessos) {
             const container = document.getElementById('container-turmas'); container.innerHTML = "";
             const isGeral = acessos.includes("TODAS");
@@ -400,11 +406,9 @@
         }
         window.voltarParaCoord = () => { usuarioAtual = perfilCoord; window.showView('coord'); };
 
-        // --- TURMA ---
         async function entrarTurma(turma, nomeProf) {
             document.getElementById('display-turma-nome').innerText = nomeProf.split(' ')[0];
             document.getElementById('display-turma-badge').innerText = turma;
-            
             window.showView('app');
             window.mudarAba('freq');
             await carregarAlunos();
@@ -416,7 +420,6 @@
             const tbody = document.getElementById('tbody-alunos');
             const listaMob = document.getElementById('mobile-lista');
             tbody.innerHTML = ""; listaMob.innerHTML = "";
-            
             try {
                 const q = query(collection(db, "alunos"), where("turma", "==", usuarioAtual.turma));
                 const snap = await getDocs(q);
@@ -458,7 +461,6 @@
             }
         };
 
-        // --- FREQUÊNCIA ---
         window.carregarFrequencia = async () => {
             const dt = document.getElementById('data-freq').value;
             document.querySelectorAll('.toggle-btn').forEach(b => { b.className='toggle-btn presente'; b.innerText='Presente'; });
@@ -518,12 +520,63 @@
             } catch(e) { alert("Erro ao salvar."); } finally { loading(false); }
         };
 
-        // --- DIÁRIO ---
+        window.abrirRelatorioMensal = () => {
+            const hoje = new Date();
+            const mesStr = hoje.toISOString().slice(0, 7); 
+            document.getElementById('mes-relatorio').value = mesStr;
+            document.getElementById('resultado-relatorio').innerHTML = "";
+            document.getElementById('modal-relatorio').style.display = 'flex';
+        };
+
+        window.gerarRelatorioFaltas = async () => {
+            const mesAno = document.getElementById('mes-relatorio').value; 
+            if(!mesAno) return alert("Selecione o mês.");
+            const divRes = document.getElementById('resultado-relatorio');
+            divRes.innerHTML = "Calculando...";
+            loading(true);
+            try {
+                const start = mesAno + "-01";
+                const end = mesAno + "-31";
+                const q = query(
+                    collection(db, "frequencia"), 
+                    where("turma", "==", usuarioAtual.turma),
+                    where("data", ">=", start),
+                    where("data", "<=", end)
+                );
+                const snap = await getDocs(q);
+                let mapaFaltas = {};
+                listaAlunosCache.forEach(a => mapaFaltas[a.nome] = 0);
+                let diasLetivos = 0;
+                snap.forEach(docSnap => {
+                    diasLetivos++;
+                    const dados = docSnap.data();
+                    if(dados.detalhes) {
+                        dados.detalhes.forEach(d => {
+                            if(!d.presente) {
+                                if(mapaFaltas[d.nome] !== undefined) mapaFaltas[d.nome]++;
+                                else mapaFaltas[d.nome] = (mapaFaltas[d.nome] || 0) + 1;
+                            }
+                        });
+                    }
+                });
+                const listaFinal = Object.entries(mapaFaltas).sort((a, b) => b[1] - a[1]);
+                let html = `<p><strong>Dias Letivos no Mês:</strong> ${diasLetivos}</p>`;
+                html += `<table class="desktop-table" style="width:100%; font-size:0.9rem;">
+                            <thead style="background:#eee; color:#333;"><tr><th>Aluno</th><th style="text-align:center">Faltas</th></tr></thead>
+                            <tbody>`;
+                listaFinal.forEach(([nome, faltas]) => {
+                    const cor = faltas > 0 ? "color:#c0392b; font-weight:bold;" : "color:#27ae60;";
+                    html += `<tr><td>${nome}</td><td style="text-align:center; ${cor}">${faltas}</td></tr>`;
+                });
+                html += `</tbody></table>`;
+                divRes.innerHTML = html;
+            } catch(e) { console.error(e); divRes.innerHTML = "Erro ao gerar relatório."; } finally { loading(false); }
+        };
+
         window.carregarPlanejamento = async () => {
             const dt = document.getElementById('data-plan').value;
             document.querySelectorAll('.input-plan').forEach(i => { i.value=""; i.disabled=true; });
             document.getElementById('btn-unlock').style.display='none';
-
             try {
                 const s = await getDocs(query(collection(db,"planejamentos"), where("turma","==",usuarioAtual.turma), where("data","==",dt)));
                 if(!s.empty) {
@@ -567,7 +620,6 @@
             } else alert("Senha errada.");
         };
 
-        // --- GESTÃO CADASTRO E ADMIN ---
         window.validarAcessoCadastro = () => { if(prompt("Senha Admin:") === SENHAS.CADASTRO) window.showView('cadastro'); };
         window.abrirAreaAdmin = () => { if(prompt("Senha Secretaria:") === SENHAS.SECRETARIA) document.getElementById('modal-admin').style.display='flex'; };
         
@@ -601,7 +653,6 @@
             const email = document.getElementById('cad-email').value;
             const senha = document.getElementById('cad-senha').value;
             const tipo = document.getElementById('cad-tipo').value;
-            
             let turma = "", acessos = [];
             if(tipo === 'professor') {
                 turma = document.getElementById('cad-turma-unica').value;
@@ -616,7 +667,6 @@
                     if(!acessos.length) return alert("Selecione turmas.");
                 } else acessos = REGRAS_COORDENACAO[perf];
             }
-
             loading(true);
             try {
                 await addDoc(collection(db, "professores"), { nome, email, senha, turma, acessos });
@@ -624,21 +674,18 @@
             } catch(e) { alert("Erro."); } finally { loading(false); }
         };
 
-        // --- IMPORTAÇÃO DE ALUNOS (MASSA) ---
         window.importarAlunosMassa = async () => {
             const raw = document.getElementById('lista-alunos-massa').value;
             if(!raw.trim()) return alert("Cole a lista (Nome, Turma).");
-            
             loading(true);
             const linhas = raw.split('\n');
             let count = 0;
             const promises = [];
-
             for(const l of linhas) {
                 const parts = l.split(',');
                 if(parts.length >= 2) {
                     const nome = parts[0].trim();
-                    const turma = parts[1].trim(); // Pega a turma depois da vírgula
+                    const turma = parts[1].trim(); 
                     if(nome && turma) {
                         promises.push(addDoc(collection(db, "alunos"), { nome, turma }));
                         count++;
@@ -649,6 +696,47 @@
             loading(false);
             alert(`${count} alunos importados com sucesso!`);
             document.getElementById('lista-alunos-massa').value = "";
+        };
+
+        // --- MANUTENÇÃO ---
+        window.removerDuplicados = async () => {
+            if(!confirm("Isso irá verificar TODOS os alunos e apagar as duplicatas (mesmo nome e mesma turma). Deseja continuar?")) return;
+            loading(true);
+            try {
+                const q = query(collection(db, "alunos"));
+                const snap = await getDocs(q);
+                const seen = new Set();
+                const duplicates = [];
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    const key = `${data.nome.trim().toLowerCase()}|${data.turma}`;
+                    if (seen.has(key)) duplicates.push(doc.id);
+                    else seen.add(key);
+                });
+                if (duplicates.length === 0) {
+                    alert("Nenhuma duplicata encontrada.");
+                } else {
+                    const promises = duplicates.map(id => deleteDoc(doc(db, "alunos", id)));
+                    await Promise.all(promises);
+                    alert(`${duplicates.length} registros duplicados foram removidos!`);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao remover duplicados.");
+            } finally { loading(false); }
+        };
+
+        window.limparBancoAlunos = async () => {
+            if(!confirm("TEM CERTEZA? Isso apagará TODOS os alunos de TODAS as turmas.")) return;
+            if(prompt("Digite a senha de Secretaria:") !== SENHAS.SECRETARIA) return alert("Senha errada.");
+            loading(true);
+            try {
+                const q = query(collection(db, "alunos"));
+                const snap = await getDocs(q);
+                const promises = snap.docs.map(d => deleteDoc(doc(db, "alunos", d.id)));
+                await Promise.all(promises);
+                alert("Banco limpo!");
+            } catch(e) { alert("Erro."); } finally { loading(false); }
         };
 
         window.processarImportacaoProfs = async () => {
@@ -700,7 +788,6 @@
                 window.carregarAlunos();
             }
         };
-
     </script>
 </body>
 </html>
