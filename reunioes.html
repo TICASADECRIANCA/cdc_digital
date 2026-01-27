@@ -28,27 +28,26 @@
             body * { visibility: hidden; }
             #area-impressao, #area-impressao * { visibility: visible; }
             #area-impressao { position: absolute; left: 0; top: 0; width: 100%; }
-            @page { margin: 1cm; }
+            @page { margin: 1.5cm; }
         }
         .data-ativa { background-color: #00A8A8 !important; color: white !important; border-color: #00A8A8 !important; }
-        .fade-in { animation: fadeIn 0.5s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-800">
 
     <header class="bg-white text-brandAzul shadow-md sticky top-0 z-50 print:hidden border-b-4 border-brandVerde">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center relative">
-            <div id="logo-container" class="flex items-center gap-3 select-none">
-                <img src="https://drive.google.com/thumbnail?id=1rl8NUZkkDBhw-U5KjGBxUu2UwaPLNJVO&sz=w500" alt="Logo Casa de Criança" class="h-14 w-auto object-contain">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="https://drive.google.com/thumbnail?id=1rl8NUZkkDBhw-U5KjGBxUu2UwaPLNJVO&sz=w500" alt="Logo" class="h-14 w-auto object-contain">
             </div>
 
             <div class="flex items-center gap-2">
                 <button id="btn-login-prof" onclick="acessoProfessor()" class="text-xs md:text-sm bg-slate-100 hover:bg-slate-200 border border-slate-300 px-4 py-2 rounded-lg text-brandAzul font-bold transition flex items-center gap-2">
-                    <i class="fas fa-lock"></i> 
-                    <span class="hidden md:inline">Área Restrita</span>
+                    <i class="fas fa-lock"></i> <span>Área Restrita</span>
                 </button>
-                <button id="btn-sair-admin" onclick="sairAdmin()" class="hidden text-sm bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-white font-bold transition flex items-center gap-2">
+                <button id="btn-sair-admin" onclick="location.reload()" class="hidden text-sm bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-white font-bold transition">
                     <i class="fas fa-sign-out-alt"></i> Sair
                 </button>
             </div>
@@ -56,64 +55,57 @@
     </header>
 
     <main class="container mx-auto mt-8 p-4 mb-20 max-w-6xl print:hidden">
+        
         <section id="view-pais" class="block animate-fade-in">
             <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 text-center mb-8">
-                <div class="inline-block p-4 rounded-full bg-cyan-50 text-brandVerde mb-4">
-                    <i class="fas fa-calendar-alt text-4xl"></i>
-                </div>
-                <h2 class="text-2xl font-bold text-brandAzul mb-2">Agendamento de Reuniões</h2>
-                <p class="text-slate-500 mb-8">Selecione a turma para visualizar as datas disponíveis.</p>
+                <h2 class="text-2xl font-bold text-brandAzul mb-6">Agendamento de Reuniões</h2>
                 
                 <div class="relative max-w-md mx-auto mb-10">
-                    <select id="filtro-turma-pais" onchange="selecionarTurma()" class="w-full p-4 pl-12 text-lg border-2 border-slate-200 rounded-xl focus:border-brandVerde outline-none bg-white cursor-pointer hover:border-brandVerde/50 transition shadow-sm appearance-none">
-                        <option value="" disabled selected>Carregando turmas...</option>
+                    <select id="filtro-turma-pais" onchange="selecionarTurma()" class="w-full p-4 pl-12 text-lg border-2 border-slate-200 rounded-xl focus:border-brandVerde outline-none bg-white cursor-pointer appearance-none">
+                        <option value="" disabled selected>Escolha sua turma...</option>
                     </select>
                     <i class="fas fa-graduation-cap absolute left-4 top-5 text-brandVerde text-xl pointer-events-none"></i>
-                    <i class="fas fa-chevron-down absolute right-4 top-5 text-slate-400 pointer-events-none"></i>
                 </div>
 
                 <div id="area-datas" class="hidden text-left max-w-4xl mx-auto">
-                    <h3 class="text-sm font-bold text-brandAzul uppercase tracking-wider mb-4 border-b pb-2">1. Escolha uma Data</h3>
+                    <h3 class="text-sm font-bold text-brandAzul uppercase mb-4 border-b pb-2">1. Selecione a Data</h3>
                     <div id="lista-datas" class="flex flex-wrap gap-3 justify-center md:justify-start mb-10"></div>
                 </div>
 
-                <div id="area-horarios" class="hidden text-left max-w-4xl mx-auto border-t border-slate-100 pt-8 fade-in">
-                    <h3 class="text-sm font-bold text-brandAzul uppercase tracking-wider mb-4">2. Escolha um Horário</h3>
+                <div id="area-horarios" class="hidden text-left max-w-4xl mx-auto border-t border-slate-100 pt-8">
+                    <h3 class="text-sm font-bold text-brandAzul uppercase mb-4">2. Selecione o Horário</h3>
                     <div id="grid-horarios" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
                 </div>
 
-                <div id="msg-vazia" class="hidden text-center text-slate-500 py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300 mt-6">
-                    <i class="fas fa-calendar-times text-4xl text-slate-300 mb-3 block"></i>
-                    Nenhuma agenda aberta para esta turma no momento.
-                </div>
+                <div id="msg-vazia" class="hidden text-center text-slate-400 py-12">Nenhum horário disponível para esta turma.</div>
             </div>
         </section>
 
         <section id="view-admin" class="hidden space-y-8">
             <div class="bg-brandAzul text-white p-6 rounded-2xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-6">
-                <div class="flex-1 text-center md:text-left">
-                    <h3 class="font-bold text-xl flex items-center justify-center md:justify-start gap-2">
-                        <i class="fas fa-link text-brandVerde"></i> Painel de Gestão
-                    </h3>
-                    <p class="text-blue-100 text-sm mt-2 mb-4">Gerencie os horários e compartilhe o acesso.</p>
-                    <div class="flex flex-wrap justify-center md:justify-start gap-2">
-                        <button onclick="compartilharZap()" class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md transition flex items-center gap-2">
+                <div class="flex-1">
+                    <h3 class="font-bold text-xl mb-4">Gestão de Agendamentos</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="compartilharZap()" class="bg-green-500 hover:bg-green-600 px-5 py-2 rounded-lg text-sm font-bold shadow-md flex items-center gap-2">
                             <i class="fab fa-whatsapp"></i> WhatsApp
                         </button>
-                        <button onclick="copiarLink()" class="bg-white/10 hover:bg-white/20 text-white border border-white/30 px-5 py-2 rounded-lg text-sm font-bold transition">
+                        <button onclick="copiarLink()" class="bg-white/10 hover:bg-white/20 px-5 py-2 rounded-lg text-sm font-bold border border-white/30">
                             <i class="fas fa-copy"></i> Copiar Link
+                        </button>
+                        <button onclick="imprimirRelatorio()" class="bg-brandVerde hover:bg-brandVerde/80 px-5 py-2 rounded-lg text-sm font-bold shadow-md flex items-center gap-2">
+                            <i class="fas fa-print"></i> Imprimir Lista
                         </button>
                     </div>
                 </div>
-                <div class="bg-white p-3 rounded-xl shadow-inner"><div id="qrcode"></div></div>
+                <div class="bg-white p-3 rounded-xl"><div id="qrcode"></div></div>
             </div>
 
             <div class="bg-white border-t-4 border-brandAzul p-6 rounded-2xl shadow-md">
-                <h3 class="text-xl font-bold text-brandAzul mb-6"><i class="fas fa-plus-circle mr-2 text-brandVerde"></i>Criar Novos Horários</h3>
+                <h3 class="text-xl font-bold text-brandAzul mb-6">Gerar Novos Horários</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-1">TURMA</label>
-                        <select id="gen-turma" class="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-brandVerde outline-none bg-slate-50">
+                        <select id="gen-turma" class="w-full border p-2.5 rounded-lg outline-none bg-slate-50 focus:ring-2 focus:ring-brandVerde">
                             <option value="" disabled selected>Selecione...</option>
                             <optgroup label="Infantil 1"><option value="Infantil 1A">Infantil 1A</option><option value="Infantil 1B">Infantil 1B</option><option value="Infantil 1C">Infantil 1C</option><option value="Infantil 1D">Infantil 1D</option><option value="Infantil 1E">Infantil 1E</option><option value="Infantil 1F">Infantil 1F</option><option value="Infantil 1G">Infantil 1G</option></optgroup>
                             <optgroup label="Infantil 2"><option value="Infantil 2A">Infantil 2A</option><option value="Infantil 2B">Infantil 2B</option><option value="Infantil 2C">Infantil 2C</option><option value="Infantil 2D">Infantil 2D</option><option value="Infantil 2E">Infantil 2E</option><option value="Infantil 2F">Infantil 2F</option><option value="Infantil 2G">Infantil 2G</option><option value="Infantil 2I">Infantil 2I</option><option value="Infantil 2J">Infantil 2J</option></optgroup>
@@ -125,34 +117,34 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-1">DATA</label>
-                        <input type="date" id="gen-data" class="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-brandVerde outline-none bg-slate-50">
+                        <input type="date" id="gen-data" class="w-full border p-2.5 rounded-lg bg-slate-50">
                     </div>
-                    <div class="lg:col-span-2">
-                        <label class="block text-xs font-bold text-slate-500 mb-1 text-center">INTERVALO</label>
-                        <div class="flex items-center gap-2">
-                            <input type="time" id="gen-inicio" value="08:00" class="w-full border p-2.5 rounded-lg text-center bg-slate-50">
-                            <span class="text-slate-400">até</span>
-                            <input type="time" id="gen-fim" value="11:40" class="w-full border p-2.5 rounded-lg text-center bg-slate-50">
-                        </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">INÍCIO</label>
+                        <input type="time" id="gen-inicio" value="08:00" class="w-full border p-2.5 rounded-lg bg-slate-50">
                     </div>
-                    <div><button onclick="gerarAutomatico()" class="w-full bg-brandVerde hover:bg-brandVerde/90 text-white font-bold py-2.5 px-6 rounded-lg shadow-md transition">Gerar</button></div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">FIM</label>
+                        <input type="time" id="gen-fim" value="11:40" class="w-full border p-2.5 rounded-lg bg-slate-50">
+                    </div>
+                    <div><button onclick="gerarAutomatico()" class="w-full bg-brandVerde hover:bg-brandVerde/90 text-white font-bold py-2.5 rounded-lg shadow-md transition">Gerar</button></div>
                 </div>
             </div>
 
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-4 border-b flex justify-between items-center bg-slate-50">
-                    <h3 class="font-bold text-brandAzul text-sm">Controle de Agendamentos</h3>
-                    <button onclick="limparTudo()" class="text-red-500 text-[10px] font-bold hover:bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 uppercase">Zerar Tudo</button>
+                    <h3 class="font-bold text-brandAzul text-sm">Controle Geral</h3>
+                    <button onclick="limparTudo()" class="text-red-500 text-[10px] font-bold uppercase border border-red-200 px-2 py-1 rounded">Limpar Todos os Dados</button>
                 </div>
                 <div class="overflow-x-auto max-h-[500px]">
                     <table class="w-full text-sm text-left">
-                        <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] font-bold sticky top-0">
+                        <thead class="bg-slate-100 text-slate-600 sticky top-0">
                             <tr>
                                 <th class="p-4">Turma</th>
                                 <th class="p-4">Data/Hora</th>
                                 <th class="p-4">Status</th>
-                                <th class="p-4">Responsável / Aluno</th>
-                                <th class="p-4 text-center">Ação</th>
+                                <th class="p-4">Pai / Aluno</th>
+                                <th class="p-4">Ação</th>
                             </tr>
                         </thead>
                         <tbody id="tabela-admin" class="divide-y divide-slate-100"></tbody>
@@ -182,7 +174,7 @@
         const colRef = collection(db, "agendamentos");
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkCfZOtgj54l47hwmyzcvqP8muTX8dtojcOS4MQ3N1ZKqmbEhJKR7BdYPdajQVNLiVvQ/exec";
 
-        // RESTAURADA A LISTA COMPLETA DE E-MAILS
+        // TODOS OS E-MAILS DO SEU ARQUIVO ORIGINAL RESTAURADOS
         const EMAILS_PROFESSORES = {
             "Infantil 1A": "gabrielsimao@casadecrianca.com.br",
             "Infantil 1B": "email@escola.com",
@@ -223,7 +215,7 @@
         let isAdmin = false;
 
         window.acessoProfessor = async () => {
-            const { value: senha } = await Swal.fire({ title: 'Acesso', input: 'password', confirmButtonColor: '#00A8A8' });
+            const { value: senha } = await Swal.fire({ title: 'Acesso Administrativo', input: 'password', confirmButtonColor: '#00A8A8' });
             if (senha === '1992') {
                 isAdmin = true;
                 document.getElementById('view-pais').classList.add('hidden');
@@ -231,10 +223,9 @@
                 document.getElementById('btn-sair-admin').classList.remove('hidden');
                 document.getElementById('btn-login-prof').classList.add('hidden');
                 gerarQRCode();
+                renderAdminTable();
             }
         };
-
-        window.sairAdmin = () => location.reload();
 
         onSnapshot(query(colRef, orderBy("timestamp", "asc")), (snapshot) => {
             todosDados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -243,26 +234,25 @@
         });
 
         function atualizarDropdownTurmas() {
-            const turmasUnicas = [...new Set(todosDados.map(item => item.turma))].sort();
-            const select = document.getElementById('filtro-turma-pais');
-            select.innerHTML = '<option value="" disabled selected>Escolha sua turma...</option>' + 
-                             turmasUnicas.map(t => `<option value="${t}">${t}</option>`).join('');
+            const turmas = [...new Set(todosDados.map(i => i.turma))].sort();
+            const sel = document.getElementById('filtro-turma-pais');
+            sel.innerHTML = '<option value="" disabled selected>Escolha sua turma...</option>' + 
+                             turmas.map(t => `<option value="${t}">${t}</option>`).join('');
         }
 
         window.selecionarTurma = () => {
             const turma = document.getElementById('filtro-turma-pais').value;
-            const horarios = todosDados.filter(i => i.turma === turma && i.disponivel);
-            const areaDatas = document.getElementById('area-datas');
-            const msg = document.getElementById('msg-vazia');
-
-            if(horarios.length === 0) { areaDatas.classList.add('hidden'); msg.classList.remove('hidden'); return; }
-
-            msg.classList.add('hidden');
-            areaDatas.classList.remove('hidden');
-            const datasUnicas = [...new Set(horarios.map(i => i.data))].sort();
-            document.getElementById('lista-datas').innerHTML = datasUnicas.map(dataIso => `
-                <button onclick="carregarHorarios('${turma}', '${dataIso}')" class="px-6 py-4 bg-white border-2 border-slate-200 rounded-2xl font-bold text-brandAzul hover:border-brandVerde transition flex flex-col items-center">
-                    <span class="text-xl">${dataIso.split('-').reverse().slice(0,2).join('/')}</span>
+            const disponiveis = todosDados.filter(i => i.turma === turma && i.disponivel);
+            const area = document.getElementById('area-datas');
+            
+            if(disponiveis.length === 0) { area.classList.add('hidden'); document.getElementById('msg-vazia').classList.remove('hidden'); return; }
+            
+            document.getElementById('msg-vazia').classList.add('hidden');
+            area.classList.remove('hidden');
+            const datas = [...new Set(disponiveis.map(i => i.data))].sort();
+            document.getElementById('lista-datas').innerHTML = datas.map(d => `
+                <button onclick="carregarHorarios('${turma}', '${d}')" class="px-6 py-4 bg-white border-2 border-slate-200 rounded-2xl font-bold text-brandAzul hover:border-brandVerde transition">
+                    ${d.split('-').reverse().slice(0,2).join('/')}
                 </button>
             `).join('');
         };
@@ -273,22 +263,22 @@
                 .filter(i => i.turma === turma && i.data === data && i.disponivel)
                 .map(item => `
                     <button onclick="reservar('${item.id}', '${item.horario}', '${item.data}', '${item.turma}')" 
-                        class="bg-cyan-50 hover:bg-brandVerde hover:text-white text-brandVerde font-bold py-4 rounded-xl border border-cyan-100 transition shadow-sm">
+                        class="bg-cyan-50 hover:bg-brandVerde hover:text-white text-brandVerde font-bold py-4 rounded-xl border border-cyan-100 transition">
                         ${item.horario}
                     </button>`).join('');
         };
 
         window.reservar = async (id, hora, dataIso, turma) => {
             const { value: form } = await Swal.fire({
-                title: 'Agendar',
-                html: `<input id="swal-resp" class="swal2-input" placeholder="Responsável"><input id="swal-aluno" class="swal2-input" placeholder="Aluno"><input id="swal-email" class="swal2-input" placeholder="Seu E-mail">`,
+                title: 'Agendar Horário',
+                html: `<input id="swal-resp" class="swal2-input" placeholder="Seu Nome"><input id="swal-aluno" class="swal2-input" placeholder="Nome do Aluno"><input id="swal-email" class="swal2-input" placeholder="Seu E-mail">`,
                 preConfirm: () => ({ r: document.getElementById('swal-resp').value, a: document.getElementById('swal-aluno').value, e: document.getElementById('swal-email').value })
             });
 
             if (form && form.r && form.a && form.e) {
                 Swal.fire({ title: 'Salvando...', didOpen: () => Swal.showLoading() });
                 await updateDoc(doc(db, "agendamentos", id), { disponivel: false, pai: `${form.r} (Aluno: ${form.a})` });
-
+                
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: "POST", mode: "no-cors",
                     body: JSON.stringify({
@@ -297,8 +287,7 @@
                         emailResponsavel: form.e, data: dataIso.split('-').reverse().join('/'), horario: hora
                     })
                 });
-                Swal.fire('Sucesso!', 'Agendamento confirmado.', 'success');
-                selecionarTurma();
+                Swal.fire('Sucesso!', 'Seu horário foi reservado.', 'success');
             }
         };
 
@@ -315,24 +304,49 @@
                 atual.setMinutes(atual.getMinutes() + 20);
             }
             await batch.commit();
-            Swal.fire('Gerado!', 'Horários criados.', 'success');
+            Swal.fire('Gerado!', 'Horários criados com sucesso.', 'success');
         };
 
-        function renderAdminTable() {
+        window.renderAdminTable = () => {
             document.getElementById('tabela-admin').innerHTML = todosDados.map(item => `
                 <tr class="hover:bg-slate-50">
                     <td class="p-4 font-bold text-brandAzul">${item.turma}</td>
                     <td class="p-4">${item.data.split('-').reverse().join('/')} às ${item.horario}</td>
-                    <td class="p-4">${item.disponivel ? 'Livre' : 'Agendado'}</td>
+                    <td class="p-4"><span class="${item.disponivel ? 'text-green-600' : 'text-red-600'} font-bold">${item.disponivel ? 'Livre' : 'Ocupado'}</span></td>
                     <td class="p-4 text-xs">${item.pai || '—'}</td>
-                    <td class="p-4"><button onclick="deletar('${item.id}')" class="text-red-400"><i class="fas fa-trash"></i></button></td>
+                    <td class="p-4"><button onclick="deletar('${item.id}')" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button></td>
                 </tr>`).join('');
-        }
+        };
 
-        window.deletar = async (id) => { if (confirm('Excluir?')) await deleteDoc(doc(db, "agendamentos", id)); };
+        window.deletar = async (id) => { if(confirm('Excluir horário?')) await deleteDoc(doc(db, "agendamentos", id)); };
+
+        window.limparTudo = async () => {
+            const { value: confirm } = await Swal.fire({ title: 'Atenção!', text: "Digite 'DELETAR' para apagar tudo", input: 'text' });
+            if (confirm === 'DELETAR') {
+                const snap = await getDocs(colRef);
+                const batch = writeBatch(db);
+                snap.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                Swal.fire('Limpo!');
+            }
+        };
+
+        window.imprimirRelatorio = () => {
+            const area = document.getElementById('area-impressao');
+            let html = `<div style="padding:40px">
+                <h2 style="text-align:center; color:#003366">Lista de Agendamentos</h2>
+                <table style="width:100%; border-collapse:collapse; margin-top:20px">
+                    <thead style="border-bottom:2px solid #003366"><tr><th>Turma</th><th>Data</th><th>Hora</th><th>Responsável</th></tr></thead>
+                    <tbody>`;
+            todosDados.filter(i => !i.disponivel).forEach(item => {
+                html += `<tr style="border-bottom:1px solid #eee"><td style="padding:10px">${item.turma}</td><td>${item.data.split('-').reverse().join('/')}</td><td>${item.horario}</td><td>${item.pai}</td></tr>`;
+            });
+            html += '</tbody></table></div>';
+            area.innerHTML = html;
+            window.print();
+        };
 
         function gerarQRCode() { new QRCode(document.getElementById("qrcode"), { text: window.location.href.split('?')[0], width: 80, height: 80 }); }
-
         window.copiarLink = () => { navigator.clipboard.writeText(window.location.href.split('?')[0]); alert('Link copiado!'); };
         window.compartilharZap = () => { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(window.location.href.split('?')[0])}`, '_blank'); };
     </script>
