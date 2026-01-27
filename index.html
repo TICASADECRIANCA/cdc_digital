@@ -72,11 +72,12 @@
         .student-card.status-exaluno { border-left-color: #7f8c8d; background: #fdfdfd; }
         .student-info strong { display: block; font-size: 1rem; color: #333; }
         .student-info span { font-size: 0.8rem; color: #888; }
+        .texto-removido { color: #c0392b; font-size: 0.85em; font-style: italic; }
         
         .toggle-btn { padding: 8px 20px; border-radius: 20px; border: none; font-weight: bold; color: white; width: 110px; }
         .toggle-btn.presente { background: var(--success); }
         .toggle-btn.ausente { background: var(--danger); }
-        .toggle-btn.ex-btn { opacity: 0.7; cursor: default; } /* Botão visual para ex-aluno */
+        .toggle-btn.ex-btn { opacity: 0.7; cursor: default; }
 
         .plan-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .plan-box textarea { width: 100%; border: 1px solid #ddd; background: #fafafa; border-radius: 8px; padding: 10px; resize: vertical; min-height: 100px; }
@@ -114,7 +115,8 @@
             body > #print-area { display: block !important; }
             
             body.printing-report #modal-relatorio { display: block !important; }
-            body.printing-report #modal-relatorio .modal-content { width: 100%; }
+            body.printing-report #modal-relatorio .modal-content { width: 100%; padding:0; }
+            body.printing-report #resultado-relatorio { max-height: none !important; overflow: visible !important; }
         }
     </style>
 </head>
@@ -479,7 +481,7 @@
                 }
 
                 tr.innerHTML = `<td>${idx+1}</td>
-                                <td>${aluno.nome} ${isExAluno ? '<span style="color:red; font-size:0.8em;">(Ex-aluno)</span>':''}</td>
+                                <td>${aluno.nome} ${isExAluno ? '<span class="texto-removido">(Ex-Aluno)</span>':''}</td>
                                 <td style="text-align:center">${btnHtml}</td>
                                 <td class="no-print" style="text-align:center">${btnDel}</td>`;
                 tbody.appendChild(tr);
@@ -487,7 +489,7 @@
                 const card = document.createElement('div');
                 card.className = `student-card status-${statusClass} ${isExAluno ? 'status-exaluno' : ''}`;
                 card.innerHTML = `
-                    <div class="student-info"><strong>${idx+1}. ${aluno.nome}</strong><span>${isExAluno ? 'Aluno Removido' : usuarioAtual.turma}</span></div>
+                    <div class="student-info"><strong>${idx+1}. ${aluno.nome} ${isExAluno ? '<span class="texto-removido">(Ex-Aluno)</span>':''}</strong><span>${isExAluno ? 'Removido' : usuarioAtual.turma}</span></div>
                     ${isExAluno ? `<button class="toggle-btn ${statusClass} ex-btn">${statusText}</button>` : `<button class="toggle-btn ${statusClass}" onclick="window.togglePresenca(this, '${aluno.id}', true)">${statusText}</button>`}
                 `;
                 listaMob.appendChild(card);
@@ -554,9 +556,9 @@
 
             let totalValidos = 0;
             rows.forEach(tr => {
-                // Pega o nome limpando o sufixo (Removido) se houver
+                // Pega o nome limpando o sufixo (Ex-Aluno) se houver
                 const nomeRaw = tr.cells[1].innerText;
-                const nomeLimpo = nomeRaw.replace('(Removido)', '').trim();
+                const nomeLimpo = nomeRaw.replace('(Ex-Aluno)', '').trim();
                 
                 const btn = tr.querySelector('.toggle-btn');
                 if(btn) { 
@@ -618,21 +620,26 @@
                     const dados = docSnap.data();
                     if(dados.detalhes) {
                         dados.detalhes.forEach(d => {
-                            if(!d.presente) {
-                                if(mapaFaltas[d.nome] !== undefined) mapaFaltas[d.nome]++;
-                                else mapaFaltas[d.nome] = (mapaFaltas[d.nome] || 0) + 1;
-                            }
+                            if(mapaFaltas[d.nome] === undefined) mapaFaltas[d.nome] = 0; // Se aluno removido, adiciona
+                            if(!d.presente) mapaFaltas[d.nome]++;
                         });
                     }
                 });
+                
+                // Mapeia quem é ex-aluno para exibir no relatório
+                const nomesAtivos = listaAlunosCache.map(a => a.nome);
+
                 const listaFinal = Object.entries(mapaFaltas).sort((a, b) => b[1] - a[1]);
                 let html = `<div style="padding:10px;"><p><strong>Dias Letivos no Mês:</strong> ${diasLetivos}</p>`;
                 html += `<table class="desktop-table" style="width:100%; font-size:0.9rem; border:1px solid #ddd;">
                             <thead style="background:#eee; color:#333;"><tr><th>Aluno</th><th style="text-align:center">Faltas</th></tr></thead>
                             <tbody>`;
                 listaFinal.forEach(([nome, faltas]) => {
+                    const isEx = !nomesAtivos.includes(nome);
+                    const nomeExibicao = isEx ? `${nome} <span class="texto-removido">(Ex-Aluno)</span>` : nome;
+                    
                     const cor = faltas > 0 ? "color:#c0392b; font-weight:bold;" : "color:#27ae60;";
-                    html += `<tr><td>${nome}</td><td style="text-align:center; ${cor}">${faltas}</td></tr>`;
+                    html += `<tr><td>${nomeExibicao}</td><td style="text-align:center; ${cor}">${faltas}</td></tr>`;
                 });
                 html += `</tbody></table></div>`;
                 divRes.innerHTML = html;
@@ -851,7 +858,7 @@
         window.removerAluno = async (id) => {
             if(confirm("Remover aluno permanentemente?")) {
                 await deleteDoc(doc(db, "alunos", id));
-                window.entrarTurma(usuarioAtual.turma.replace(/ \(Coord\)/,''), usuarioAtual.nome);
+                window.carregarAlunosBase().then(() => window.carregarFrequencia());
             }
         };
     </script>
