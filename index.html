@@ -69,14 +69,14 @@
         .student-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-left: 5px solid transparent; }
         .student-card.status-presente { border-left-color: var(--success); }
         .student-card.status-ausente { border-left-color: var(--danger); opacity: 0.9; }
-        .student-card.status-exaluno { border-left-color: #7f8c8d; background: #f4f4f4; }
+        .student-card.status-exaluno { border-left-color: #7f8c8d; background: #fdfdfd; }
         .student-info strong { display: block; font-size: 1rem; color: #333; }
         .student-info span { font-size: 0.8rem; color: #888; }
         
         .toggle-btn { padding: 8px 20px; border-radius: 20px; border: none; font-weight: bold; color: white; width: 110px; }
         .toggle-btn.presente { background: var(--success); }
         .toggle-btn.ausente { background: var(--danger); }
-        .toggle-btn.exaluno { background: #95a5a6; cursor: default; }
+        .toggle-btn.ex-btn { opacity: 0.7; cursor: default; } /* Botão visual para ex-aluno */
 
         .plan-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .plan-box textarea { width: 100%; border: 1px solid #ddd; background: #fafafa; border-radius: 8px; padding: 10px; resize: vertical; min-height: 100px; }
@@ -110,11 +110,9 @@
             .app-header, .nav-tabs, .action-bar, .no-print, #view-login, #view-cadastro, #view-coord, .btn-group { display: none !important; }
             .modal-overlay { position: static; background: white; height: auto; display: block !important; }
             .modal-content { box-shadow: none; border: none; max-width: 100%; width: 100%; }
-            /* Esconde tudo, mostra só o que importa */
             body > * { display: none !important; }
             body > #print-area { display: block !important; }
             
-            /* Se estiver imprimindo relatório */
             body.printing-report #modal-relatorio { display: block !important; }
             body.printing-report #modal-relatorio .modal-content { width: 100%; }
         }
@@ -429,10 +427,7 @@
             document.getElementById('display-turma-badge').innerText = turma;
             window.showView('app');
             window.mudarAba('freq');
-            
-            // Carrega lista base de alunos ativos
             await carregarAlunosBase();
-            // Carrega frequencia (que agora vai combinar ativos + histórico)
             await carregarFrequencia();
             await carregarPlanejamento();
         }
@@ -448,55 +443,52 @@
             } catch(e) { console.log(e); } finally { loading(false); }
         }
 
-        // --- RENDERIZADOR DA LISTA ---
+        // --- RENDERIZADOR ---
         function renderizarTabelaAlunos(listaExibicao, faltosos = []) {
             const tbody = document.getElementById('tbody-alunos');
             const listaMob = document.getElementById('mobile-lista');
             tbody.innerHTML = ""; listaMob.innerHTML = "";
 
-            if(listaExibicao.length === 0) {
-                document.getElementById('empty-msg').style.display = 'block';
-            } else {
-                document.getElementById('empty-msg').style.display = 'none';
-            }
+            if(listaExibicao.length === 0) document.getElementById('empty-msg').style.display = 'block';
+            else document.getElementById('empty-msg').style.display = 'none';
 
             listaExibicao.forEach((aluno, idx) => {
                 const isExAluno = aluno.exAluno;
-                const foiFalta = faltosos.includes(aluno.nome);
                 
-                // Define classes
-                let statusClass = "presente";
-                let statusText = "Presente";
-                if(foiFalta) { statusClass = "ausente"; statusText = "Ausente"; }
-                if(isExAluno) { statusClass = "exaluno"; statusText = "Ex-Aluno"; }
+                // Determina status
+                let foiFalta = false;
+                if(isExAluno) {
+                    // Para ex-aluno, usamos o status guardado no histórico
+                    foiFalta = !aluno.statusHistorico; 
+                } else {
+                    foiFalta = faltosos.includes(aluno.nome);
+                }
+                
+                let statusClass = foiFalta ? "ausente" : "presente";
+                let statusText = foiFalta ? "Ausente" : "Presente";
 
                 const tr = document.createElement('tr');
-                // Botão de deletar apenas se for aluno ativo
                 const btnDel = (perfilCoord && !isExAluno) ? `<button onclick="window.removerAluno('${aluno.id}')" style="background:none; border:none; color:red;">🗑️</button>` : '';
                 
-                // Se for ex-aluno, botão fica desabilitado
-                const btnHtml = isExAluno 
-                    ? `<span style="color:#777; font-size:0.9rem;">(Histórico)</span>`
-                    : `<button class="toggle-btn ${statusClass}" onclick="window.togglePresenca(this, '${aluno.id}')">${statusText}</button>`;
+                // Se for ex-aluno, botão visual, senão botão funcional
+                let btnHtml;
+                if(isExAluno) {
+                    btnHtml = `<button class="toggle-btn ${statusClass} ex-btn">${statusText}</button>`;
+                } else {
+                    btnHtml = `<button class="toggle-btn ${statusClass}" onclick="window.togglePresenca(this, '${aluno.id}')">${statusText}</button>`;
+                }
 
                 tr.innerHTML = `<td>${idx+1}</td>
-                                <td>${aluno.nome} ${isExAluno ? '<small style="color:red">(Removido)</small>':''}</td>
+                                <td>${aluno.nome} ${isExAluno ? '<span style="color:red; font-size:0.8em;">(Ex-aluno)</span>':''}</td>
                                 <td style="text-align:center">${btnHtml}</td>
                                 <td class="no-print" style="text-align:center">${btnDel}</td>`;
                 tbody.appendChild(tr);
 
-                // MOBILE
                 const card = document.createElement('div');
-                card.className = `student-card status-${statusClass}`;
-                card.id = `card-${aluno.id || 'ex-'+idx}`;
-                
-                const btnMobile = isExAluno 
-                    ? `<small>Aluno Removido</small>`
-                    : `<button class="toggle-btn ${statusClass}" onclick="window.togglePresenca(this, '${aluno.id}', true)">${statusText}</button>`;
-
+                card.className = `student-card status-${statusClass} ${isExAluno ? 'status-exaluno' : ''}`;
                 card.innerHTML = `
-                    <div class="student-info"><strong>${idx+1}. ${aluno.nome}</strong><span>${usuarioAtual.turma}</span></div>
-                    ${btnMobile}
+                    <div class="student-info"><strong>${idx+1}. ${aluno.nome}</strong><span>${isExAluno ? 'Aluno Removido' : usuarioAtual.turma}</span></div>
+                    ${isExAluno ? `<button class="toggle-btn ${statusClass} ex-btn">${statusText}</button>` : `<button class="toggle-btn ${statusClass}" onclick="window.togglePresenca(this, '${aluno.id}', true)">${statusText}</button>`}
                 `;
                 listaMob.appendChild(card);
             });
@@ -510,11 +502,11 @@
             btn.innerText = novoStatus;
             if(isMobile) {
                 const card = document.getElementById(`card-${id}`);
-                card.className = `student-card status-${novaClasse}`;
+                if(card) card.className = `student-card status-${novaClasse}`;
             }
         };
 
-        // --- CARREGAR FREQUENCIA (COMBINADA) ---
+        // --- CARREGAR FREQUENCIA COM HISTORICO DE REMOVIDOS ---
         window.carregarFrequencia = async () => {
             const dt = document.getElementById('data-freq').value;
             if(dt > getHoje()) { alert("Data futura não permitida."); document.getElementById('data-freq').value = getHoje(); return; }
@@ -524,31 +516,30 @@
                 const q = query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma), where("data", "==", dt));
                 const snap = await getDocs(q);
                 
-                let listaFinal = [...listaAlunosCache]; // Começa com os ativos
+                let listaFinal = [...listaAlunosCache]; 
                 let faltosos = [];
 
                 if(!snap.empty) {
                     const dados = snap.docs[0].data();
-                    
-                    // Identifica faltosos
                     if(dados.detalhes) {
                         faltosos = dados.detalhes.filter(d => !d.presente).map(d => d.nome);
                         
-                        // Verifica se há alunos no histórico que não estão na lista ativa
+                        // Verifica alunos do histórico que sumiram da lista
                         dados.detalhes.forEach(hist => {
                             const existe = listaFinal.find(a => a.nome === hist.nome);
                             if(!existe) {
-                                // Adiciona como Ex-Aluno apenas para visualização
-                                listaFinal.push({ nome: hist.nome, id: null, exAluno: true });
+                                listaFinal.push({
+                                    nome: hist.nome,
+                                    id: null,
+                                    exAluno: true,
+                                    statusHistorico: hist.presente 
+                                });
                             }
                         });
                     }
                 }
                 
-                // Ordena lista combinada
                 listaFinal.sort((a,b) => a.nome.localeCompare(b.nome));
-                
-                // Renderiza
                 renderizarTabelaAlunos(listaFinal, faltosos);
 
             } catch(e){ console.error(e); } finally { loading(false); }
@@ -558,38 +549,30 @@
             loading(true);
             const dt = document.getElementById('data-freq').value;
             const detalhes = []; let presentes = 0;
-            
-            // Pega dados da tabela renderizada (que pode conter ex-alunos, mas só salvamos os que tem botão ativo ou estado)
             const rows = document.querySelectorAll('#tbody-alunos tr');
             if(!rows.length) { loading(false); return alert("Sem alunos."); }
 
-            let totalAlunosValidos = 0;
-
+            let totalValidos = 0;
             rows.forEach(tr => {
-                const nomeCell = tr.cells[1].innerText.replace('(Removido)', '').trim();
+                // Pega o nome limpando o sufixo (Removido) se houver
+                const nomeRaw = tr.cells[1].innerText;
+                const nomeLimpo = nomeRaw.replace('(Removido)', '').trim();
+                
                 const btn = tr.querySelector('.toggle-btn');
-                
-                // Se tem botão, é editável. Se não tem botão (ex-aluno), mantemos o histórico?
-                // Na verdade, ao salvar, sobrescrevemos. Se o aluno foi removido, ele não deve ser salvo na NOVA chamada, 
-                // a menos que queiramos "ressuscitar" ele.
-                // Logica padrão: Salvar apenas os alunos que estão ATIVOS e LISTADOS no momento, ou manter estado.
-                // Simplificação: Salvamos o estado atual da tela.
-                
-                if(btn) { // Apenas alunos editáveis (ativos)
-                    const isP = btn.classList.contains('presente');
+                if(btn) { 
+                    const isP = btn.innerText === "Presente"; // Verifica texto, pois classe pode variar
                     if(isP) presentes++;
-                    detalhes.push({ nome: nomeCell, presente: isP });
-                    totalAlunosValidos++;
+                    detalhes.push({ nome: nomeLimpo, presente: isP });
+                    totalValidos++;
                 }
             });
 
             try {
                 const idDoc = usuarioAtual.turma.replace(/\s/g,'') + "_" + dt;
                 await setDoc(doc(db, "frequencia", idDoc), {
-                    data: dt, turma: usuarioAtual.turma, detalhes, resumo: `${presentes} Presentes / ${totalAlunosValidos - presentes} Faltas`
+                    data: dt, turma: usuarioAtual.turma, detalhes, resumo: `${presentes} Presentes / ${totalValidos - presentes} Faltas`
                 });
                 alert("Salvo com sucesso!");
-                // Recarrega para confirmar visual
                 window.carregarFrequencia();
             } catch(e) { alert("Erro ao salvar."); } finally { loading(false); }
         };
@@ -602,11 +585,10 @@
             document.getElementById('modal-relatorio').style.display = 'flex';
         };
 
+        // --- CORREÇÃO IMPRESSÃO RELATÓRIO ---
         window.imprimirRelatorio = () => {
-            // Adiciona classe ao corpo para CSS de impressão filtrar
             document.body.classList.add('printing-report');
             window.print();
-            // Remove depois para não bugar impressões normais
             setTimeout(() => document.body.classList.remove('printing-report'), 1000);
         };
 
@@ -628,7 +610,6 @@
                 const snap = await getDocs(q);
                 let mapaFaltas = {};
                 
-                // Inicializa com alunos atuais
                 listaAlunosCache.forEach(a => mapaFaltas[a.nome] = 0);
                 
                 let diasLetivos = 0;
@@ -639,7 +620,7 @@
                         dados.detalhes.forEach(d => {
                             if(!d.presente) {
                                 if(mapaFaltas[d.nome] !== undefined) mapaFaltas[d.nome]++;
-                                else mapaFaltas[d.nome] = (mapaFaltas[d.nome] || 0) + 1; // Contabiliza ex-alunos
+                                else mapaFaltas[d.nome] = (mapaFaltas[d.nome] || 0) + 1;
                             }
                         });
                     }
@@ -870,7 +851,6 @@
         window.removerAluno = async (id) => {
             if(confirm("Remover aluno permanentemente?")) {
                 await deleteDoc(doc(db, "alunos", id));
-                // Recarrega tudo para atualizar lista base
                 window.entrarTurma(usuarioAtual.turma.replace(/ \(Coord\)/,''), usuarioAtual.nome);
             }
         };
