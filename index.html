@@ -69,12 +69,14 @@
         .student-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-left: 5px solid transparent; }
         .student-card.status-presente { border-left-color: var(--success); }
         .student-card.status-ausente { border-left-color: var(--danger); opacity: 0.9; }
+        .student-card.status-exaluno { border-left-color: #7f8c8d; background: #f4f4f4; }
         .student-info strong { display: block; font-size: 1rem; color: #333; }
         .student-info span { font-size: 0.8rem; color: #888; }
         
         .toggle-btn { padding: 8px 20px; border-radius: 20px; border: none; font-weight: bold; color: white; width: 110px; }
         .toggle-btn.presente { background: var(--success); }
         .toggle-btn.ausente { background: var(--danger); }
+        .toggle-btn.exaluno { background: #95a5a6; cursor: default; }
 
         .plan-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .plan-box textarea { width: 100%; border: 1px solid #ddd; background: #fafafa; border-radius: 8px; padding: 10px; resize: vertical; min-height: 100px; }
@@ -106,11 +108,15 @@
         }
         @media print {
             .app-header, .nav-tabs, .action-bar, .no-print, #view-login, #view-cadastro, #view-coord, .btn-group { display: none !important; }
-            .main-content { overflow: visible; height: auto; }
-            .desktop-table { display: table !important; width: 100%; border: 1px solid #000; }
-            .student-card { display: none; }
-            body { background: white; color: black; }
-            #print-area { display: block; }
+            .modal-overlay { position: static; background: white; height: auto; display: block !important; }
+            .modal-content { box-shadow: none; border: none; max-width: 100%; width: 100%; }
+            /* Esconde tudo, mostra só o que importa */
+            body > * { display: none !important; }
+            body > #print-area { display: block !important; }
+            
+            /* Se estiver imprimindo relatório */
+            body.printing-report #modal-relatorio { display: block !important; }
+            body.printing-report #modal-relatorio .modal-content { width: 100%; }
         }
     </style>
 </head>
@@ -162,9 +168,7 @@
                     <option value="LUDMILLA">Coord. Ludmilla</option>
                     <option value="ELIONEIDE">Coord. Elioneide</option>
                     <option value="SAVIA">Coord. Savia</option>
-                    
                     <option value="COORD_ESPORTES">Coord. de Esportes/Extras</option>
-                    
                     <option value="CUSTOM">Outro</option>
                 </select>
                 <div id="container-checkboxes" class="hidden" style="max-height:100px; overflow-y:auto; border:1px solid #ccc; padding:5px; font-size:0.85rem;"></div>
@@ -255,13 +259,15 @@
     <div id="modal-relatorio" class="modal-overlay">
         <div class="modal-content">
             <h3 style="color:var(--primary); margin-top:0;">📊 Relatório Mensal</h3>
-            <div style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #eee;">
+            <div class="no-print" style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #eee;">
                 <label>Selecione o Mês:</label>
                 <input type="month" id="mes-relatorio" style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc;">
                 <button onclick="window.gerarRelatorioFaltas()" class="btn-action btn-save" style="width:100%; margin-top:10px;">Gerar Relatório</button>
             </div>
-            <div id="resultado-relatorio" style="max-height:300px; overflow-y:auto;"></div>
-            <button onclick="document.getElementById('modal-relatorio').style.display='none'" class="btn-action btn-hist" style="width:100%; margin-top:10px;">Fechar</button>
+            <div id="resultado-relatorio" style="max-height:300px; overflow-y:auto; margin-bottom:10px;"></div>
+            
+            <button onclick="window.imprimirRelatorio()" class="btn-action btn-print no-print" style="width:100%; margin-bottom:10px;">🖨️ Imprimir este Relatório</button>
+            <button onclick="document.getElementById('modal-relatorio').style.display='none'" class="btn-action btn-hist no-print" style="width:100%;">Fechar</button>
         </div>
     </div>
 
@@ -311,7 +317,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- ATUALIZADO COM ESPORTES ---
         const ESTRUTURA_TURMAS = { 
             "Berçário": [ { nome: "Berçário", letras: ["A"] } ],
             "Infantil 1": [ { nome: "Infantil 1", letras: ["A", "B", "C", "D", "E", "F", "G"] } ],
@@ -320,8 +325,6 @@
             "Infantil 4": [ { nome: "Infantil 4", letras: ["A", "B", "C", "D", "E", "F", "I", "J"] } ], 
             "Infantil 5": [ { nome: "Infantil 5", letras: ["A", "B", "C", "D", "E", "F", "G", "I"] } ],
             "Ensino Fundamental": [ { nome: "1º Ano", letras: ["A", "B", "C", "D", "I"] } ],
-            
-            // ESPORTES E EXTRAS
             "Esportes e Extras": [
                 { nome: "Futsal", letras: ["A"] },
                 { nome: "Dança", letras: ["A"] },
@@ -337,14 +340,7 @@
             "LUDMILLA": ["Infantil 3 I", "Infantil 3 J", "Infantil 4 I", "Infantil 4 J", "Infantil 5 A", "Infantil 5 B", "Infantil 5 C", "Infantil 5 D", "Infantil 5 E", "Infantil 5 F", "Infantil 5 G", "Infantil 5 I", "1º Ano I"],
             "ELIONEIDE": ["Infantil 4 A", "Infantil 4 B", "Infantil 4 C", "Infantil 4 D", "Infantil 4 E", "Infantil 4 F"],
             "SAVIA": ["1º Ano A", "1º Ano B", "1º Ano C", "1º Ano D"],
-            
-            // COORDENAÇÃO DE ESPORTES
-            "COORD_ESPORTES": [
-                "Futsal A",
-                "Dança A",
-                "Ginástica Rítmica A",
-                "Judô A"
-            ]
+            "COORD_ESPORTES": ["Futsal A", "Dança A", "Ginástica Rítmica A", "Judô A"]
         };
 
         const SENHAS = { CADASTRO: "1992", SECRETARIA: "1992", EDICAO: "1992" };
@@ -433,42 +429,77 @@
             document.getElementById('display-turma-badge').innerText = turma;
             window.showView('app');
             window.mudarAba('freq');
-            await carregarAlunos();
+            
+            // Carrega lista base de alunos ativos
+            await carregarAlunosBase();
+            // Carrega frequencia (que agora vai combinar ativos + histórico)
+            await carregarFrequencia();
             await carregarPlanejamento();
         }
 
-        async function carregarAlunos() {
+        async function carregarAlunosBase() {
             loading(true);
-            const tbody = document.getElementById('tbody-alunos');
-            const listaMob = document.getElementById('mobile-lista');
-            tbody.innerHTML = ""; listaMob.innerHTML = "";
             try {
                 const q = query(collection(db, "alunos"), where("turma", "==", usuarioAtual.turma));
                 const snap = await getDocs(q);
                 listaAlunosCache = [];
                 snap.forEach(d => listaAlunosCache.push({id: d.id, ...d.data()}));
                 listaAlunosCache.sort((a,b) => a.nome.localeCompare(b.nome));
-
-                if(listaAlunosCache.length === 0) document.getElementById('empty-msg').style.display = 'block';
-                else document.getElementById('empty-msg').style.display = 'none';
-
-                listaAlunosCache.forEach((aluno, idx) => {
-                    const tr = document.createElement('tr');
-                    const btnDel = perfilCoord ? `<button onclick="window.removerAluno('${aluno.id}')" style="background:none; border:none; color:red;">🗑️</button>` : '';
-                    tr.innerHTML = `<td>${idx+1}</td><td>${aluno.nome}</td><td style="text-align:center"><button class="toggle-btn presente" onclick="window.togglePresenca(this, '${aluno.id}')">Presente</button></td><td class="no-print" style="text-align:center">${btnDel}</td>`;
-                    tbody.appendChild(tr);
-
-                    const card = document.createElement('div');
-                    card.className = 'student-card status-presente';
-                    card.id = `card-${aluno.id}`;
-                    card.innerHTML = `
-                        <div class="student-info"><strong>${idx+1}. ${aluno.nome}</strong><span>${usuarioAtual.turma}</span></div>
-                        <button class="toggle-btn presente" onclick="window.togglePresenca(this, '${aluno.id}', true)">Presente</button>
-                    `;
-                    listaMob.appendChild(card);
-                });
-                await window.carregarFrequencia(); 
             } catch(e) { console.log(e); } finally { loading(false); }
+        }
+
+        // --- RENDERIZADOR DA LISTA ---
+        function renderizarTabelaAlunos(listaExibicao, faltosos = []) {
+            const tbody = document.getElementById('tbody-alunos');
+            const listaMob = document.getElementById('mobile-lista');
+            tbody.innerHTML = ""; listaMob.innerHTML = "";
+
+            if(listaExibicao.length === 0) {
+                document.getElementById('empty-msg').style.display = 'block';
+            } else {
+                document.getElementById('empty-msg').style.display = 'none';
+            }
+
+            listaExibicao.forEach((aluno, idx) => {
+                const isExAluno = aluno.exAluno;
+                const foiFalta = faltosos.includes(aluno.nome);
+                
+                // Define classes
+                let statusClass = "presente";
+                let statusText = "Presente";
+                if(foiFalta) { statusClass = "ausente"; statusText = "Ausente"; }
+                if(isExAluno) { statusClass = "exaluno"; statusText = "Ex-Aluno"; }
+
+                const tr = document.createElement('tr');
+                // Botão de deletar apenas se for aluno ativo
+                const btnDel = (perfilCoord && !isExAluno) ? `<button onclick="window.removerAluno('${aluno.id}')" style="background:none; border:none; color:red;">🗑️</button>` : '';
+                
+                // Se for ex-aluno, botão fica desabilitado
+                const btnHtml = isExAluno 
+                    ? `<span style="color:#777; font-size:0.9rem;">(Histórico)</span>`
+                    : `<button class="toggle-btn ${statusClass}" onclick="window.togglePresenca(this, '${aluno.id}')">${statusText}</button>`;
+
+                tr.innerHTML = `<td>${idx+1}</td>
+                                <td>${aluno.nome} ${isExAluno ? '<small style="color:red">(Removido)</small>':''}</td>
+                                <td style="text-align:center">${btnHtml}</td>
+                                <td class="no-print" style="text-align:center">${btnDel}</td>`;
+                tbody.appendChild(tr);
+
+                // MOBILE
+                const card = document.createElement('div');
+                card.className = `student-card status-${statusClass}`;
+                card.id = `card-${aluno.id || 'ex-'+idx}`;
+                
+                const btnMobile = isExAluno 
+                    ? `<small>Aluno Removido</small>`
+                    : `<button class="toggle-btn ${statusClass}" onclick="window.togglePresenca(this, '${aluno.id}', true)">${statusText}</button>`;
+
+                card.innerHTML = `
+                    <div class="student-info"><strong>${idx+1}. ${aluno.nome}</strong><span>${usuarioAtual.turma}</span></div>
+                    ${btnMobile}
+                `;
+                listaMob.appendChild(card);
+            });
         }
 
         window.togglePresenca = (btn, id, isMobile) => {
@@ -483,62 +514,83 @@
             }
         };
 
+        // --- CARREGAR FREQUENCIA (COMBINADA) ---
         window.carregarFrequencia = async () => {
             const dt = document.getElementById('data-freq').value;
-            document.querySelectorAll('.toggle-btn').forEach(b => { b.className='toggle-btn presente'; b.innerText='Presente'; });
-            document.querySelectorAll('.student-card').forEach(c => c.className='student-card status-presente');
-
             if(dt > getHoje()) { alert("Data futura não permitida."); document.getElementById('data-freq').value = getHoje(); return; }
+            loading(true);
 
             try {
                 const q = query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma), where("data", "==", dt));
                 const snap = await getDocs(q);
+                
+                let listaFinal = [...listaAlunosCache]; // Começa com os ativos
+                let faltosos = [];
+
                 if(!snap.empty) {
                     const dados = snap.docs[0].data();
-                    const faltosos = dados.detalhes.filter(d => !d.presente).map(d => d.nome);
                     
-                    const rows = document.querySelectorAll('#tbody-alunos tr');
-                    rows.forEach(tr => {
-                        const nome = tr.cells[1].innerText;
-                        if(faltosos.includes(nome)) {
-                            const btn = tr.querySelector('.toggle-btn');
-                            btn.className = 'toggle-btn ausente'; btn.innerText = "Ausente";
-                        }
-                    });
-
-                    const cards = document.querySelectorAll('.student-card');
-                    cards.forEach(c => {
-                        const nome = c.querySelector('strong').innerText.split('. ')[1]; 
-                        if(faltosos.includes(nome)) {
-                            c.className = 'student-card status-ausente';
-                            const btn = c.querySelector('button');
-                            btn.className = 'toggle-btn ausente'; btn.innerText = "Ausente";
-                        }
-                    });
+                    // Identifica faltosos
+                    if(dados.detalhes) {
+                        faltosos = dados.detalhes.filter(d => !d.presente).map(d => d.nome);
+                        
+                        // Verifica se há alunos no histórico que não estão na lista ativa
+                        dados.detalhes.forEach(hist => {
+                            const existe = listaFinal.find(a => a.nome === hist.nome);
+                            if(!existe) {
+                                // Adiciona como Ex-Aluno apenas para visualização
+                                listaFinal.push({ nome: hist.nome, id: null, exAluno: true });
+                            }
+                        });
+                    }
                 }
-            } catch(e){}
+                
+                // Ordena lista combinada
+                listaFinal.sort((a,b) => a.nome.localeCompare(b.nome));
+                
+                // Renderiza
+                renderizarTabelaAlunos(listaFinal, faltosos);
+
+            } catch(e){ console.error(e); } finally { loading(false); }
         };
 
         window.salvarChamada = async () => {
             loading(true);
             const dt = document.getElementById('data-freq').value;
             const detalhes = []; let presentes = 0;
+            
+            // Pega dados da tabela renderizada (que pode conter ex-alunos, mas só salvamos os que tem botão ativo ou estado)
             const rows = document.querySelectorAll('#tbody-alunos tr');
             if(!rows.length) { loading(false); return alert("Sem alunos."); }
 
+            let totalAlunosValidos = 0;
+
             rows.forEach(tr => {
-                const nome = tr.cells[1].innerText;
-                const isP = tr.querySelector('.toggle-btn').classList.contains('presente');
-                if(isP) presentes++;
-                detalhes.push({ nome, presente: isP });
+                const nomeCell = tr.cells[1].innerText.replace('(Removido)', '').trim();
+                const btn = tr.querySelector('.toggle-btn');
+                
+                // Se tem botão, é editável. Se não tem botão (ex-aluno), mantemos o histórico?
+                // Na verdade, ao salvar, sobrescrevemos. Se o aluno foi removido, ele não deve ser salvo na NOVA chamada, 
+                // a menos que queiramos "ressuscitar" ele.
+                // Logica padrão: Salvar apenas os alunos que estão ATIVOS e LISTADOS no momento, ou manter estado.
+                // Simplificação: Salvamos o estado atual da tela.
+                
+                if(btn) { // Apenas alunos editáveis (ativos)
+                    const isP = btn.classList.contains('presente');
+                    if(isP) presentes++;
+                    detalhes.push({ nome: nomeCell, presente: isP });
+                    totalAlunosValidos++;
+                }
             });
 
             try {
                 const idDoc = usuarioAtual.turma.replace(/\s/g,'') + "_" + dt;
                 await setDoc(doc(db, "frequencia", idDoc), {
-                    data: dt, turma: usuarioAtual.turma, detalhes, resumo: `${presentes} Presentes / ${rows.length - presentes} Faltas`
+                    data: dt, turma: usuarioAtual.turma, detalhes, resumo: `${presentes} Presentes / ${totalAlunosValidos - presentes} Faltas`
                 });
                 alert("Salvo com sucesso!");
+                // Recarrega para confirmar visual
+                window.carregarFrequencia();
             } catch(e) { alert("Erro ao salvar."); } finally { loading(false); }
         };
 
@@ -548,6 +600,14 @@
             document.getElementById('mes-relatorio').value = mesStr;
             document.getElementById('resultado-relatorio').innerHTML = "";
             document.getElementById('modal-relatorio').style.display = 'flex';
+        };
+
+        window.imprimirRelatorio = () => {
+            // Adiciona classe ao corpo para CSS de impressão filtrar
+            document.body.classList.add('printing-report');
+            window.print();
+            // Remove depois para não bugar impressões normais
+            setTimeout(() => document.body.classList.remove('printing-report'), 1000);
         };
 
         window.gerarRelatorioFaltas = async () => {
@@ -567,7 +627,10 @@
                 );
                 const snap = await getDocs(q);
                 let mapaFaltas = {};
+                
+                // Inicializa com alunos atuais
                 listaAlunosCache.forEach(a => mapaFaltas[a.nome] = 0);
+                
                 let diasLetivos = 0;
                 snap.forEach(docSnap => {
                     diasLetivos++;
@@ -576,21 +639,21 @@
                         dados.detalhes.forEach(d => {
                             if(!d.presente) {
                                 if(mapaFaltas[d.nome] !== undefined) mapaFaltas[d.nome]++;
-                                else mapaFaltas[d.nome] = (mapaFaltas[d.nome] || 0) + 1;
+                                else mapaFaltas[d.nome] = (mapaFaltas[d.nome] || 0) + 1; // Contabiliza ex-alunos
                             }
                         });
                     }
                 });
                 const listaFinal = Object.entries(mapaFaltas).sort((a, b) => b[1] - a[1]);
-                let html = `<p><strong>Dias Letivos no Mês:</strong> ${diasLetivos}</p>`;
-                html += `<table class="desktop-table" style="width:100%; font-size:0.9rem;">
+                let html = `<div style="padding:10px;"><p><strong>Dias Letivos no Mês:</strong> ${diasLetivos}</p>`;
+                html += `<table class="desktop-table" style="width:100%; font-size:0.9rem; border:1px solid #ddd;">
                             <thead style="background:#eee; color:#333;"><tr><th>Aluno</th><th style="text-align:center">Faltas</th></tr></thead>
                             <tbody>`;
                 listaFinal.forEach(([nome, faltas]) => {
                     const cor = faltas > 0 ? "color:#c0392b; font-weight:bold;" : "color:#27ae60;";
                     html += `<tr><td>${nome}</td><td style="text-align:center; ${cor}">${faltas}</td></tr>`;
                 });
-                html += `</tbody></table>`;
+                html += `</tbody></table></div>`;
                 divRes.innerHTML = html;
             } catch(e) { console.error(e); divRes.innerHTML = "Erro ao gerar relatório."; } finally { loading(false); }
         };
@@ -720,7 +783,6 @@
             document.getElementById('lista-alunos-massa').value = "";
         };
 
-        // --- MANUTENÇÃO ---
         window.removerDuplicados = async () => {
             if(!confirm("Isso irá verificar TODOS os alunos e apagar as duplicatas (mesmo nome e mesma turma). Deseja continuar?")) return;
             loading(true);
@@ -799,6 +861,7 @@
         window.fecharHistorico = () => document.getElementById('modal-historico').style.display = 'none';
 
         window.imprimirTela = (tipo) => {
+            document.body.classList.remove('printing-report');
             document.getElementById('p-turma').innerText = usuarioAtual.turma;
             document.getElementById('p-data').innerText = formatData(document.getElementById(tipo==='freq'?'data-freq':'data-plan').value);
             window.print();
@@ -807,7 +870,8 @@
         window.removerAluno = async (id) => {
             if(confirm("Remover aluno permanentemente?")) {
                 await deleteDoc(doc(db, "alunos", id));
-                window.carregarAlunos();
+                // Recarrega tudo para atualizar lista base
+                window.entrarTurma(usuarioAtual.turma.replace(/ \(Coord\)/,''), usuarioAtual.nome);
             }
         };
     </script>
