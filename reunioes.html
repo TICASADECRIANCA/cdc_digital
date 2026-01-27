@@ -17,9 +17,6 @@
             #area-impressao { position: absolute; left: 0; top: 0; width: 100%; }
             @page { margin: 2cm; }
         }
-        .click-anim { animation: pulse 0.2s; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
-        
         .data-ativa { background-color: #2563eb !important; color: white !important; border-color: #2563eb !important; }
         .fade-in { animation: fadeIn 0.5s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -29,8 +26,8 @@
 
     <header class="bg-blue-900 text-white shadow-lg sticky top-0 z-50 print:hidden">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center relative">
-            <div id="logo-secret" class="flex items-center gap-3 cursor-pointer select-none transition" onclick="tentarAcessoAdmin()">
-                <i class="fas fa-shapes text-2xl text-yellow-400"></i>
+            <div id="logo-container" class="flex items-center gap-3 select-none">
+                <img src="https://drive.google.com/thumbnail?id=1rl8NUZkkDBhw-U5KjGBxUu2UwaPLNJVO&sz=w500" alt="Logo Casa de Criança" class="h-12 w-auto object-contain">
                 <h1 class="text-xl font-bold">Casa de Criança</h1>
             </div>
 
@@ -83,12 +80,10 @@
         </section>
 
         <section id="view-admin" class="hidden space-y-8">
-            
             <div class="bg-teal-50 border border-teal-200 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="flex-1">
                     <h3 class="font-bold text-teal-900 text-lg flex items-center gap-2"><i class="fas fa-share-alt"></i> Link para os Pais</h3>
                     <p class="text-teal-700 text-sm mt-1 mb-4">Compartilhe o link de agendamento via:</p>
-                    
                     <div class="flex gap-2">
                         <button onclick="compartilharZap()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
                             <i class="fab fa-whatsapp text-lg"></i> WhatsApp
@@ -109,7 +104,6 @@
 
             <div class="bg-white border-l-4 border-blue-600 p-6 rounded-2xl shadow-md">
                 <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="fas fa-magic text-blue-600 mr-2"></i> Criar Agenda</h3>
-                
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                     <div class="lg:col-span-1">
                         <label class="block text-xs font-bold text-slate-500 mb-1">TURMA</label>
@@ -123,7 +117,7 @@
                             <optgroup label="1 Ano"><option value="1 Ano A">1 Ano A</option><option value="1 Ano B">1 Ano B</option><option value="1 Ano C">1 Ano C</option><option value="1 Ano D">1 Ano D</option><option value="1 Ano I">1 Ano I</option></optgroup>
                         </select>
                     </div>
-                    <div class="lg:col-span-1">
+                    <div>
                         <label class="block text-xs font-bold text-slate-500 mb-1">DATA</label>
                         <input type="date" id="gen-data" class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
@@ -135,7 +129,7 @@
                             <input type="time" id="gen-fim" value="11:00" class="w-full border p-2 rounded text-center">
                         </div>
                     </div>
-                    <div class="lg:col-span-1">
+                    <div>
                         <label class="block text-xs font-bold text-slate-500 mb-1">DURAÇÃO (MIN)</label>
                         <input type="number" id="gen-duracao" value="20" class="w-full border p-2 rounded text-center font-bold text-blue-900">
                     </div>
@@ -198,7 +192,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, query, orderBy, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDBWADP0CJMbIg5dlU_F4U-LSUbZ_KGngo",
             authDomain: "agendacdc-7c58a.firebaseapp.com",
@@ -212,10 +205,8 @@
         const db = getFirestore(app);
         const colRef = collection(db, "agendamentos");
 
-        // URL DO GOOGLE SCRIPT
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkCfZOtgj54l47hwmyzcvqP8muTX8dtojcOS4MQ3N1ZKqmbEhJKR7BdYPdajQVNLiVvQ/exec";
-        
-        // CONFIGURAÇÃO DOS E-MAILS
+
         const EMAILS_PROFESSORES = {
             "Infantil 1A": "gabrielsimao@casadecrianca.com.br",
             "Infantil 1B": "email@escola.com",
@@ -271,18 +262,7 @@
         let isAdmin = false;
         let horariosTurmaSelecionada = [];
 
-        // ADMIN LOGIN
-        let logoClicks = 0;
-        
-        window.acessoProfessor = () => logarAdmin(); // Função ligada ao botão novo
-
-        window.tentarAcessoAdmin = async () => {
-            logoClicks++;
-            const logo = document.getElementById('logo-secret');
-            logo.classList.add('click-anim');
-            setTimeout(() => logo.classList.remove('click-anim'), 200);
-            if(logoClicks >= 5) { logoClicks = 0; await logarAdmin(); }
-        };
+        window.acessoProfessor = () => logarAdmin();
 
         async function logarAdmin() {
             const { value: senha } = await Swal.fire({
@@ -300,7 +280,7 @@
             document.getElementById('view-pais').classList.add('hidden');
             document.getElementById('view-admin').classList.remove('hidden');
             document.getElementById('btn-sair-admin').classList.remove('hidden');
-            document.getElementById('btn-login-prof').classList.add('hidden'); // Esconde o botão de login
+            document.getElementById('btn-login-prof').classList.add('hidden');
             renderAdminTable();
             gerarQRCode();
             
@@ -313,11 +293,8 @@
             isAdmin = false;
             document.getElementById('view-admin').classList.add('hidden');
             document.getElementById('btn-sair-admin').classList.add('hidden');
-            document.getElementById('btn-login-prof').classList.remove('hidden'); // Mostra o botão de login de volta
+            document.getElementById('btn-login-prof').classList.remove('hidden');
             document.getElementById('view-pais').classList.remove('hidden');
-            const url = new URL(window.location);
-            url.searchParams.delete('modo');
-            window.history.pushState({}, '', url);
         };
 
         window.onload = () => {
@@ -325,9 +302,8 @@
             gerarQRCode();
         };
 
-        // QR CODE E COMPARTILHAMENTO
         function gerarQRCode() {
-            const urlLimpa = window.location.href.split('?')[0]; 
+            const urlLimpa = window.location.href.split('?')[0];
             const divQR = document.getElementById("qrcode");
             divQR.innerHTML = "";
             new QRCode(divQR, { text: urlLimpa, width: 100, height: 100, colorDark : "#115e59", colorLight : "#ffffff" });
@@ -340,38 +316,19 @@
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
         };
 
-        window.compartilharTelegram = () => {
-            const url = window.location.href.split('?')[0];
-            const texto = `Olá! Segue o link para o agendamento da reunião escolar:`;
-            window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(texto)}`, '_blank');
-        };
-        
-        window.copiarLink = () => {
-            const url = window.location.href.split('?')[0];
-            navigator.clipboard.writeText(url).then(() => {
-                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Link copiado!', showConfirmButton: false, timer: 1500 });
-            });
-        };
-
-        // DATABASE LISTENER
         const q = query(colRef, orderBy("timestamp", "asc"));
         onSnapshot(q, (snapshot) => {
             todosDados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             atualizarDropdownTurmas();
             if(isAdmin) renderAdminTable();
-            const turmaAtual = document.getElementById('filtro-turma-pais').value;
-            if(turmaAtual) selecionarTurma();
         });
 
-        // VIEW PAIS
         function atualizarDropdownTurmas() {
             const turmasUnicas = [...new Set(todosDados.map(item => item.turma))].sort();
             const select = document.getElementById('filtro-turma-pais');
-            const valorSalvo = select.value;
             let html = '<option value="" disabled selected>Clique para selecionar a turma...</option>';
             turmasUnicas.forEach(t => html += `<option value="${t}">${t}</option>`);
             select.innerHTML = html;
-            if(turmasUnicas.includes(valorSalvo)) select.value = valorSalvo;
         }
 
         window.selecionarTurma = () => {
@@ -392,7 +349,6 @@
 
             msg.classList.add('hidden');
             areaDatas.classList.remove('hidden');
-
             const datasUnicas = [...new Set(horariosTurmaSelecionada.map(i => i.data))].sort();
             listaDatas.innerHTML = "";
             datasUnicas.forEach(dataIso => {
@@ -406,7 +362,7 @@
         };
 
         window.carregarHorariosDaData = (dataIso, btnElement) => {
-            document.querySelectorAll('#lista-datas button').forEach(b => b.className = b.className.replace('data-ativa', ''));
+            document.querySelectorAll('#lista-datas button').forEach(b => b.classList.remove('data-ativa'));
             btnElement.classList.add('data-ativa');
 
             const grid = document.getElementById('grid-horarios');
@@ -423,116 +379,80 @@
             });
         };
 
-        // ============================================
-        //  RESERVA FINAL (COM EMAIL PAI + SEM ARQUIVO ICS)
-        // ============================================
         window.reservarComEmail = async (id, hora, dataIso, turma) => {
             const dataBr = dataIso.split('-').reverse().join('/');
-            
             const { value: formValues } = await Swal.fire({
                 title: 'Confirmar Agendamento',
                 html: `
-                    <div class="mb-4 text-sm text-slate-500">
-                        Agendando para <b>${dataBr}</b> às <b>${hora}</b>
-                    </div>
+                    <div class="mb-4 text-sm text-slate-500">Agendando para <b>${dataBr}</b> às <b>${hora}</b></div>
                     <div class="text-left space-y-3">
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1 ml-1">Nome do Responsável</label>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Responsável</label>
                             <input id="swal-responsavel" class="w-full p-2 border rounded" placeholder="Nome Completo">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1 ml-1">Nome do Aluno(a)</label>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Aluno(a)</label>
                             <input id="swal-aluno" class="w-full p-2 border rounded" placeholder="Nome do Aluno">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1 ml-1">E-mail para Confirmação</label>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">E-mail para Confirmação</label>
                             <input id="swal-email" type="email" class="w-full p-2 border rounded" placeholder="exemplo@gmail.com">
                         </div>
                     </div>
                 `,
-                focusConfirm: false,
-                showCancelButton: true,
-                confirmButtonColor: '#2563eb',
-                confirmButtonText: 'Confirmar',
                 preConfirm: () => {
                     const r = document.getElementById('swal-responsavel').value;
                     const a = document.getElementById('swal-aluno').value;
                     const e = document.getElementById('swal-email').value;
                     if (!r || !a || !e) Swal.showValidationMessage('Preencha todos os campos!');
-                    if (!e.includes('@')) Swal.showValidationMessage('E-mail inválido!');
                     return { r, a, e };
                 }
             });
 
             if (formValues) {
-                Swal.fire({ 
-                    title: 'Processando...', 
-                    html: 'Salvando e enviando e-mail de confirmação.', 
-                    didOpen: () => Swal.showLoading(),
-                    allowOutsideClick: false
-                });
-
+                Swal.fire({ title: 'Processando...', didOpen: () => Swal.showLoading() });
                 try {
-                    // 1. Salva no Firebase
                     await updateDoc(doc(db, "agendamentos", id), { 
                         disponivel: false, 
                         pai: `${formValues.r} (Aluno: ${formValues.a})` 
                     });
-
-                    // 2. Prepara envio para Google Sheets + Email
-                    const emailProfessora = EMAILS_PROFESSORES[turma] || EMAILS_PROFESSORES["PADRAO"];
-
+                    
                     const dadosParaEnvio = {
                         nomeResponsavel: formValues.r,
                         nomeAluno: formValues.a,
                         turma: turma,
                         nomeProfessor: "Professora da " + turma, 
-                        emailProfessor: emailProfessora,
-                        emailResponsavel: formValues.e, // <--- CAMPO DO EMAIL DO PAI
+                        emailProfessor: EMAILS_PROFESSORES[turma] || EMAILS_PROFESSORES["PADRAO"],
+                        emailResponsavel: formValues.e,
                         data: dataBr,
                         horario: hora
                     };
 
-                    // Envia para o Google Script
                     await fetch(GOOGLE_SCRIPT_URL, {
                         method: "POST",
                         mode: "no-cors", 
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(dadosParaEnvio)
                     });
-                    
-                    // Sucesso na tela (Sem baixar ICS)
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Confirmado!',
-                        text: `Agendamento realizado! Um e-mail foi enviado para ${formValues.e} e para a escola.`,
-                        confirmButtonColor: '#2563eb'
-                    });
 
-                    // Limpa a tela
-                    document.getElementById('area-horarios').classList.add('hidden');
-                    document.getElementById('area-datas').classList.add('hidden');
-                    document.getElementById('filtro-turma-pais').value = "";
-
+                    Swal.fire({ icon: 'success', title: 'Confirmado!', text: `Agendamento realizado para ${formValues.e}` });
+                    selecionarTurma(); 
                 } catch(e) { 
-                    console.error(e);
-                    Swal.fire('Erro', 'Este horário já foi ocupado ou houve um erro de conexão.', 'error'); 
+                    Swal.fire('Erro', 'Houve um problema ao salvar seu agendamento.', 'error');
                 }
             }
         };
 
-        // ADMIN FUNÇÕES
         window.gerarAutomatico = async () => {
             const t = document.getElementById('gen-turma').value;
             const d = document.getElementById('gen-data').value;
             const inicio = document.getElementById('gen-inicio').value;
             const fim = document.getElementById('gen-fim').value;
             const duracao = parseInt(document.getElementById('gen-duracao').value);
-
+            
             if (!t || !d || !inicio || !fim) return Swal.fire('Erro', 'Preencha todos os campos!', 'error');
-
+            
             Swal.fire({ title: 'Gerando...', didOpen: () => Swal.showLoading() });
-
             let atual = new Date(`2000-01-01T${inicio}`);
             let limite = new Date(`2000-01-01T${fim}`);
             const batch = writeBatch(db);
@@ -541,90 +461,54 @@
             while (atual < limite) {
                 const h = atual.toTimeString().substring(0, 5);
                 const ref = doc(collection(db, "agendamentos"));
-                
-                // COMPLETADO A PARTIR DAQUI (O código anterior estava cortado)
                 batch.set(ref, {
-                    turma: t,
-                    data: d,
-                    horario: h,
-                    disponivel: true,
-                    pai: "",
+                    turma: t, data: d, horario: h, disponivel: true, pai: "",
                     timestamp: new Date(`${d}T${h}`).getTime()
                 });
                 atual.setMinutes(atual.getMinutes() + duracao);
                 count++;
             }
-            
             await batch.commit();
             Swal.fire('Sucesso', `${count} horários gerados!`, 'success');
         };
 
-        // FUNÇÃO ADICIONADA: Renderiza a tabela de status (Faltava no seu código)
         function renderAdminTable() {
             const tbody = document.getElementById('tabela-admin');
             if(!tbody) return;
             tbody.innerHTML = '';
-            
-            // Ordena por data e horário
             const sorted = [...todosDados].sort((a,b) => a.timestamp - b.timestamp);
-
             sorted.forEach(item => {
                 const statusHtml = item.disponivel 
                     ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">Livre</span>' 
                     : '<span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-[10px] font-bold">Agendado</span>';
                 
-                const dataFormatada = item.data.split('-').reverse().join('/');
-
-                const row = `
-                    <tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0">
-                        <td class="p-3 font-bold text-slate-700 text-xs">${item.turma}</td>
-                        <td class="p-3 text-xs">
-                            <div class="font-bold">${dataFormatada}</div>
-                            <div class="text-slate-400">${item.horario}</div>
-                        </td>
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 border-b border-slate-50">
+                        <td class="p-3 font-bold text-xs">${item.turma}</td>
+                        <td class="p-3 text-xs"><b>${item.data.split('-').reverse().join('/')}</b><br>${item.horario}</td>
                         <td class="p-3">${statusHtml}</td>
-                        <td class="p-3 text-xs text-slate-500 max-w-[150px] truncate" title="${item.pai || ''}">
-                            ${item.pai || '-'}
-                        </td>
+                        <td class="p-3 text-xs truncate max-w-[150px]">${item.pai || '-'}</td>
                         <td class="p-3 text-center">
-                            <button onclick="deletarAgendamento('${item.id}')" class="text-red-400 hover:text-red-600 transition p-1">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <button onclick="deletarAgendamento('${item.id}')" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
-                tbody.innerHTML += row;
             });
         }
 
         window.deletarAgendamento = async (id) => {
-            const result = await Swal.fire({
-                title: 'Tem certeza?',
-                text: "Isso apagará este horário permanentemente.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                confirmButtonText: 'Sim, apagar'
-            });
-
+            const result = await Swal.fire({ title: 'Apagar horário?', icon: 'warning', showCancelButton: true });
             if (result.isConfirmed) {
                 await deleteDoc(doc(db, "agendamentos", id));
-                Swal.fire('Deletado!', 'O horário foi removido.', 'success');
             }
         };
 
         window.limparTudo = async () => {
             const { value: confirmacao } = await Swal.fire({
-                title: 'PERIGO!',
-                text: "Digite 'DELETAR' para apagar TODOS os agendamentos de todas as turmas.",
-                input: 'text',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33'
+                title: 'PERIGO!', text: "Digite 'DELETAR' para apagar TUDO.",
+                input: 'text', showCancelButton: true
             });
-
             if (confirmacao === 'DELETAR') {
-                Swal.fire({ title: 'Apagando...', didOpen: () => Swal.showLoading() });
                 const querySnapshot = await getDocs(collection(db, "agendamentos"));
                 const batch = writeBatch(db);
                 querySnapshot.forEach((doc) => batch.delete(doc.ref));
@@ -635,55 +519,25 @@
 
         window.imprimirSelecionado = () => {
             const turma = document.getElementById('select-impressao').value;
-            if(!turma) return Swal.fire('Atenção', 'Selecione uma turma para imprimir.', 'warning');
+            if(!turma) return Swal.fire('Atenção', 'Selecione uma turma.', 'warning');
             imprimirRelatorio(turma);
         };
 
         window.imprimirRelatorio = (turmaFiltro) => {
             const area = document.getElementById('area-impressao');
-            const dadosPrint = turmaFiltro 
-                ? todosDados.filter(i => i.turma === turmaFiltro) 
-                : todosDados;
-
-            if(dadosPrint.length === 0) return Swal.fire('Vazio', 'Não há dados para imprimir.', 'info');
-
-            // Ordenar
-            dadosPrint.sort((a,b) => {
-                if(a.turma !== b.turma) return a.turma.localeCompare(b.turma);
-                return a.timestamp - b.timestamp;
-            });
-
-            let html = `
-                <div class="text-center mb-8 border-b pb-4">
-                    <h1 class="text-2xl font-bold text-blue-900">Relatório de Agendamentos</h1>
-                    <p class="text-slate-500">${turmaFiltro ? 'Turma: ' + turmaFiltro : 'Todas as Turmas'}</p>
-                    <p class="text-xs text-slate-400 mt-2">Gerado em: ${new Date().toLocaleString()}</p>
-                </div>
-                <table class="w-full text-sm text-left border-collapse">
-                    <thead>
-                        <tr class="border-b-2 border-slate-800">
-                            <th class="py-2">Turma</th>
-                            <th class="py-2">Data</th>
-                            <th class="py-2">Hora</th>
-                            <th class="py-2">Responsável / Aluno</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
+            const dadosPrint = turmaFiltro ? todosDados.filter(i => i.turma === turmaFiltro) : todosDados;
+            if(dadosPrint.length === 0) return Swal.fire('Vazio', 'Não há dados.', 'info');
+            
+            dadosPrint.sort((a,b) => a.timestamp - b.timestamp);
+            let html = `<h1 class="text-center text-2xl font-bold mb-4">Relatório - ${turmaFiltro || 'Todas'}</h1>
+                        <table class="w-full text-left border-collapse">
+                            <thead><tr class="border-b-2 border-black"><th>Turma</th><th>Data</th><th>Hora</th><th>Responsável</th></tr></thead>
+                            <tbody>`;
             dadosPrint.forEach(item => {
-                if(!item.disponivel) { // Só imprime os agendados
-                    html += `
-                        <tr class="border-b border-slate-200">
-                            <td class="py-3 font-bold">${item.turma}</td>
-                            <td class="py-3">${item.data.split('-').reverse().join('/')}</td>
-                            <td class="py-3">${item.horario}</td>
-                            <td class="py-3">${item.pai}</td>
-                        </tr>
-                    `;
+                if(!item.disponivel) {
+                    html += `<tr class="border-b"><td>${item.turma}</td><td>${item.data.split('-').reverse().join('/')}</td><td>${item.horario}</td><td>${item.pai}</td></tr>`;
                 }
             });
-
             html += `</tbody></table>`;
             area.innerHTML = html;
             window.print();
@@ -692,6 +546,3 @@
     </script>
 </body>
 </html>
-
-
-
