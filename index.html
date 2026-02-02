@@ -865,157 +865,164 @@
         };
         window.fecharHistorico = () => document.getElementById('modal-historico').style.display = 'none';
 
- window.imprimirTela = async (tipo) => {
-    console.log("Iniciando função de impressão...", tipo);
+window.imprimirTela = async (tipo) => {
+    // DEBUG: Confirma se o botão funcionou
+    // Se não aparecer este alerta, o problema é no HTML do botão, não aqui.
+    // alert("Iniciando impressão... Tipo: " + tipo); 
 
-    // 1. Validação de Segurança
-    if (!usuarioAtual || !usuarioAtual.turma) {
-        alert("Erro: Nenhuma turma identificada. Faça login novamente.");
-        return;
-    }
+    if (!usuarioAtual || !usuarioAtual.turma) return alert("Erro: Turma não carregada.");
 
-    // 2. Abre a janela DE IMEDIATO (para não ser bloqueada)
-    const win = window.open('', '_blank', 'width=900,height=700');
-    if (!win) {
-        alert("O navegador bloqueou o pop-up. Permita pop-ups para este site.");
-        return;
-    }
-
-    // Mensagem de status enquanto carrega
-    win.document.write(`
-        <div style="font-family:sans-serif; text-align:center; padding-top:50px;">
-            <h3>Carregando...</h3>
-            <p>Buscando dados da turma ${usuarioAtual.turma}...</p>
-        </div>
-    `);
+    loading(true); // Mostra que está carregando
 
     try {
         let conteudoHTML = "";
+        let tituloDoc = "";
         
-        // ==========================================================
-        // OPÇÃO 1: IMPRIMIR LISTA DE FREQUÊNCIA
-        // ==========================================================
+        // ===============================================
+        // LÓGICA DA FREQUÊNCIA
+        // ===============================================
         if (tipo === 'freq') {
-            const dataInput = document.getElementById('data-freq').value || new Date().toISOString().split('T')[0];
-            let listaFinal = [];
-            let tituloStatus = "Assinatura / Presença";
+            const dataInput = document.getElementById('data-freq').value;
+            if(!dataInput) return alert("Selecione uma data para imprimir.");
 
-            // TENTA BUSCAR NO FIREBASE (Histórico)
+            tituloDoc = `Frequência - ${usuarioAtual.turma}`;
+            
+            let listaParaImprimir = [];
+            let statusOrigem = "";
+
+            // 1. TENTATIVA: Buscar no Banco de Dados
             try {
-                // Verifica se as funções do Firebase estão acessíveis globalmente
-                if (typeof query !== 'undefined' && typeof collection !== 'undefined' && typeof db !== 'undefined') {
+                // Verifica se o Firebase está ativo
+                if(typeof db !== 'undefined' && typeof query !== 'undefined') {
                     const q = query(collection(db, "frequencia"), 
                                   where("turma", "==", usuarioAtual.turma), 
                                   where("data", "==", dataInput));
                     const snap = await getDocs(q);
-                    
+
                     if (!snap.empty) {
-                        const dados = snap.docs[0].data();
-                        listaFinal = dados.detalhes || [];
-                        tituloStatus = "Situação (Salva no Banco)";
+                        listaParaImprimir = snap.docs[0].data().detalhes;
+                        statusOrigem = "(Registro Salvo)";
                     }
                 }
-            } catch (errFirebase) {
-                console.warn("Erro ao buscar no Firebase (usando cache local):", errFirebase);
-                // Não trava o código, apenas segue para usar o cache local
+            } catch (erroBanco) {
+                console.warn("Erro ao buscar no banco (usando local):", erroBanco);
             }
 
-            // SE NÃO ACHOU NO BANCO (ou deu erro), USA A LISTA LOCAL (CACHE)
-            if (listaFinal.length === 0) {
-                if (typeof listaAlunosCache !== 'undefined' && listaAlunosCache.length > 0) {
-                    // Mapeia a lista local para o formato de impressão
-                    listaFinal = listaAlunosCache.map(a => ({ nome: a.nome, presente: null }));
-                } else {
-                    // Última tentativa: buscar alunos agora
-                    if(typeof window.carregarAlunosBase === 'function') await window.carregarAlunosBase();
-                    listaFinal = (window.listaAlunosCache || []).map(a => ({ nome: a.nome, presente: null }));
+            // 2. FALLBACK: Se não achou no banco ou deu erro, usa a lista da tela
+            if (!listaParaImprimir || listaParaImprimir.length === 0) {
+                statusOrigem = "(Folha em Branco)";
+                // Se a lista de cache estiver vazia, tenta recarregar
+                if (!listaAlunosCache || listaAlunosCache.length === 0) {
+                     if(typeof window.carregarAlunosBase === 'function') await window.carregarAlunosBase();
                 }
+                
+                // Pega o que tiver
+                const listaBase = listaAlunosCache || [];
+                listaParaImprimir = listaBase.map(a => ({ nome: a.nome, presente: null }));
             }
 
-            // ORDENAÇÃO ALFABÉTICA
-            listaFinal.sort((a, b) => a.nome.localeCompare(b.nome));
+            // Ordena
+            listaParaImprimir.sort((a,b) => a.nome.localeCompare(b.nome));
 
-            // GERA AS LINHAS DA TABELA
-            const linhas = listaFinal.map((a, i) => {
-                let situacao = "__________";
-                if (a.presente === true) situacao = "<b>PRESENTE</b>";
-                else if (a.presente === false) situacao = "<b style='color:red'>FALTA</b>";
+            // Gera HTML da Tabela
+            const linhas = listaParaImprimir.map((a, i) => {
+                let st = "__________";
+                if (a.presente === true) st = "<b>PRESENTE</b>";
+                else if (a.presente === false) st = "<b style='color:red'>FALTA</b>";
                 
-                return `
-                    <tr>
-                        <td style="text-align:center">${i + 1}</td>
-                        <td>${a.nome}</td>
-                        <td style="text-align:center">${situacao}</td>
-                    </tr>
-                `;
+                return `<tr>
+                    <td style='text-align:center'>${i+1}</td>
+                    <td>${a.nome}</td>
+                    <td style='text-align:center'>${st}</td>
+                </tr>`;
             }).join('');
 
-            // MONTA O HTML DA FREQUÊNCIA
             conteudoHTML = `
-                <h2 style="text-align:center">Lista de Frequência</h2>
-                <p style="text-align:center">Turma: <strong>${usuarioAtual.turma}</strong> | Data: <strong>${dataInput.split('-').reverse().join('/')}</strong></p>
-                <table style="width:100%; border-collapse:collapse; margin-top:15px; border:1px solid #000;">
-                    <thead style="background:#eee;">
+                <h2 style="text-align:center; margin-bottom:5px">Controle de Frequência</h2>
+                <p style="text-align:center; margin-top:0">
+                    Turma: <b>${usuarioAtual.turma}</b> | Data: <b>${formatData(dataInput)}</b> <br>
+                    <small>${statusOrigem}</small>
+                </p>
+                <table style="width:100%; border-collapse:collapse; font-size:12px; border:1px solid #000;">
+                    <thead style="background:#eee">
                         <tr>
-                            <th style="border:1px solid #999; padding:5px; width:50px;">Nº</th>
-                            <th style="border:1px solid #999; padding:5px;">Nome do Aluno</th>
-                            <th style="border:1px solid #999; padding:5px; width:150px;">${tituloStatus}</th>
+                            <th style="border:1px solid #999; padding:5px; width:50px">Nº</th>
+                            <th style="border:1px solid #999; padding:5px">Nome</th>
+                            <th style="border:1px solid #999; padding:5px; width:150px; text-align:center">Assinatura / Status</th>
                         </tr>
                     </thead>
-                    <tbody>${linhas || '<tr><td colspan="3" style="text-align:center; padding:20px">Nenhum aluno encontrado.</td></tr>'}</tbody>
+                    <tbody>${linhas}</tbody>
                 </table>
-                <br><br>
-                <div style="text-align:center; margin-top:50px; border-top:1px solid #000; width:50%; margin-left:auto; margin-right:auto;">Assinatura do Professor</div>
+                <br><br><br>
+                <div style="border-top:1px solid #000; width:50%; margin:0 auto; text-align:center">Professor(a)</div>
             `;
-
         } 
-        // ==========================================================
-        // OPÇÃO 2: IMPRIMIR DIÁRIO (PLANEJAMENTO)
-        // ==========================================================
+        // ===============================================
+        // LÓGICA DO DIÁRIO (Manteve o que funcionava)
+        // ===============================================
         else {
-            const dataPlan = document.getElementById('data-plan').value;
-            const titulo = document.getElementById('plan-disciplina').value || "";
-            const texto = document.getElementById('plan-metodologia').value || "";
+            tituloDoc = "Diário de Classe";
+            const dt = document.getElementById('data-plan').value;
+            const tit = document.getElementById('plan-disciplina').value || "";
+            const txt = document.getElementById('plan-metodologia').value || "";
             
             conteudoHTML = `
                 <h2 style="text-align:center">Diário de Classe</h2>
-                <p style="text-align:center">Turma: <strong>${usuarioAtual.turma}</strong> | Data: <strong>${dataPlan.split('-').reverse().join('/')}</strong></p>
-                <hr>
-                <h3>${titulo}</h3>
-                <div style="white-space: pre-wrap; text-align:justify; font-size:14px; line-height:1.5;">${texto}</div>
+                <p style="text-align:center">Turma: <b>${usuarioAtual.turma}</b> | Data: <b>${formatData(dt)}</b></p>
+                <hr><h3>${tit}</h3>
+                <div style="text-align:justify; line-height:1.5">${txt}</div>
             `;
         }
 
-        // 3. INSERE O CONTEÚDO FINAL E IMPRIME
-        win.document.open();
-        win.document.write(`
+        // ===============================================
+        // PROCESSO DE IMPRESSÃO (Técnica Iframe)
+        // ===============================================
+        // Remove iframe anterior se existir
+        let oldFrame = document.getElementById('print-iframe');
+        if(oldFrame) oldFrame.remove();
+
+        // Cria um iframe invisível para imprimir
+        let iframe = document.createElement('iframe');
+        iframe.id = 'print-iframe';
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+
+        // Escreve o conteúdo
+        let doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
             <html>
-            <head>
-                <title>Impressão - CASA+</title>
-                <style>
-                    body { font-family: Arial, sans-serif; padding: 20px; font-size: 12px; }
-                    h2, h3 { margin: 10px 0; }
-                    table, th, td { border: 1px solid #ccc; border-collapse: collapse; }
-                    th, td { padding: 8px; text-align: left; }
-                    @media print { 
-                        .no-print { display: none; } 
-                        @page { margin: 1cm; }
-                    }
-                </style>
-            </head>
-            <body>
-                ${conteudoHTML}
-                <script>
-                    setTimeout(() => { window.print(); }, 500);
-                <\/script>
-            </body>
+                <head>
+                    <title>${tituloDoc}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        table, th, td { border: 1px solid #ccc; border-collapse: collapse; }
+                        th, td { padding: 5px; }
+                        @media print { @page { margin: 1cm; } }
+                    </style>
+                </head>
+                <body>${conteudoHTML}</body>
             </html>
         `);
-        win.document.close();
+        doc.close();
 
-    } catch (erroFatal) {
-        console.error("Erro fatal na impressão:", erroFatal);
-        win.document.body.innerHTML = `<h3 style='color:red'>Erro ao gerar documento: ${erroFatal.message}</h3>`;
+        // Aguarda carregar e manda imprimir
+        setTimeout(() => {
+            loading(false);
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            // iframe.remove(); // Opcional: remover depois
+        }, 500);
+
+    } catch (e) {
+        loading(false);
+        console.error(e);
+        alert("Erro fatal ao imprimir: " + e.message);
     }
 };
 
@@ -1028,6 +1035,7 @@
     </script>
 </body>
 </html>
+
 
 
 
