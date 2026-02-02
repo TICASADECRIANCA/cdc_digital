@@ -211,7 +211,7 @@
                         <button onclick="window.salvarChamada()" class="btn-action btn-save">Salvar</button>
                         <button onclick="window.abrirRelatorioMensal()" class="btn-action btn-report">📊 Relatório</button>
                         <button onclick="window.abrirHistorico('freq')" class="btn-action btn-hist">Histórico</button>
-                        <button onclick="window.imprimirTela('freq')" class="btn-action btn-print">Imprimir</button>
+                        <button onclick="('freq')" class="btn-action btn-print">Imprimir</button>
                     </div>
                 </div>
 
@@ -596,7 +596,7 @@
 
         window.gerarRelatorioFaltas = async () => {
     const mesAno = document.getElementById('mes-relatorio').value;
-    if(!mesAno) return alert("Selecione o mês.");
+    if (!mesAno) return alert("Selecione o mês.");
     
     const divRes = document.getElementById('resultado-relatorio');
     divRes.innerHTML = "Calculando...";
@@ -606,8 +606,7 @@
         const start = mesAno + "-01";
         const end = mesAno + "-31";
         
-        // CORREÇÃO: Removemos o filtro de data da query (causa do erro de índice).
-        // Filtramos apenas a TURMA no banco de dados.
+        // CORREÇÃO: Buscamos apenas pela TURMA para evitar erro de índice
         const q = query(
             collection(db, "frequencia"), 
             where("turma", "==", usuarioAtual.turma)
@@ -616,28 +615,30 @@
         const snap = await getDocs(q);
         
         let mapaFaltas = {};
-        // Inicializa contagem com os alunos atuais
+        // Inicia contagem
+        if (listaAlunosCache.length === 0) await carregarAlunosBase();
         listaAlunosCache.forEach(a => mapaFaltas[a.nome] = 0);
+        
         let diasLetivos = 0;
         
         snap.forEach(docSnap => {
             const dados = docSnap.data();
             
-            // CORREÇÃO: O filtro de data é feito aqui no JavaScript (Client-side)
+            // CORREÇÃO: Filtramos a data aqui no Javascript
             if (dados.data >= start && dados.data <= end) {
                 diasLetivos++;
-                if(dados.detalhes) {
+                if (dados.detalhes) {
                     dados.detalhes.forEach(d => {
-                        if(mapaFaltas[d.nome] === undefined) mapaFaltas[d.nome] = 0;
-                        if(!d.presente) mapaFaltas[d.nome]++;
+                        if (mapaFaltas[d.nome] === undefined) mapaFaltas[d.nome] = 0;
+                        if (!d.presente) mapaFaltas[d.nome]++;
                     });
                 }
             }
         });
         
-        // Geração do HTML (mantido igual ao original)
+        // Renderiza HTML
         const nomesAtivos = listaAlunosCache.map(a => a.nome);
-        const listaFinal = Object.entries(mapaFaltas).sort((a, b) => b[1] - a[1]);
+        const listaFinal = Object.entries(mapaFaltas).sort((a, b) => b[1] - a[1]); // Mais faltas primeiro
         
         let html = `<div style="padding:10px;"><p><strong>Dias Letivos no Mês:</strong> ${diasLetivos}</p>`;
         html += `<table class="desktop-table" style="width:100%; font-size:0.9rem; border:1px solid #ddd;">
@@ -648,6 +649,7 @@
             const isEx = !nomesAtivos.includes(nome);
             const nomeExibicao = isEx ? `${nome} <span class="texto-removido">(Ex-Aluno)</span>` : nome;
             const cor = faltas > 0 ? "color:#c0392b; font-weight:bold;" : "color:#27ae60;";
+            // Só mostra quem tem faltas ou está na lista ativa
             html += `<tr><td>${nomeExibicao}</td><td style="text-align:center; ${cor}">${faltas}</td></tr>`;
         });
         html += `</tbody></table></div>`;
@@ -655,7 +657,7 @@
         
     } catch(e) {
         console.error(e);
-        divRes.innerHTML = "Erro ao gerar relatório: " + e.message;
+        divRes.innerHTML = "Erro ao gerar: " + e.message;
     } finally {
         loading(false);
     }
@@ -863,49 +865,113 @@
         };
         window.fecharHistorico = () => document.getElementById('modal-historico').style.display = 'none';
 
-    window.imprimirTela = (tipo) => {
-    // 1. Garante que a área de impressão existe (exigido pelo CSS @media print)
-    let printArea = document.getElementById('print-area');
-    if (!printArea) {
-        printArea = document.createElement('div');
-        printArea.id = 'print-area';
-        document.body.appendChild(printArea);
+   window.imprimirTela = async (tipo) => {
+    // Verifica se há dados básicos
+    if (!usuarioAtual || !usuarioAtual.turma) return alert("Nenhuma turma selecionada.");
+
+    loading(true);
+    
+    try {
+        if (tipo === 'freq') {
+            const dt = document.getElementById('data-freq').value;
+            
+            // 1. Busca a chamada salva no Banco
+            const q = query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma), where("data", "==", dt));
+            const snap = await getDocs(q);
+            
+            let listaParaImprimir = [];
+            let tituloStatus = "Situação";
+
+            if (!snap.empty) {
+                // Se existe chamada salva, usa ela
+                const dados = snap.docs[0].data();
+                listaParaImprimir = dados.detalhes; // Array {nome, presente}
+                listaParaImprimir.sort((a,b) => a.nome.localeCompare(b.nome));
+            } else {
+                // Se NÃO existe, pega a lista de alunos da turma para gerar folha em branco
+                tituloStatus = "Assinatura / Presença";
+                if (listaAlunosCache.length === 0) await carregarAlunosBase();
+                listaParaImprimir = listaAlunosCache.map(a => ({ nome: a.nome, presente: null }));
+            }
+
+            // 2. Cria a janela de impressão
+            const win = window.open('', '_blank', 'width=900,height=700');
+            
+            // 3. Monta o HTML Limpo
+            const linhasTable = listaParaImprimir.map((a, i) => {
+                let statusHtml = "___";
+                if (a.presente === true) statusHtml = "<b style='color:green'>PRESENTE</b>";
+                else if (a.presente === false) statusHtml = "<b style='color:red'>FALTA</b>";
+                
+                return `
+                    <tr>
+                        <td style="text-align:center">${i + 1}</td>
+                        <td>${a.nome}</td>
+                        <td style="text-align:center">${statusHtml}</td>
+                    </tr>`;
+            }).join('');
+
+            const conteudo = `
+                <html>
+                <head>
+                    <title>Frequência - ${usuarioAtual.turma}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #999; padding: 8px; text-align: left; }
+                        th { background: #eee; }
+                        h2, p { text-align: center; margin: 5px; }
+                    </style>
+                </head>
+                <body>
+                    <h2>Controle de Frequência</h2>
+                    <p><strong>Turma:</strong> ${usuarioAtual.turma} | <strong>Data:</strong> ${formatData(dt)}</p>
+                    <table>
+                        <thead><tr><th width="50">Nº</th><th>Aluno</th><th width="150" style="text-align:center">${tituloStatus}</th></tr></thead>
+                        <tbody>${linhasTable}</tbody>
+                    </table>
+                    <br><br>
+                    <div style="border-top:1px solid #000; width:60%; margin:50px auto 0 auto; text-align:center; padding-top:5px;">
+                        Assinatura do Professor(a)
+                    </div>
+                </body>
+                <script>
+                    window.onload = function() { window.print(); setTimeout(() => window.close(), 1000); }
+                <\/script>
+                </html>
+            `;
+            
+            win.document.write(conteudo);
+            win.document.close();
+
+        } else {
+            // Lógica para o Diário (Planejamento)
+            const dt = document.getElementById('data-plan').value;
+            const titulo = document.getElementById('plan-disciplina').value || "Sem Título";
+            const texto = document.getElementById('plan-metodologia').value || ""; // Pega o valor atual do textarea
+
+            const win = window.open('', '_blank', 'width=800,height=600');
+            win.document.write(`
+                <html><head><title>Diário de Classe</title>
+                <style>body{font-family:Arial,sans-serif;padding:30px;}</style>
+                </head><body>
+                <h2 style="text-align:center">Diário de Classe</h2>
+                <p style="text-align:center"><strong>Turma:</strong> ${usuarioAtual.turma} | <strong>Data:</strong> ${formatData(dt)}</p>
+                <hr>
+                <h3>${titulo}</h3>
+                <div style="white-space: pre-wrap; font-size:1.1rem; line-height:1.5;">${texto}</div>
+                <script>window.onload = function() { window.print(); window.close(); }<\/script>
+                </body></html>
+            `);
+            win.document.close();
+        }
+
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao imprimir: " + e.message);
+    } finally {
+        loading(false);
     }
-    
-    // 2. Limpa conteúdo anterior
-    printArea.innerHTML = "";
-    
-    // 3. Prepara o Cabeçalho (clona do elemento oculto #print-header)
-    const header = document.getElementById('print-header').cloneNode(true);
-    header.classList.remove('hidden');
-    
-    // Preenche os dados do cabeçalho
-    const turma = usuarioAtual ? usuarioAtual.turma : "Turma";
-    const campoData = document.getElementById(tipo === 'freq' ? 'data-freq' : 'data-plan');
-    header.querySelector('#p-turma').innerText = turma;
-    header.querySelector('#p-data').innerText = formatData(campoData.value);
-    printArea.appendChild(header);
-    
-    // 4. Copia o conteúdo da tela para a área de impressão
-    if (tipo === 'freq') {
-        // Clona a tabela de alunos
-        const tabela = document.querySelector('#tab-freq .desktop-table').cloneNode(true);
-        printArea.appendChild(tabela);
-    } else {
-        // Clona o diário/planejamento
-        const diario = document.querySelector('#tab-plan .plan-box').cloneNode(true);
-        
-        // Garante que o texto digitado apareça na impressão (copia valores dos inputs)
-        const titulo = document.getElementById('plan-disciplina').value;
-        const texto = document.getElementById('plan-metodologia').value;
-        diario.querySelector('#plan-disciplina').setAttribute('value', titulo);
-        diario.querySelector('#plan-metodologia').innerHTML = texto;
-        
-        printArea.appendChild(diario);
-    }
-    
-    // 5. Aciona a impressão do navegador
-    window.print();
 };
 
         window.removerAluno = async (id) => {
@@ -917,6 +983,7 @@
     </script>
 </body>
 </html>
+
 
 
 
