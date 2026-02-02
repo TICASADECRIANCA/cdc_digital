@@ -595,56 +595,71 @@
         };
 
         window.gerarRelatorioFaltas = async () => {
-            const mesAno = document.getElementById('mes-relatorio').value; 
-            if(!mesAno) return alert("Selecione o mês.");
-            const divRes = document.getElementById('resultado-relatorio');
-            divRes.innerHTML = "Calculando...";
-            loading(true);
-            try {
-                const start = mesAno + "-01";
-                const end = mesAno + "-31";
-                const q = query(
-                    collection(db, "frequencia"), 
-                    where("turma", "==", usuarioAtual.turma),
-                    where("data", ">=", start),
-                    where("data", "<=", end)
-                );
-                const snap = await getDocs(q);
-                let mapaFaltas = {};
+    const mesAno = document.getElementById('mes-relatorio').value;
+    if(!mesAno) return alert("Selecione o mês.");
+    
+    const divRes = document.getElementById('resultado-relatorio');
+    divRes.innerHTML = "Calculando...";
+    loading(true);
+    
+    try {
+        const start = mesAno + "-01";
+        const end = mesAno + "-31";
+        
+        // CORREÇÃO: Removemos o filtro de data da query (causa do erro de índice).
+        // Filtramos apenas a TURMA no banco de dados.
+        const q = query(
+            collection(db, "frequencia"), 
+            where("turma", "==", usuarioAtual.turma)
+        );
+        
+        const snap = await getDocs(q);
+        
+        let mapaFaltas = {};
+        // Inicializa contagem com os alunos atuais
+        listaAlunosCache.forEach(a => mapaFaltas[a.nome] = 0);
+        let diasLetivos = 0;
+        
+        snap.forEach(docSnap => {
+            const dados = docSnap.data();
+            
+            // CORREÇÃO: O filtro de data é feito aqui no JavaScript (Client-side)
+            if (dados.data >= start && dados.data <= end) {
+                diasLetivos++;
+                if(dados.detalhes) {
+                    dados.detalhes.forEach(d => {
+                        if(mapaFaltas[d.nome] === undefined) mapaFaltas[d.nome] = 0;
+                        if(!d.presente) mapaFaltas[d.nome]++;
+                    });
+                }
+            }
+        });
+        
+        // Geração do HTML (mantido igual ao original)
+        const nomesAtivos = listaAlunosCache.map(a => a.nome);
+        const listaFinal = Object.entries(mapaFaltas).sort((a, b) => b[1] - a[1]);
+        
+        let html = `<div style="padding:10px;"><p><strong>Dias Letivos no Mês:</strong> ${diasLetivos}</p>`;
+        html += `<table class="desktop-table" style="width:100%; font-size:0.9rem; border:1px solid #ddd;">
+                <thead style="background:#eee; color:#333;"><tr><th>Aluno</th><th style="text-align:center">Faltas</th></tr></thead>
+                <tbody>`;
                 
-                listaAlunosCache.forEach(a => mapaFaltas[a.nome] = 0);
-                
-                let diasLetivos = 0;
-                snap.forEach(docSnap => {
-                    diasLetivos++;
-                    const dados = docSnap.data();
-                    if(dados.detalhes) {
-                        dados.detalhes.forEach(d => {
-                            if(mapaFaltas[d.nome] === undefined) mapaFaltas[d.nome] = 0; // Se aluno removido, adiciona
-                            if(!d.presente) mapaFaltas[d.nome]++;
-                        });
-                    }
-                });
-                
-                // Mapeia quem é ex-aluno para exibir no relatório
-                const nomesAtivos = listaAlunosCache.map(a => a.nome);
-
-                const listaFinal = Object.entries(mapaFaltas).sort((a, b) => b[1] - a[1]);
-                let html = `<div style="padding:10px;"><p><strong>Dias Letivos no Mês:</strong> ${diasLetivos}</p>`;
-                html += `<table class="desktop-table" style="width:100%; font-size:0.9rem; border:1px solid #ddd;">
-                            <thead style="background:#eee; color:#333;"><tr><th>Aluno</th><th style="text-align:center">Faltas</th></tr></thead>
-                            <tbody>`;
-                listaFinal.forEach(([nome, faltas]) => {
-                    const isEx = !nomesAtivos.includes(nome);
-                    const nomeExibicao = isEx ? `${nome} <span class="texto-removido">(Ex-Aluno)</span>` : nome;
-                    
-                    const cor = faltas > 0 ? "color:#c0392b; font-weight:bold;" : "color:#27ae60;";
-                    html += `<tr><td>${nomeExibicao}</td><td style="text-align:center; ${cor}">${faltas}</td></tr>`;
-                });
-                html += `</tbody></table></div>`;
-                divRes.innerHTML = html;
-            } catch(e) { console.error(e); divRes.innerHTML = "Erro ao gerar relatório."; } finally { loading(false); }
-        };
+        listaFinal.forEach(([nome, faltas]) => {
+            const isEx = !nomesAtivos.includes(nome);
+            const nomeExibicao = isEx ? `${nome} <span class="texto-removido">(Ex-Aluno)</span>` : nome;
+            const cor = faltas > 0 ? "color:#c0392b; font-weight:bold;" : "color:#27ae60;";
+            html += `<tr><td>${nomeExibicao}</td><td style="text-align:center; ${cor}">${faltas}</td></tr>`;
+        });
+        html += `</tbody></table></div>`;
+        divRes.innerHTML = html;
+        
+    } catch(e) {
+        console.error(e);
+        divRes.innerHTML = "Erro ao gerar relatório: " + e.message;
+    } finally {
+        loading(false);
+    }
+};
 
         window.carregarPlanejamento = async () => {
             const dt = document.getElementById('data-plan').value;
@@ -848,12 +863,50 @@
         };
         window.fecharHistorico = () => document.getElementById('modal-historico').style.display = 'none';
 
-        window.imprimirTela = (tipo) => {
-            document.body.classList.remove('printing-report');
-            document.getElementById('p-turma').innerText = usuarioAtual.turma;
-            document.getElementById('p-data').innerText = formatData(document.getElementById(tipo==='freq'?'data-freq':'data-plan').value);
-            window.print();
-        };
+    window.imprimirTela = (tipo) => {
+    // 1. Garante que a área de impressão existe (exigido pelo CSS @media print)
+    let printArea = document.getElementById('print-area');
+    if (!printArea) {
+        printArea = document.createElement('div');
+        printArea.id = 'print-area';
+        document.body.appendChild(printArea);
+    }
+    
+    // 2. Limpa conteúdo anterior
+    printArea.innerHTML = "";
+    
+    // 3. Prepara o Cabeçalho (clona do elemento oculto #print-header)
+    const header = document.getElementById('print-header').cloneNode(true);
+    header.classList.remove('hidden');
+    
+    // Preenche os dados do cabeçalho
+    const turma = usuarioAtual ? usuarioAtual.turma : "Turma";
+    const campoData = document.getElementById(tipo === 'freq' ? 'data-freq' : 'data-plan');
+    header.querySelector('#p-turma').innerText = turma;
+    header.querySelector('#p-data').innerText = formatData(campoData.value);
+    printArea.appendChild(header);
+    
+    // 4. Copia o conteúdo da tela para a área de impressão
+    if (tipo === 'freq') {
+        // Clona a tabela de alunos
+        const tabela = document.querySelector('#tab-freq .desktop-table').cloneNode(true);
+        printArea.appendChild(tabela);
+    } else {
+        // Clona o diário/planejamento
+        const diario = document.querySelector('#tab-plan .plan-box').cloneNode(true);
+        
+        // Garante que o texto digitado apareça na impressão (copia valores dos inputs)
+        const titulo = document.getElementById('plan-disciplina').value;
+        const texto = document.getElementById('plan-metodologia').value;
+        diario.querySelector('#plan-disciplina').setAttribute('value', titulo);
+        diario.querySelector('#plan-metodologia').innerHTML = texto;
+        
+        printArea.appendChild(diario);
+    }
+    
+    // 5. Aciona a impressão do navegador
+    window.print();
+};
 
         window.removerAluno = async (id) => {
             if(confirm("Remover aluno permanentemente?")) {
@@ -864,5 +917,6 @@
     </script>
 </body>
 </html>
+
 
 
