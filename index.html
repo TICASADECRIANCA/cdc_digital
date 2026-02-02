@@ -865,167 +865,157 @@
         };
         window.fecharHistorico = () => document.getElementById('modal-historico').style.display = 'none';
 
-  window.imprimirTela = async (tipo) => {
-    // 1. Validação inicial
-    if (!usuarioAtual || !usuarioAtual.turma) return alert("Nenhuma turma selecionada.");
+ window.imprimirTela = async (tipo) => {
+    console.log("Iniciando função de impressão...", tipo);
 
-    // 2. Abre a janela IMEDIATAMENTE (para evitar bloqueio de popup)
-    const win = window.open('', '_blank', 'width=900,height=700');
-    
-    if (!win) {
-        alert("Pop-up bloqueado! Permita pop-ups para imprimir.");
+    // 1. Validação de Segurança
+    if (!usuarioAtual || !usuarioAtual.turma) {
+        alert("Erro: Nenhuma turma identificada. Faça login novamente.");
         return;
     }
 
-    // Mensagem de espera
+    // 2. Abre a janela DE IMEDIATO (para não ser bloqueada)
+    const win = window.open('', '_blank', 'width=900,height=700');
+    if (!win) {
+        alert("O navegador bloqueou o pop-up. Permita pop-ups para este site.");
+        return;
+    }
+
+    // Mensagem de status enquanto carrega
     win.document.write(`
-        <div style="font-family:sans-serif; text-align:center; margin-top:50px;">
-            <h3>Gerando documento...</h3>
-            <p>Aguarde enquanto buscamos os dados.</p>
+        <div style="font-family:sans-serif; text-align:center; padding-top:50px;">
+            <h3>Carregando...</h3>
+            <p>Buscando dados da turma ${usuarioAtual.turma}...</p>
         </div>
     `);
 
     try {
-        let conteudoBody = "";
-        let tituloDoc = "";
-
-        // ==========================================
-        // LÓGICA DA FREQUÊNCIA (Onde estava o erro)
-        // ==========================================
+        let conteudoHTML = "";
+        
+        // ==========================================================
+        // OPÇÃO 1: IMPRIMIR LISTA DE FREQUÊNCIA
+        // ==========================================================
         if (tipo === 'freq') {
-            tituloDoc = "Frequência - " + usuarioAtual.turma;
-            
-            // Pega a data ou usa HOJE se estiver vazio
-            let dataInput = document.getElementById('data-freq').value;
-            if (!dataInput) {
-                const hoje = new Date();
-                dataInput = hoje.toISOString().split('T')[0];
-            }
+            const dataInput = document.getElementById('data-freq').value || new Date().toISOString().split('T')[0];
+            let listaFinal = [];
+            let tituloStatus = "Assinatura / Presença";
 
-            // Busca no banco se já existe chamada salva
-            const q = query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma), where("data", "==", dataInput));
-            const snap = await getDocs(q);
-
-            let listaParaImprimir = [];
-            let tituloStatus = "Situação";
-
-            if (!snap.empty) {
-                // --- CENÁRIO 1: Já existe chamada salva ---
-                const dados = snap.docs[0].data();
-                listaParaImprimir = dados.detalhes || [];
-                // Ordena alfabeticamente
-                listaParaImprimir.sort((a,b) => a.nome.localeCompare(b.nome));
-            } else {
-                // --- CENÁRIO 2: Folha em branco (usar lista de alunos) ---
-                tituloStatus = "Assinatura / Presença";
-                
-                // SE A LISTA ESTIVER VAZIA, CARREGA AGORA
-                if (!listaAlunosCache || listaAlunosCache.length === 0) {
-                    // Tenta carregar. Se a função carregarAlunosBase não existir no escopo, dispara erro.
-                    if (typeof window.carregarAlunosBase === 'function') {
-                        await window.carregarAlunosBase();
+            // TENTA BUSCAR NO FIREBASE (Histórico)
+            try {
+                // Verifica se as funções do Firebase estão acessíveis globalmente
+                if (typeof query !== 'undefined' && typeof collection !== 'undefined' && typeof db !== 'undefined') {
+                    const q = query(collection(db, "frequencia"), 
+                                  where("turma", "==", usuarioAtual.turma), 
+                                  where("data", "==", dataInput));
+                    const snap = await getDocs(q);
+                    
+                    if (!snap.empty) {
+                        const dados = snap.docs[0].data();
+                        listaFinal = dados.detalhes || [];
+                        tituloStatus = "Situação (Salva no Banco)";
                     }
                 }
-
-                // Se mesmo assim estiver vazia (turma sem alunos), cria array vazio
-                const alunosAtuais = listaAlunosCache || [];
-                listaParaImprimir = alunosAtuais.map(a => ({ nome: a.nome, presente: null }));
+            } catch (errFirebase) {
+                console.warn("Erro ao buscar no Firebase (usando cache local):", errFirebase);
+                // Não trava o código, apenas segue para usar o cache local
             }
 
-            // Monta as linhas da tabela
-            let linhasTable = "";
-            if (listaParaImprimir.length === 0) {
-                linhasTable = "<tr><td colspan='3' style='text-align:center; padding:20px'>Nenhum aluno encontrado nesta turma.</td></tr>";
-            } else {
-                linhasTable = listaParaImprimir.map((a, i) => {
-                    let statusHtml = "<span style='color:#ccc'>__________</span>"; // Linha para assinar
-                    
-                    // Se tiver status definido (True/False), mostra texto
-                    if (a.presente === true) statusHtml = "<b style='color:green'>PRESENTE</b>";
-                    else if (a.presente === false) statusHtml = "<b style='color:red'>FALTA</b>";
-                    
-                    return `
+            // SE NÃO ACHOU NO BANCO (ou deu erro), USA A LISTA LOCAL (CACHE)
+            if (listaFinal.length === 0) {
+                if (typeof listaAlunosCache !== 'undefined' && listaAlunosCache.length > 0) {
+                    // Mapeia a lista local para o formato de impressão
+                    listaFinal = listaAlunosCache.map(a => ({ nome: a.nome, presente: null }));
+                } else {
+                    // Última tentativa: buscar alunos agora
+                    if(typeof window.carregarAlunosBase === 'function') await window.carregarAlunosBase();
+                    listaFinal = (window.listaAlunosCache || []).map(a => ({ nome: a.nome, presente: null }));
+                }
+            }
+
+            // ORDENAÇÃO ALFABÉTICA
+            listaFinal.sort((a, b) => a.nome.localeCompare(b.nome));
+
+            // GERA AS LINHAS DA TABELA
+            const linhas = listaFinal.map((a, i) => {
+                let situacao = "__________";
+                if (a.presente === true) situacao = "<b>PRESENTE</b>";
+                else if (a.presente === false) situacao = "<b style='color:red'>FALTA</b>";
+                
+                return `
+                    <tr>
+                        <td style="text-align:center">${i + 1}</td>
+                        <td>${a.nome}</td>
+                        <td style="text-align:center">${situacao}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // MONTA O HTML DA FREQUÊNCIA
+            conteudoHTML = `
+                <h2 style="text-align:center">Lista de Frequência</h2>
+                <p style="text-align:center">Turma: <strong>${usuarioAtual.turma}</strong> | Data: <strong>${dataInput.split('-').reverse().join('/')}</strong></p>
+                <table style="width:100%; border-collapse:collapse; margin-top:15px; border:1px solid #000;">
+                    <thead style="background:#eee;">
                         <tr>
-                            <td style="text-align:center; width:50px;">${i + 1}</td>
-                            <td>${a.nome}</td>
-                            <td style="text-align:center; width:150px;">${statusHtml}</td>
-                        </tr>`;
-                }).join('');
-            }
-
-            // HTML Final da Tabela de Frequência
-            conteudoBody = `
-                <h2 style="text-align:center; margin-bottom:5px;">Controle de Frequência</h2>
-                <p style="text-align:center; margin-top:0;">
-                    <strong>Turma:</strong> ${usuarioAtual.turma} | 
-                    <strong>Data:</strong> ${formatData(dataInput)}
-                </p>
-                <table style="width:100%; border-collapse:collapse; margin-top:20px; font-size:14px;">
-                    <thead>
-                        <tr style="background:#eee;">
-                            <th style="border:1px solid #999; padding:8px;">Nº</th>
-                            <th style="border:1px solid #999; padding:8px;">Nome do Aluno</th>
-                            <th style="border:1px solid #999; padding:8px; text-align:center;">${tituloStatus}</th>
+                            <th style="border:1px solid #999; padding:5px; width:50px;">Nº</th>
+                            <th style="border:1px solid #999; padding:5px;">Nome do Aluno</th>
+                            <th style="border:1px solid #999; padding:5px; width:150px;">${tituloStatus}</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        ${linhasTable}
-                    </tbody>
+                    <tbody>${linhas || '<tr><td colspan="3" style="text-align:center; padding:20px">Nenhum aluno encontrado.</td></tr>'}</tbody>
                 </table>
-                <div style="margin-top:60px; text-align:center;">
-                    <div style="border-top:1px solid #000; width:60%; margin:0 auto; padding-top:5px;">Assinatura do Responsável</div>
-                </div>
+                <br><br>
+                <div style="text-align:center; margin-top:50px; border-top:1px solid #000; width:50%; margin-left:auto; margin-right:auto;">Assinatura do Professor</div>
             `;
 
-        } else {
-            // ==========================================
-            // LÓGICA DO DIÁRIO (Já estava funcionando)
-            // ==========================================
-            tituloDoc = "Diário de Classe";
-            const dtPlan = document.getElementById('data-plan').value;
-            const tituloPlan = document.getElementById('plan-disciplina').value || "Sem Título";
-            const textoPlan = document.getElementById('plan-metodologia').value || "";
-
-            conteudoBody = `
+        } 
+        // ==========================================================
+        // OPÇÃO 2: IMPRIMIR DIÁRIO (PLANEJAMENTO)
+        // ==========================================================
+        else {
+            const dataPlan = document.getElementById('data-plan').value;
+            const titulo = document.getElementById('plan-disciplina').value || "";
+            const texto = document.getElementById('plan-metodologia').value || "";
+            
+            conteudoHTML = `
                 <h2 style="text-align:center">Diário de Classe</h2>
-                <p style="text-align:center"><strong>Turma:</strong> ${usuarioAtual.turma} | <strong>Data:</strong> ${formatData(dtPlan)}</p>
-                <hr style="margin:20px 0;">
-                <h3>${tituloPlan}</h3>
-                <div style="white-space: pre-wrap; font-size:16px; line-height:1.6; text-align:justify;">${textoPlan}</div>
+                <p style="text-align:center">Turma: <strong>${usuarioAtual.turma}</strong> | Data: <strong>${dataPlan.split('-').reverse().join('/')}</strong></p>
+                <hr>
+                <h3>${titulo}</h3>
+                <div style="white-space: pre-wrap; text-align:justify; font-size:14px; line-height:1.5;">${texto}</div>
             `;
         }
 
-        // 3. Escreve o HTML Final na Janela
+        // 3. INSERE O CONTEÚDO FINAL E IMPRIME
         win.document.open();
         win.document.write(`
             <html>
             <head>
-                <title>${tituloDoc}</title>
+                <title>Impressão - CASA+</title>
                 <style>
-                    body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
-                    @media print { @page { margin: 1cm; } }
+                    body { font-family: Arial, sans-serif; padding: 20px; font-size: 12px; }
+                    h2, h3 { margin: 10px 0; }
+                    table, th, td { border: 1px solid #ccc; border-collapse: collapse; }
+                    th, td { padding: 8px; text-align: left; }
+                    @media print { 
+                        .no-print { display: none; } 
+                        @page { margin: 1cm; }
+                    }
                 </style>
             </head>
             <body>
-                ${conteudoBody}
+                ${conteudoHTML}
                 <script>
-                    window.onload = function() { window.print(); }
+                    setTimeout(() => { window.print(); }, 500);
                 <\/script>
             </body>
             </html>
         `);
         win.document.close();
 
-    } catch (e) {
-        console.error("Erro ao imprimir:", e);
-        // Mostra o erro na tela para debug
-        win.document.body.innerHTML = `
-            <div style="color:red; text-align:center; margin-top:50px;">
-                <h3>Erro ao gerar impressão</h3>
-                <p>${e.message}</p>
-                <p><small>Verifique o console (F12) para mais detalhes.</small></p>
-            </div>
-        `;
+    } catch (erroFatal) {
+        console.error("Erro fatal na impressão:", erroFatal);
+        win.document.body.innerHTML = `<h3 style='color:red'>Erro ao gerar documento: ${erroFatal.message}</h3>`;
     }
 };
 
@@ -1038,6 +1028,7 @@
     </script>
 </body>
 </html>
+
 
 
 
