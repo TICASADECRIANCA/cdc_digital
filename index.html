@@ -866,135 +866,166 @@
         window.fecharHistorico = () => document.getElementById('modal-historico').style.display = 'none';
 
   window.imprimirTela = async (tipo) => {
-    // Validação básica
+    // 1. Validação inicial
     if (!usuarioAtual || !usuarioAtual.turma) return alert("Nenhuma turma selecionada.");
 
-    // 1. ABRIR JANELA IMEDIATAMENTE (Para evitar bloqueio de pop-up)
-    // Se abrir depois do 'await', o navegador bloqueia.
+    // 2. Abre a janela IMEDIATAMENTE (para evitar bloqueio de popup)
     const win = window.open('', '_blank', 'width=900,height=700');
     
-    // Verifica se o navegador bloqueou mesmo assim
     if (!win) {
-        alert("O navegador bloqueou a janela de impressão. Por favor, permita pop-ups para este site.");
+        alert("Pop-up bloqueado! Permita pop-ups para imprimir.");
         return;
     }
 
-    // Escreve um aviso de carregamento inicial
+    // Mensagem de espera
     win.document.write(`
-        <html>
-            <body style="font-family:Arial; display:flex; justify-content:center; align-items:center; height:100vh;">
-                <h3>Gerando documento, aguarde...</h3>
-            </body>
-        </html>
+        <div style="font-family:sans-serif; text-align:center; margin-top:50px;">
+            <h3>Gerando documento...</h3>
+            <p>Aguarde enquanto buscamos os dados.</p>
+        </div>
     `);
 
     try {
-        let conteudoHTML = "";
+        let conteudoBody = "";
+        let tituloDoc = "";
 
+        // ==========================================
+        // LÓGICA DA FREQUÊNCIA (Onde estava o erro)
+        // ==========================================
         if (tipo === 'freq') {
-            const dt = document.getElementById('data-freq').value;
+            tituloDoc = "Frequência - " + usuarioAtual.turma;
             
-            // Busca dados no banco
-            const q = query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma), where("data", "==", dt));
+            // Pega a data ou usa HOJE se estiver vazio
+            let dataInput = document.getElementById('data-freq').value;
+            if (!dataInput) {
+                const hoje = new Date();
+                dataInput = hoje.toISOString().split('T')[0];
+            }
+
+            // Busca no banco se já existe chamada salva
+            const q = query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma), where("data", "==", dataInput));
             const snap = await getDocs(q);
-            
+
             let listaParaImprimir = [];
             let tituloStatus = "Situação";
 
             if (!snap.empty) {
-                // Tem chamada salva
+                // --- CENÁRIO 1: Já existe chamada salva ---
                 const dados = snap.docs[0].data();
                 listaParaImprimir = dados.detalhes || [];
+                // Ordena alfabeticamente
                 listaParaImprimir.sort((a,b) => a.nome.localeCompare(b.nome));
             } else {
-                // Não tem chamada, folha em branco
+                // --- CENÁRIO 2: Folha em branco (usar lista de alunos) ---
                 tituloStatus = "Assinatura / Presença";
-                // Garante que a lista de alunos base está carregada
+                
+                // SE A LISTA ESTIVER VAZIA, CARREGA AGORA
                 if (!listaAlunosCache || listaAlunosCache.length === 0) {
-                     // Se precisar carregar alunos, avisa na janela
-                     win.document.body.innerHTML = "<h3>Carregando lista de alunos...</h3>";
-                     await window.carregarAlunosBase(); 
+                    // Tenta carregar. Se a função carregarAlunosBase não existir no escopo, dispara erro.
+                    if (typeof window.carregarAlunosBase === 'function') {
+                        await window.carregarAlunosBase();
+                    }
                 }
-                listaParaImprimir = listaAlunosCache.map(a => ({ nome: a.nome, presente: null }));
+
+                // Se mesmo assim estiver vazia (turma sem alunos), cria array vazio
+                const alunosAtuais = listaAlunosCache || [];
+                listaParaImprimir = alunosAtuais.map(a => ({ nome: a.nome, presente: null }));
             }
 
             // Monta as linhas da tabela
-            const linhasTable = listaParaImprimir.map((a, i) => {
-                let statusHtml = "___";
-                if (a.presente === true) statusHtml = "<b style='color:green'>PRESENTE</b>";
-                else if (a.presente === false) statusHtml = "<b style='color:red'>FALTA</b>";
-                
-                return `
-                    <tr>
-                        <td style="text-align:center">${i + 1}</td>
-                        <td>${a.nome}</td>
-                        <td style="text-align:center">${statusHtml}</td>
-                    </tr>`;
-            }).join('');
+            let linhasTable = "";
+            if (listaParaImprimir.length === 0) {
+                linhasTable = "<tr><td colspan='3' style='text-align:center; padding:20px'>Nenhum aluno encontrado nesta turma.</td></tr>";
+            } else {
+                linhasTable = listaParaImprimir.map((a, i) => {
+                    let statusHtml = "<span style='color:#ccc'>__________</span>"; // Linha para assinar
+                    
+                    // Se tiver status definido (True/False), mostra texto
+                    if (a.presente === true) statusHtml = "<b style='color:green'>PRESENTE</b>";
+                    else if (a.presente === false) statusHtml = "<b style='color:red'>FALTA</b>";
+                    
+                    return `
+                        <tr>
+                            <td style="text-align:center; width:50px;">${i + 1}</td>
+                            <td>${a.nome}</td>
+                            <td style="text-align:center; width:150px;">${statusHtml}</td>
+                        </tr>`;
+                }).join('');
+            }
 
-            conteudoHTML = `
-                <html>
-                <head>
-                    <title>Frequência - ${usuarioAtual.turma}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; padding: 20px; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                        th, td { border: 1px solid #999; padding: 8px; text-align: left; }
-                        th { background: #eee; }
-                        h2, p { text-align: center; margin: 5px; }
-                        @media print {
-                            @page { margin: 1cm; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <h2>Controle de Frequência</h2>
-                    <p><strong>Turma:</strong> ${usuarioAtual.turma} | <strong>Data:</strong> ${formatData(dt)}</p>
-                    <table>
-                        <thead><tr><th width="50">Nº</th><th>Aluno</th><th width="150" style="text-align:center">${tituloStatus}</th></tr></thead>
-                        <tbody>${linhasTable}</tbody>
-                    </table>
-                    <br><br>
-                    <div style="border-top:1px solid #000; width:60%; margin:50px auto 0 auto; text-align:center; padding-top:5px;">
-                        Assinatura do Professor(a)
-                    </div>
-                    <script>
-                        // Imprime automaticamente ao terminar de carregar
-                        window.onload = function() { window.print(); }
-                    <\/script>
-                </body>
-                </html>
+            // HTML Final da Tabela de Frequência
+            conteudoBody = `
+                <h2 style="text-align:center; margin-bottom:5px;">Controle de Frequência</h2>
+                <p style="text-align:center; margin-top:0;">
+                    <strong>Turma:</strong> ${usuarioAtual.turma} | 
+                    <strong>Data:</strong> ${formatData(dataInput)}
+                </p>
+                <table style="width:100%; border-collapse:collapse; margin-top:20px; font-size:14px;">
+                    <thead>
+                        <tr style="background:#eee;">
+                            <th style="border:1px solid #999; padding:8px;">Nº</th>
+                            <th style="border:1px solid #999; padding:8px;">Nome do Aluno</th>
+                            <th style="border:1px solid #999; padding:8px; text-align:center;">${tituloStatus}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${linhasTable}
+                    </tbody>
+                </table>
+                <div style="margin-top:60px; text-align:center;">
+                    <div style="border-top:1px solid #000; width:60%; margin:0 auto; padding-top:5px;">Assinatura do Responsável</div>
+                </div>
             `;
 
         } else {
-            // Lógica do Diário (Planejamento)
-            const dt = document.getElementById('data-plan').value;
-            const titulo = document.getElementById('plan-disciplina').value || "Sem Título";
-            const texto = document.getElementById('plan-metodologia').value || "";
+            // ==========================================
+            // LÓGICA DO DIÁRIO (Já estava funcionando)
+            // ==========================================
+            tituloDoc = "Diário de Classe";
+            const dtPlan = document.getElementById('data-plan').value;
+            const tituloPlan = document.getElementById('plan-disciplina').value || "Sem Título";
+            const textoPlan = document.getElementById('plan-metodologia').value || "";
 
-            conteudoHTML = `
-                <html><head><title>Diário de Classe</title>
-                <style>body{font-family:Arial,sans-serif;padding:30px;}</style>
-                </head><body>
+            conteudoBody = `
                 <h2 style="text-align:center">Diário de Classe</h2>
-                <p style="text-align:center"><strong>Turma:</strong> ${usuarioAtual.turma} | <strong>Data:</strong> ${formatData(dt)}</p>
-                <hr>
-                <h3>${titulo}</h3>
-                <div style="white-space: pre-wrap; font-size:1.1rem; line-height:1.5;">${texto}</div>
-                <script>window.onload = function() { window.print(); }<\/script>
-                </body></html>
+                <p style="text-align:center"><strong>Turma:</strong> ${usuarioAtual.turma} | <strong>Data:</strong> ${formatData(dtPlan)}</p>
+                <hr style="margin:20px 0;">
+                <h3>${tituloPlan}</h3>
+                <div style="white-space: pre-wrap; font-size:16px; line-height:1.6; text-align:justify;">${textoPlan}</div>
             `;
         }
 
-        // Atualiza a janela com o conteúdo final
+        // 3. Escreve o HTML Final na Janela
         win.document.open();
-        win.document.write(conteudoHTML);
+        win.document.write(`
+            <html>
+            <head>
+                <title>${tituloDoc}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+                    @media print { @page { margin: 1cm; } }
+                </style>
+            </head>
+            <body>
+                ${conteudoBody}
+                <script>
+                    window.onload = function() { window.print(); }
+                <\/script>
+            </body>
+            </html>
+        `);
         win.document.close();
 
     } catch (e) {
-        console.error(e);
-        // Mostra o erro na janela aberta para você saber o que houve
-        win.document.body.innerHTML = `<h3 style="color:red">Erro ao gerar impressão: ${e.message}</h3>`;
+        console.error("Erro ao imprimir:", e);
+        // Mostra o erro na tela para debug
+        win.document.body.innerHTML = `
+            <div style="color:red; text-align:center; margin-top:50px;">
+                <h3>Erro ao gerar impressão</h3>
+                <p>${e.message}</p>
+                <p><small>Verifique o console (F12) para mais detalhes.</small></p>
+            </div>
+        `;
     }
 };
 
@@ -1007,6 +1038,7 @@
     </script>
 </body>
 </html>
+
 
 
 
