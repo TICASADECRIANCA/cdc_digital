@@ -865,17 +865,36 @@
         };
         window.fecharHistorico = () => document.getElementById('modal-historico').style.display = 'none';
 
-   window.imprimirTela = async (tipo) => {
-    // Verifica se há dados básicos
+  window.imprimirTela = async (tipo) => {
+    // Validação básica
     if (!usuarioAtual || !usuarioAtual.turma) return alert("Nenhuma turma selecionada.");
 
-    loading(true);
+    // 1. ABRIR JANELA IMEDIATAMENTE (Para evitar bloqueio de pop-up)
+    // Se abrir depois do 'await', o navegador bloqueia.
+    const win = window.open('', '_blank', 'width=900,height=700');
     
+    // Verifica se o navegador bloqueou mesmo assim
+    if (!win) {
+        alert("O navegador bloqueou a janela de impressão. Por favor, permita pop-ups para este site.");
+        return;
+    }
+
+    // Escreve um aviso de carregamento inicial
+    win.document.write(`
+        <html>
+            <body style="font-family:Arial; display:flex; justify-content:center; align-items:center; height:100vh;">
+                <h3>Gerando documento, aguarde...</h3>
+            </body>
+        </html>
+    `);
+
     try {
+        let conteudoHTML = "";
+
         if (tipo === 'freq') {
             const dt = document.getElementById('data-freq').value;
             
-            // 1. Busca a chamada salva no Banco
+            // Busca dados no banco
             const q = query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma), where("data", "==", dt));
             const snap = await getDocs(q);
             
@@ -883,21 +902,23 @@
             let tituloStatus = "Situação";
 
             if (!snap.empty) {
-                // Se existe chamada salva, usa ela
+                // Tem chamada salva
                 const dados = snap.docs[0].data();
-                listaParaImprimir = dados.detalhes; // Array {nome, presente}
+                listaParaImprimir = dados.detalhes || [];
                 listaParaImprimir.sort((a,b) => a.nome.localeCompare(b.nome));
             } else {
-                // Se NÃO existe, pega a lista de alunos da turma para gerar folha em branco
+                // Não tem chamada, folha em branco
                 tituloStatus = "Assinatura / Presença";
-                if (listaAlunosCache.length === 0) await carregarAlunosBase();
+                // Garante que a lista de alunos base está carregada
+                if (!listaAlunosCache || listaAlunosCache.length === 0) {
+                     // Se precisar carregar alunos, avisa na janela
+                     win.document.body.innerHTML = "<h3>Carregando lista de alunos...</h3>";
+                     await window.carregarAlunosBase(); 
+                }
                 listaParaImprimir = listaAlunosCache.map(a => ({ nome: a.nome, presente: null }));
             }
 
-            // 2. Cria a janela de impressão
-            const win = window.open('', '_blank', 'width=900,height=700');
-            
-            // 3. Monta o HTML Limpo
+            // Monta as linhas da tabela
             const linhasTable = listaParaImprimir.map((a, i) => {
                 let statusHtml = "___";
                 if (a.presente === true) statusHtml = "<b style='color:green'>PRESENTE</b>";
@@ -911,7 +932,7 @@
                     </tr>`;
             }).join('');
 
-            const conteudo = `
+            conteudoHTML = `
                 <html>
                 <head>
                     <title>Frequência - ${usuarioAtual.turma}</title>
@@ -921,6 +942,9 @@
                         th, td { border: 1px solid #999; padding: 8px; text-align: left; }
                         th { background: #eee; }
                         h2, p { text-align: center; margin: 5px; }
+                        @media print {
+                            @page { margin: 1cm; }
+                        }
                     </style>
                 </head>
                 <body>
@@ -934,24 +958,21 @@
                     <div style="border-top:1px solid #000; width:60%; margin:50px auto 0 auto; text-align:center; padding-top:5px;">
                         Assinatura do Professor(a)
                     </div>
+                    <script>
+                        // Imprime automaticamente ao terminar de carregar
+                        window.onload = function() { window.print(); }
+                    <\/script>
                 </body>
-                <script>
-                    window.onload = function() { window.print(); setTimeout(() => window.close(), 1000); }
-                <\/script>
                 </html>
             `;
-            
-            win.document.write(conteudo);
-            win.document.close();
 
         } else {
-            // Lógica para o Diário (Planejamento)
+            // Lógica do Diário (Planejamento)
             const dt = document.getElementById('data-plan').value;
             const titulo = document.getElementById('plan-disciplina').value || "Sem Título";
-            const texto = document.getElementById('plan-metodologia').value || ""; // Pega o valor atual do textarea
+            const texto = document.getElementById('plan-metodologia').value || "";
 
-            const win = window.open('', '_blank', 'width=800,height=600');
-            win.document.write(`
+            conteudoHTML = `
                 <html><head><title>Diário de Classe</title>
                 <style>body{font-family:Arial,sans-serif;padding:30px;}</style>
                 </head><body>
@@ -960,17 +981,20 @@
                 <hr>
                 <h3>${titulo}</h3>
                 <div style="white-space: pre-wrap; font-size:1.1rem; line-height:1.5;">${texto}</div>
-                <script>window.onload = function() { window.print(); window.close(); }<\/script>
+                <script>window.onload = function() { window.print(); }<\/script>
                 </body></html>
-            `);
-            win.document.close();
+            `;
         }
+
+        // Atualiza a janela com o conteúdo final
+        win.document.open();
+        win.document.write(conteudoHTML);
+        win.document.close();
 
     } catch (e) {
         console.error(e);
-        alert("Erro ao imprimir: " + e.message);
-    } finally {
-        loading(false);
+        // Mostra o erro na janela aberta para você saber o que houve
+        win.document.body.innerHTML = `<h3 style="color:red">Erro ao gerar impressão: ${e.message}</h3>`;
     }
 };
 
@@ -983,6 +1007,7 @@
     </script>
 </body>
 </html>
+
 
 
 
