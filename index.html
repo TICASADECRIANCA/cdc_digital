@@ -311,26 +311,27 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, setDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, setDoc, deleteDoc, query, where, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBjtXXfchJQO4vxeI_Vqw1QhV_1CLwB6jc", authDomain: "escoladigital-79997.firebaseapp.com", projectId: "escoladigital-79997", storageBucket: "escoladigital-79997.appspot.com", messagingSenderId: "system", appId: "system" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+// NOVA FUNÇÃO: Registra o que acontece no sistema
 async function registrarLog(acao) {
-    if(!usuarioAtual) return; // Só registra se houver alguém logado
+    if (!usuarioAtual) return; 
     try {
         await addDoc(collection(db, "logs_auditoria"), {
             usuario: usuarioAtual.nome,
             email: usuarioAtual.email || "Acesso Manual",
             turma: usuarioAtual.turma,
+            turmaAfetada: typeof turmaSelecionada !== 'undefined' ? turmaSelecionada : usuarioAtual.turma,
             acao: acao,
-            data: new Date().toISOString(), // Para facilitar filtros futuros
-            dataStr: new Date().toLocaleDateString('pt-BR'), // Para o gráfico
-            horario: new Date().toLocaleTimeString('pt-BR')
+            data: serverTimestamp(), // Hora oficial do servidor
+            dataLegivel: new Date().toLocaleString('pt-BR')
         });
     } catch (e) {
-        console.error("Erro ao gerar log:", e);
+        console.error("Erro ao salvar log: ", e);
     }
 }
         
@@ -408,6 +409,7 @@ async function registrarLog(acao) {
                 if(snap.empty) alert("Dados incorretos.");
                 else {
                     const user = snap.docs[0].data();
+                    registrarLog("Fez Login");
                     if(user.turma === "COORD" || user.acessos?.length) {
                         usuarioAtual = user; perfilCoord = user;
                         window.showView('coord');
@@ -617,6 +619,7 @@ async function registrarLog(acao) {
             atualizadoEm: new Date().toISOString()
         });
         alert("Frequência salva com sucesso!");
+        registrarLog("Salvou Chamada");
     } catch (e) {
         console.error("Erro ao salvar:", e);
         alert("Erro técnico ao salvar: " + e.message);
@@ -735,7 +738,9 @@ await registrarLog("Realizou Chamada da Turma " + turmaSelecionada);
                     disciplina: document.getElementById('plan-disciplina').value,
                     metodologia: document.getElementById('plan-metodologia').value
                 });
-                alert("Diário Salvo!"); window.carregarPlanejamento();
+                alert("Diário Salvo!");
+                registrarLog("Salvou Diário/Planeamento");
+                window.carregarPlanejamento();
             } catch(e){ alert("Erro."); } finally { loading(false); }
        await registrarLog("Salvou Diário/Planejamento");
     
@@ -930,6 +935,7 @@ await registrarLog("Realizou Chamada da Turma " + turmaSelecionada);
     </script>
 </body>
 </html>
+
 
 
 
