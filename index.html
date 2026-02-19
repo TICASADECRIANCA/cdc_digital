@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#004aad">
     
-    <title>CASA+ Gestão</title>
+    <title>CASA+</title>
     <style>
         /* --- CSS BASE --- */
         :root { --primary: #004aad; --sec: #0097b2; --bg: #f4f6f8; --text: #333; --success: #27ae60; --danger: #c0392b; --warning: #f39c12; --gray: #7f8c8d; }
@@ -211,7 +211,7 @@
                         <button onclick="window.salvarChamada()" class="btn-action btn-save">Salvar</button>
                         <button onclick="window.abrirRelatorioMensal()" class="btn-action btn-report">📊 Relatório</button>
                         <button onclick="window.abrirHistorico('freq')" class="btn-action btn-hist">Histórico</button>
-                        <button onclick="('freq')" class="btn-action btn-print">Imprimir</button>
+                        <button onclick="window.imprimirTela('freq')" class="btn-action btn-print">Imprimir</button>
                     </div>
                 </div>
 
@@ -233,7 +233,7 @@
                         <button onclick="window.salvarPlanejamento()" class="btn-action btn-save">Salvar</button>
                         <button onclick="window.excluirPlanejamento()" class="btn-action btn-del">Excluir</button>
                         <button onclick="window.abrirHistorico('plan')" class="btn-action btn-hist">Ver Salvos</button>
-                        <button onclick="window.imprimirTela('freq')">Imprimir Lista</button>
+                        <button onclick="window.imprimirTela('plan')" class="btn-action btn-print">Imprimir</button>
                     </div>
                 </div>
                 <div class="plan-box">
@@ -318,11 +318,11 @@
         const db = getFirestore(app);
 
         const ESTRUTURA_TURMAS = { 
-            "Berçário": [ { nome: "Berçário", letras: ["A"] } ],
-            "Infantil 1": [ { nome: "Infantil 1", letras: ["A", "B", "C", "D", "E", "F", "G"] } ],
+            "Berçário": [ { nome: "Berçário", letras: ["A", "B"] } ],
+            "Infantil 1": [ { nome: "Infantil 1", letras: ["A", "B", "C", "D", "E", "F", "G", "I"] } ],
             "Infantil 2": [ { nome: "Infantil 2", letras: ["A", "B", "C", "D", "E", "F", "G", "I", "J"] } ], 
             "Infantil 3": [ { nome: "Infantil 3", letras: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"] } ], 
-            "Infantil 4": [ { nome: "Infantil 4", letras: ["A", "B", "C", "D", "E", "F", "I", "J"] } ], 
+            "Infantil 4": [ { nome: "Infantil 4", letras: ["A", "B", "C", "D", "E", "F", "G", "I", "J"] } ], 
             "Infantil 5": [ { nome: "Infantil 5", letras: ["A", "B", "C", "D", "E", "F", "G", "I"] } ],
             "Ensino Fundamental": [ { nome: "1º Ano", letras: ["A", "B", "C", "D", "I"] } ],
             "Esportes e Extras": [
@@ -330,17 +330,20 @@
                 { nome: "Dança", letras: ["A"] },
                 { nome: "Ginástica Rítmica", letras: ["A"] },
                 { nome: "Judô", letras: ["A"] }
-            ]
+            ],
+            "Sistema integral": [ { nome: "Integral", letras: ["1", "2"] } ]
+
         };
 
         const REGRAS_COORDENACAO = {
             "CRISTIANE": ["Berçário A", "Infantil 1 A", "Infantil 1 B", "Infantil 1 C", "Infantil 1 D", "Infantil 1 E", "Infantil 1 F", "Infantil 1 G"],
-            "ADNA": ["Infantil 2 A", "Infantil 2 B", "Infantil 2 C", "Infantil 2 D", "Infantil 2 E", "Infantil 2 F", "Infantil 2 G", "Infantil 2 I", "Infantil 2 J"],
+            "ADNA": ["Berçário B", "Infantil 1 I", "Infantil 2 A", "Infantil 2 B", "Infantil 2 C", "Infantil 2 D", "Infantil 2 E", "Infantil 2 F", "Infantil 2 G", "Infantil 2 I", "Infantil 2 J"],
             "NAYARA": ["Infantil 3 A", "Infantil 3 B", "Infantil 3 C", "Infantil 3 D", "Infantil 3 E", "Infantil 3 F", "Infantil 3 G", "Infantil 3 H"],
             "LUDMILLA": ["Infantil 3 I", "Infantil 3 J", "Infantil 4 I", "Infantil 4 J", "Infantil 5 A", "Infantil 5 B", "Infantil 5 C", "Infantil 5 D", "Infantil 5 E", "Infantil 5 F", "Infantil 5 G", "Infantil 5 I", "1º Ano I"],
-            "ELIONEIDE": ["Infantil 4 A", "Infantil 4 B", "Infantil 4 C", "Infantil 4 D", "Infantil 4 E", "Infantil 4 F"],
+            "ELIONEIDE": ["Infantil 4 A", "Infantil 4 B", "Infantil 4 C", "Infantil 4 D", "Infantil 4 E", "Infantil 4 F", "Infantil 4 G"],
             "SAVIA": ["1º Ano A", "1º Ano B", "1º Ano C", "1º Ano D"],
-            "COORD_ESPORTES": ["Futsal A", "Dança A", "Ginástica Rítmica A", "Judô A"]
+            "COORD_ESPORTES": ["Futsal A", "Dança A", "Ginástica Rítmica A", "Judô A"],
+            "SISTEMA INTEGRAL":["Integral 1", "integral 2"]
         };
 
         const SENHAS = { CADASTRO: "$2026", SECRETARIA: "$2026", EDICAO: "1992" };
@@ -548,37 +551,61 @@
         };
 
         window.salvarChamada = async () => {
-            loading(true);
-            const dt = document.getElementById('data-freq').value;
-            const detalhes = []; let presentes = 0;
-            const rows = document.querySelectorAll('#tbody-alunos tr');
-            if(!rows.length) { loading(false); return alert("Sem alunos."); }
+    const data = document.getElementById('data-freq').value;
+    const detalhes = [];
+    
+    // Verifica se a lista mobile está visível
+    const isMobile = window.innerWidth <= 768;
+    const container = isMobile ? document.getElementById('mobile-lista') : document.getElementById('tbody-alunos');
+    
+    // No mobile buscamos pelos cards, no PC pelas linhas da tabela
+    const itens = isMobile ? container.querySelectorAll('.student-card') : container.querySelectorAll('tr');
 
-            let totalValidos = 0;
-            rows.forEach(tr => {
-                // Pega o nome limpando o sufixo (Ex-Aluno) se houver
-                const nomeRaw = tr.cells[1].innerText;
-                const nomeLimpo = nomeRaw.replace('(Ex-Aluno)', '').trim();
-                
-                const btn = tr.querySelector('.toggle-btn');
-                if(btn) { 
-                    const isP = btn.innerText === "Presente"; // Verifica texto, pois classe pode variar
-                    if(isP) presentes++;
-                    detalhes.push({ nome: nomeLimpo, presente: isP });
-                    totalValidos++;
-                }
-            });
+    if (itens.length === 0) return alert("Nenhum dado encontrado para salvar nesta turma.");
 
-            try {
-                const idDoc = usuarioAtual.turma.replace(/\s/g,'') + "_" + dt;
-                await setDoc(doc(db, "frequencia", idDoc), {
-                    data: dt, turma: usuarioAtual.turma, detalhes, resumo: `${presentes} Presentes / ${totalValidos - presentes} Faltas`
-                });
-                alert("Salvo com sucesso!");
-                window.carregarFrequencia();
-            } catch(e) { alert("Erro ao salvar."); } finally { loading(false); }
-        };
+    itens.forEach(item => {
+        const btn = item.querySelector('.toggle-btn');
+        // Ignora botões de ex-alunos se existirem na sua lógica
+        if (btn.classList.contains('ex-btn')) return;
 
+        let nomeAluno;
+        if (isMobile) {
+            // No mobile, removemos o "1. " (número e ponto) do início do nome
+            const nomeRaw = item.querySelector('strong').innerText;
+            nomeAluno = nomeRaw.substring(nomeRaw.indexOf(' ') + 1);
+        } else {
+            // No PC, pega o texto da segunda coluna (índice 1)
+            nomeAluno = item.cells[1].innerText;
+        }
+
+        // Limpa qualquer texto extra como "(Ex-Aluno)"
+        nomeAluno = nomeAluno.replace('(Ex-Aluno)', '').trim();
+
+        detalhes.push({
+            nome: nomeAluno,
+            presente: btn.innerText === "Presente"
+        });
+    });
+
+    loading(true);
+    try {
+        // Mantendo o padrão de ID que você já usa no banco
+        const idDoc = `${usuarioAtual.turma.replace(/\s/g,'')}_${data}`;
+        await setDoc(doc(db, "frequencia", idDoc), {
+            turma: usuarioAtual.turma,
+            data: data,
+            detalhes: detalhes,
+            professor: usuarioAtual.nome,
+            atualizadoEm: new Date().toISOString()
+        });
+        alert("Frequência salva com sucesso!");
+    } catch (e) {
+        console.error("Erro ao salvar:", e);
+        alert("Erro técnico ao salvar: " + e.message);
+    } finally {
+        loading(false);
+    }
+};
         window.abrirRelatorioMensal = () => {
             const hoje = new Date();
             const mesStr = hoje.toISOString().slice(0, 7); 
@@ -596,7 +623,7 @@
 
         window.gerarRelatorioFaltas = async () => {
     const mesAno = document.getElementById('mes-relatorio').value;
-    if (!mesAno) return alert("Selecione o mês.");
+    if(!mesAno) return alert("Selecione o mês.");
     
     const divRes = document.getElementById('resultado-relatorio');
     divRes.innerHTML = "Calculando...";
@@ -606,7 +633,8 @@
         const start = mesAno + "-01";
         const end = mesAno + "-31";
         
-        // CORREÇÃO: Buscamos apenas pela TURMA para evitar erro de índice
+        // CORREÇÃO: Removemos o filtro de data da query (causa do erro de índice).
+        // Filtramos apenas a TURMA no banco de dados.
         const q = query(
             collection(db, "frequencia"), 
             where("turma", "==", usuarioAtual.turma)
@@ -615,30 +643,28 @@
         const snap = await getDocs(q);
         
         let mapaFaltas = {};
-        // Inicia contagem
-        if (listaAlunosCache.length === 0) await carregarAlunosBase();
+        // Inicializa contagem com os alunos atuais
         listaAlunosCache.forEach(a => mapaFaltas[a.nome] = 0);
-        
         let diasLetivos = 0;
         
         snap.forEach(docSnap => {
             const dados = docSnap.data();
             
-            // CORREÇÃO: Filtramos a data aqui no Javascript
+            // CORREÇÃO: O filtro de data é feito aqui no JavaScript (Client-side)
             if (dados.data >= start && dados.data <= end) {
                 diasLetivos++;
-                if (dados.detalhes) {
+                if(dados.detalhes) {
                     dados.detalhes.forEach(d => {
-                        if (mapaFaltas[d.nome] === undefined) mapaFaltas[d.nome] = 0;
-                        if (!d.presente) mapaFaltas[d.nome]++;
+                        if(mapaFaltas[d.nome] === undefined) mapaFaltas[d.nome] = 0;
+                        if(!d.presente) mapaFaltas[d.nome]++;
                     });
                 }
             }
         });
         
-        // Renderiza HTML
+        // Geração do HTML (mantido igual ao original)
         const nomesAtivos = listaAlunosCache.map(a => a.nome);
-        const listaFinal = Object.entries(mapaFaltas).sort((a, b) => b[1] - a[1]); // Mais faltas primeiro
+        const listaFinal = Object.entries(mapaFaltas).sort((a, b) => b[1] - a[1]);
         
         let html = `<div style="padding:10px;"><p><strong>Dias Letivos no Mês:</strong> ${diasLetivos}</p>`;
         html += `<table class="desktop-table" style="width:100%; font-size:0.9rem; border:1px solid #ddd;">
@@ -649,7 +675,6 @@
             const isEx = !nomesAtivos.includes(nome);
             const nomeExibicao = isEx ? `${nome} <span class="texto-removido">(Ex-Aluno)</span>` : nome;
             const cor = faltas > 0 ? "color:#c0392b; font-weight:bold;" : "color:#27ae60;";
-            // Só mostra quem tem faltas ou está na lista ativa
             html += `<tr><td>${nomeExibicao}</td><td style="text-align:center; ${cor}">${faltas}</td></tr>`;
         });
         html += `</tbody></table></div>`;
@@ -657,7 +682,7 @@
         
     } catch(e) {
         console.error(e);
-        divRes.innerHTML = "Erro ao gerar: " + e.message;
+        divRes.innerHTML = "Erro ao gerar relatório: " + e.message;
     } finally {
         loading(false);
     }
@@ -865,166 +890,12 @@
         };
         window.fecharHistorico = () => document.getElementById('modal-historico').style.display = 'none';
 
-window.imprimirTela = async (tipo) => {
-    // DEBUG: Confirma se o botão funcionou
-    // Se não aparecer este alerta, o problema é no HTML do botão, não aqui.
-    // alert("Iniciando impressão... Tipo: " + tipo); 
-
-    if (!usuarioAtual || !usuarioAtual.turma) return alert("Erro: Turma não carregada.");
-
-    loading(true); // Mostra que está carregando
-
-    try {
-        let conteudoHTML = "";
-        let tituloDoc = "";
-        
-        // ===============================================
-        // LÓGICA DA FREQUÊNCIA
-        // ===============================================
-        if (tipo === 'freq') {
-            const dataInput = document.getElementById('data-freq').value;
-            if(!dataInput) return alert("Selecione uma data para imprimir.");
-
-            tituloDoc = `Frequência - ${usuarioAtual.turma}`;
-            
-            let listaParaImprimir = [];
-            let statusOrigem = "";
-
-            // 1. TENTATIVA: Buscar no Banco de Dados
-            try {
-                // Verifica se o Firebase está ativo
-                if(typeof db !== 'undefined' && typeof query !== 'undefined') {
-                    const q = query(collection(db, "frequencia"), 
-                                  where("turma", "==", usuarioAtual.turma), 
-                                  where("data", "==", dataInput));
-                    const snap = await getDocs(q);
-
-                    if (!snap.empty) {
-                        listaParaImprimir = snap.docs[0].data().detalhes;
-                        statusOrigem = "(Registro Salvo)";
-                    }
-                }
-            } catch (erroBanco) {
-                console.warn("Erro ao buscar no banco (usando local):", erroBanco);
-            }
-
-            // 2. FALLBACK: Se não achou no banco ou deu erro, usa a lista da tela
-            if (!listaParaImprimir || listaParaImprimir.length === 0) {
-                statusOrigem = "(Folha em Branco)";
-                // Se a lista de cache estiver vazia, tenta recarregar
-                if (!listaAlunosCache || listaAlunosCache.length === 0) {
-                     if(typeof window.carregarAlunosBase === 'function') await window.carregarAlunosBase();
-                }
-                
-                // Pega o que tiver
-                const listaBase = listaAlunosCache || [];
-                listaParaImprimir = listaBase.map(a => ({ nome: a.nome, presente: null }));
-            }
-
-            // Ordena
-            listaParaImprimir.sort((a,b) => a.nome.localeCompare(b.nome));
-
-            // Gera HTML da Tabela
-            const linhas = listaParaImprimir.map((a, i) => {
-                let st = "__________";
-                if (a.presente === true) st = "<b>PRESENTE</b>";
-                else if (a.presente === false) st = "<b style='color:red'>FALTA</b>";
-                
-                return `<tr>
-                    <td style='text-align:center'>${i+1}</td>
-                    <td>${a.nome}</td>
-                    <td style='text-align:center'>${st}</td>
-                </tr>`;
-            }).join('');
-
-            conteudoHTML = `
-                <h2 style="text-align:center; margin-bottom:5px">Controle de Frequência</h2>
-                <p style="text-align:center; margin-top:0">
-                    Turma: <b>${usuarioAtual.turma}</b> | Data: <b>${formatData(dataInput)}</b> <br>
-                    <small>${statusOrigem}</small>
-                </p>
-                <table style="width:100%; border-collapse:collapse; font-size:12px; border:1px solid #000;">
-                    <thead style="background:#eee">
-                        <tr>
-                            <th style="border:1px solid #999; padding:5px; width:50px">Nº</th>
-                            <th style="border:1px solid #999; padding:5px">Nome</th>
-                            <th style="border:1px solid #999; padding:5px; width:150px; text-align:center">Assinatura / Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>${linhas}</tbody>
-                </table>
-                <br><br><br>
-                <div style="border-top:1px solid #000; width:50%; margin:0 auto; text-align:center">Professor(a)</div>
-            `;
-        } 
-        // ===============================================
-        // LÓGICA DO DIÁRIO (Manteve o que funcionava)
-        // ===============================================
-        else {
-            tituloDoc = "Diário de Classe";
-            const dt = document.getElementById('data-plan').value;
-            const tit = document.getElementById('plan-disciplina').value || "";
-            const txt = document.getElementById('plan-metodologia').value || "";
-            
-            conteudoHTML = `
-                <h2 style="text-align:center">Diário de Classe</h2>
-                <p style="text-align:center">Turma: <b>${usuarioAtual.turma}</b> | Data: <b>${formatData(dt)}</b></p>
-                <hr><h3>${tit}</h3>
-                <div style="text-align:justify; line-height:1.5">${txt}</div>
-            `;
-        }
-
-        // ===============================================
-        // PROCESSO DE IMPRESSÃO (Técnica Iframe)
-        // ===============================================
-        // Remove iframe anterior se existir
-        let oldFrame = document.getElementById('print-iframe');
-        if(oldFrame) oldFrame.remove();
-
-        // Cria um iframe invisível para imprimir
-        let iframe = document.createElement('iframe');
-        iframe.id = 'print-iframe';
-        iframe.style.position = 'fixed';
-        iframe.style.right = '0';
-        iframe.style.bottom = '0';
-        iframe.style.width = '0';
-        iframe.style.height = '0';
-        iframe.style.border = '0';
-        document.body.appendChild(iframe);
-
-        // Escreve o conteúdo
-        let doc = iframe.contentWindow.document;
-        doc.open();
-        doc.write(`
-            <html>
-                <head>
-                    <title>${tituloDoc}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; padding: 20px; }
-                        table, th, td { border: 1px solid #ccc; border-collapse: collapse; }
-                        th, td { padding: 5px; }
-                        @media print { @page { margin: 1cm; } }
-                    </style>
-                </head>
-                <body>${conteudoHTML}</body>
-            </html>
-        `);
-        doc.close();
-
-        // Aguarda carregar e manda imprimir
-        setTimeout(() => {
-            loading(false);
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-            // iframe.remove(); // Opcional: remover depois
-        }, 500);
-
-    } catch (e) {
-        loading(false);
-        console.error(e);
-        alert("Erro fatal ao imprimir: " + e.message);
-    }
-};
+        window.imprimirTela = (tipo) => {
+            document.body.classList.remove('printing-report');
+            document.getElementById('p-turma').innerText = usuarioAtual.turma;
+            document.getElementById('p-data').innerText = formatData(document.getElementById(tipo==='freq'?'data-freq':'data-plan').value);
+            window.print();
+        };
 
         window.removerAluno = async (id) => {
             if(confirm("Remover aluno permanentemente?")) {
@@ -1035,12 +906,5 @@ window.imprimirTela = async (tipo) => {
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
 
 
