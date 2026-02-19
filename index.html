@@ -317,6 +317,24 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+async function registrarLog(acao) {
+    if(!usuarioAtual) return; // Só registra se houver alguém logado
+    try {
+        await addDoc(collection(db, "logs_auditoria"), {
+            usuario: usuarioAtual.nome,
+            email: usuarioAtual.email || "Acesso Manual",
+            turma: usuarioAtual.turma,
+            acao: acao,
+            data: new Date().toISOString(), // Para facilitar filtros futuros
+            dataStr: new Date().toLocaleDateString('pt-BR'), // Para o gráfico
+            horario: new Date().toLocaleTimeString('pt-BR')
+        });
+    } catch (e) {
+        console.error("Erro ao gerar log:", e);
+    }
+}
+        
+
         const ESTRUTURA_TURMAS = { 
             "Berçário": [ { nome: "Berçário", letras: ["A", "B"] } ],
             "Infantil 1": [ { nome: "Infantil 1", letras: ["A", "B", "C", "D", "E", "F", "G", "I"] } ],
@@ -447,22 +465,6 @@
                 listaAlunosCache.sort((a,b) => a.nome.localeCompare(b.nome));
             } catch(e) { console.log(e); } finally { loading(false); }
         }
-
-
-        async function registrarLogAuditoria(usuario, acao) {
-    try {
-        await addDoc(collection(db, "logs_auditoria"), {
-            usuario: usuario.nome,
-            email: usuario.email,
-            turma: usuario.turma,
-            acao: acao, // Ex: "Login", "Salvou Chamada"
-            data: new Date().toISOString(),
-            dataFormatada: getHoje()
-        });
-    } catch (e) {
-        console.error("Erro ao registrar log:", e);
-    }
-}
 
         // --- RENDERIZADOR ---
         function renderizarTabelaAlunos(listaExibicao, faltosos = []) {
@@ -621,6 +623,9 @@
     } finally {
         loading(false);
     }
+await registrarLog("Realizou Chamada da Turma " + turmaSelecionada);
+    
+    alert("Chamada salva!");
 };
         window.abrirRelatorioMensal = () => {
             const hoje = new Date();
@@ -732,7 +737,10 @@
                 });
                 alert("Diário Salvo!"); window.carregarPlanejamento();
             } catch(e){ alert("Erro."); } finally { loading(false); }
-        };
+       await registrarLog("Salvou Diário/Planejamento");
+    
+    alert("Planejamento salvo!");
+};
 
         window.excluirPlanejamento = async () => {
             if(!confirm("Excluir o registro deste dia?")) return;
@@ -922,5 +930,6 @@
     </script>
 </body>
 </html>
+
 
 
