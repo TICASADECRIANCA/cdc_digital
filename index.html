@@ -448,6 +448,22 @@
             } catch(e) { console.log(e); } finally { loading(false); }
         }
 
+
+        async function registrarLogAuditoria(usuario, acao) {
+    try {
+        await addDoc(collection(db, "logs_auditoria"), {
+            usuario: usuario.nome,
+            email: usuario.email,
+            turma: usuario.turma,
+            acao: acao, // Ex: "Login", "Salvou Chamada"
+            data: new Date().toISOString(),
+            dataFormatada: getHoje()
+        });
+    } catch (e) {
+        console.error("Erro ao registrar log:", e);
+    }
+}
+
         // --- RENDERIZADOR ---
         function renderizarTabelaAlunos(listaExibicao, faltosos = []) {
             const tbody = document.getElementById('tbody-alunos');
