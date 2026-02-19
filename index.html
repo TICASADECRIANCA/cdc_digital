@@ -319,19 +319,22 @@
 
 // NOVA FUNÇÃO: Registra o que acontece no sistema
 async function registrarLog(acao) {
-    if (!usuarioAtual) return; 
+    console.log("Tentando registrar log:", acao); // Isto vai aparecer no F12
+    if (!usuarioAtual) {
+        console.warn("Log não registrado: Nenhum usuário logado.");
+        return;
+    }
     try {
-        await addDoc(collection(db, "logs_auditoria"), {
+        const docRef = await addDoc(collection(db, "logs_auditoria"), {
             usuario: usuarioAtual.nome,
             email: usuarioAtual.email || "Acesso Manual",
             turma: usuarioAtual.turma,
-            turmaAfetada: typeof turmaSelecionada !== 'undefined' ? turmaSelecionada : usuarioAtual.turma,
             acao: acao,
-            data: serverTimestamp(), // Hora oficial do servidor
-            dataLegivel: new Date().toLocaleString('pt-BR')
+            data: serverTimestamp()
         });
+        console.log("Log gravado com sucesso! ID:", docRef.id);
     } catch (e) {
-        console.error("Erro ao salvar log: ", e);
+        console.error("ERRO AO GRAVAR NO FIREBASE:", e);
     }
 }
         
@@ -935,6 +938,7 @@ await registrarLog("Realizou Chamada da Turma " + turmaSelecionada);
     </script>
 </body>
 </html>
+
 
 
 
