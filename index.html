@@ -255,8 +255,7 @@
             <div class="nav-item" onclick="window.open('reunioes.html', '_blank')"><span>📝</span> Reuniões</div>
         </div>
     </div>
-
- <div id="modal-relatorio" class="modal-overlay">
+<div id="modal-relatorio" class="modal-overlay">
     <div class="modal-content">
         <h3 style="color:var(--primary); margin-top:0;">📊 Relatório Periódico</h3>
         <div class="no-print" style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #eee;">
@@ -278,7 +277,7 @@
         <button onclick="document.getElementById('modal-relatorio').style.display='none'" class="btn-action btn-hist no-print" style="width:100%;">Fechar</button>
     </div>
 </div>
-
+    
 
     <div id="modal-historico" class="modal-overlay" onclick="if(event.target === this) window.fecharHistorico()">
         <div class="modal-content">
@@ -662,18 +661,17 @@ window.gerarRelatorioFaltas = async () => {
     const mesFim = document.getElementById('mes-relatorio-fim').value;
 
     if (!mesInicio || !mesFim) {
-        return alert("Por favor, selecione o mês inicial e o mês final.");
+        return alert("Por favor, selecione o mês inicial e o final.");
     }
     if (mesInicio > mesFim) {
-        return alert("O mês inicial não pode ser posterior ao mês final.");
+        return alert("O mês inicial não pode ser depois do final.");
     }
 
     loading(true);
     const divRes = document.getElementById('resultado-relatorio');
-    divRes.innerHTML = "<p style='text-align:center;'>Processando dados do período...</p>";
+    divRes.innerHTML = "Processando período...";
 
     try {
-        // Formata as datas para abranger todo o intervalo (ex: 2024-01-01 até 2024-03-31)
         const dataBuscaInicio = `${mesInicio}-01`;
         const dataBuscaFim = `${mesFim}-31`;
 
@@ -688,9 +686,9 @@ window.gerarRelatorioFaltas = async () => {
         const mapaFaltas = {};
 
         snap.forEach(docSnap => {
-            const dia = docSnap.data();
-            if (dia.detalhes) {
-                dia.detalhes.forEach(aluno => {
+            const dados = docSnap.data();
+            if (dados.detalhes) {
+                dados.detalhes.forEach(aluno => {
                     if (!mapaFaltas[aluno.nome]) mapaFaltas[aluno.nome] = 0;
                     if (!aluno.presente) mapaFaltas[aluno.nome]++;
                 });
@@ -699,18 +697,15 @@ window.gerarRelatorioFaltas = async () => {
 
         let html = `<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
             <thead style="background:#eee;">
-                <tr>
-                    <th style="text-align:left; padding:8px; border:1px solid #ddd;">Aluno</th>
-                    <th style="text-align:center; padding:8px; border:1px solid #ddd;">Total Faltas</th>
-                </tr>
+                <tr><th style="text-align:left; padding:8px; border:1px solid #ddd;">Aluno</th>
+                <th style="text-align:center; padding:8px; border:1px solid #ddd;">Faltas Acumuladas</th></tr>
             </thead><tbody>`;
 
-        const nomesOrdenados = Object.keys(mapaFaltas).sort();
-        
-        if (nomesOrdenados.length === 0) {
-            divRes.innerHTML = "<p style='text-align:center; padding:20px;'>Nenhum registro de falta encontrado neste período.</p>";
+        const nomes = Object.keys(mapaFaltas).sort();
+        if (nomes.length === 0) {
+            divRes.innerHTML = "Nenhum registro encontrado no período.";
         } else {
-            nomesOrdenados.forEach(nome => {
+            nomes.forEach(nome => {
                 html += `<tr>
                     <td style="padding:8px; border:1px solid #ddd;">${nome}</td>
                     <td style="text-align:center; border:1px solid #ddd; font-weight:bold;">${mapaFaltas[nome]}</td>
@@ -719,15 +714,13 @@ window.gerarRelatorioFaltas = async () => {
             html += "</tbody></table>";
             divRes.innerHTML = html;
         }
-
     } catch (e) {
-        console.error("Erro ao gerar relatório:", e);
-        alert("Ocorreu um erro ao processar o relatório.");
+        console.error(e);
+        alert("Erro ao processar: " + e.message);
     } finally {
         loading(false);
     }
 };
-
 
         
 
