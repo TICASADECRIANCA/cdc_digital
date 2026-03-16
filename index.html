@@ -257,19 +257,31 @@
     </div>
 
     <div id="modal-relatorio" class="modal-overlay">
-        <div class="modal-content">
-            <h3 style="color:var(--primary); margin-top:0;">📊 Relatório Mensal</h3>
-            <div class="no-print" style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #eee;">
-                <label>Selecione o Mês:</label>
-                <input type="month" id="mes-relatorio" style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc;">
-                <button onclick="window.gerarRelatorioFaltas()" class="btn-action btn-save" style="width:100%; margin-top:10px;">Gerar Relatório</button>
+    <div class="modal-content">
+        <h3 style="color:var(--primary); margin-top:0;">📊 Relatório Periódico</h3>
+        <div class="no-print" style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #eee;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label>Mês Inicial:</label>
+                    <input type="month" id="mes-relatorio-inicio" style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc;">
+                </div>
+                <div>
+                    <label>Mês Final:</label>
+                    <input type="month" id="mes-relatorio-fim" style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc;">
+                </div>
             </div>
-            <div id="resultado-relatorio" style="max-height:300px; overflow-y:auto; margin-bottom:10px;"></div>
-            
-            <button onclick="window.imprimirRelatorio()" class="btn-action btn-print no-print" style="width:100%; margin-bottom:10px;">🖨️ Imprimir este Relatório</button>
-            <button onclick="document.getElementById('modal-relatorio').style.display='none'" class="btn-action btn-hist no-print" style="width:100%;">Fechar</button>
+            <button onclick="window.gerarRelatorioFaltas()" class="btn-action btn-save" style="width:100%; margin-top:10px;">Gerar Relatório</button>
         </div>
+        <div id="resultado-relatorio" style="max-height:400px; overflow-y:auto; margin-bottom:10px;"></div>
+        
+        <button onclick="window.imprimirRelatorio()" class="btn-action btn-print no-print" style="width:100%; margin-bottom:10px;">🖨️ Imprimir</button>
+        <button onclick="document.getElementById('modal-relatorio').style.display='none'" class="btn-action btn-hist no-print" style="width:100%;">Fechar</button>
     </div>
+</div>
+
+
+
+    
 
     <div id="modal-historico" class="modal-overlay" onclick="if(event.target === this) window.fecharHistorico()">
         <div class="modal-content">
@@ -648,68 +660,62 @@ await registrarLog("Realizou Chamada da Turma " + turmaSelecionada);
             setTimeout(() => document.body.classList.remove('printing-report'), 1000);
         };
 
-        window.gerarRelatorioFaltas = async () => {
-    const mesAno = document.getElementById('mes-relatorio').value;
-    if(!mesAno) return alert("Selecione o mês.");
-    
-    const divRes = document.getElementById('resultado-relatorio');
-    divRes.innerHTML = "Calculando...";
+window.gerarRelatorioFaltas = async () => {
+    const mesInicio = document.getElementById('mes-relatorio-inicio').value;
+    const mesFim = document.getElementById('mes-relatorio-fim').value;
+
+    if (!mesInicio || !mesFim) return alert("Selecione o período inicial e final.");
+    if (mesInicio > mesFim) return alert("O mês inicial não pode ser maior que o final.");
+
     loading(true);
-    
+    const divRes = document.getElementById('resultado-relatorio');
+    divRes.innerHTML = "Processando período...";
+
     try {
-        const start = mesAno + "-01";
-        const end = mesAno + "-31";
-        
-        // CORREÇÃO: Removemos o filtro de data da query (causa do erro de índice).
-        // Filtramos apenas a TURMA no banco de dados.
+        // Define o intervalo de busca (do primeiro dia do mês inicial ao último do mês final)
+        const dataInicio = `${mesInicio}-01`;
+        const dataFim = `${mesFim}-31`;
+
         const q = query(
-            collection(db, "frequencia"), 
-            where("turma", "==", usuarioAtual.turma)
+            collection(db, "frequencia"),
+            where("turma", "==", usuarioAtual.turma),
+            where("data", ">=", dataInicio),
+            where("data", "<=", dataFim)
         );
-        
+
         const snap = await getDocs(q);
-        
-        let mapaFaltas = {};
-        // Inicializa contagem com os alunos atuais
-        listaAlunosCache.forEach(a => mapaFaltas[a.nome] = 0);
-        let diasLetivos = 0;
-        
-        snap.forEach(docSnap => {
-            const dados = docSnap.data();
-            
-            // CORREÇÃO: O filtro de data é feito aqui no JavaScript (Client-side)
-            if (dados.data >= start && dados.data <= end) {
-                diasLetivos++;
-                if(dados.detalhes) {
-                    dados.detalhes.forEach(d => {
-                        if(mapaFaltas[d.nome] === undefined) mapaFaltas[d.nome] = 0;
-                        if(!d.presente) mapaFaltas[d.nome]++;
-                    });
-                }
+        const mapaFaltas = {};
+
+        snap.forEach(doc => {
+            const dia = doc.data();
+            if (dia.detalhes) {
+                dia.detalhes.forEach(aluno => {
+                    if (!mapaFaltas[aluno.nome]) mapaFaltas[aluno.nome] = 0;
+                    if (!aluno.presente) mapaFaltas[aluno.nome]++;
+                });
             }
         });
-        
-        // Geração do HTML (mantido igual ao original)
-        const nomesAtivos = listaAlunosCache.map(a => a.nome);
-        const listaFinal = Object.entries(mapaFaltas).sort((a, b) => b[1] - a[1]);
-        
-        let html = `<div style="padding:10px;"><p><strong>Dias Letivos no Mês:</strong> ${diasLetivos}</p>`;
-        html += `<table class="desktop-table" style="width:100%; font-size:0.9rem; border:1px solid #ddd;">
-                <thead style="background:#eee; color:#333;"><tr><th>Aluno</th><th style="text-align:center">Faltas</th></tr></thead>
-                <tbody>`;
-                
-        listaFinal.forEach(([nome, faltas]) => {
-            const isEx = !nomesAtivos.includes(nome);
-            const nomeExibicao = isEx ? `${nome} <span class="texto-removido">(Ex-Aluno)</span>` : nome;
-            const cor = faltas > 0 ? "color:#c0392b; font-weight:bold;" : "color:#27ae60;";
-            html += `<tr><td>${nomeExibicao}</td><td style="text-align:center; ${cor}">${faltas}</td></tr>`;
+
+        // Gera o HTML do resultado
+        let html = `<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+            <thead style="background:#eee;">
+                <tr><th style="text-align:left; padding:8px;">Aluno</th><th style="text-align:center;">Total Faltas</th></tr>
+            </thead><tbody>`;
+
+        const nomesOrdenados = Object.keys(mapaFaltas).sort();
+        nomesOrdenados.forEach(nome => {
+            html += `<tr>
+                <td style="padding:8px; border-bottom:1px solid #eee;">${nome}</td>
+                <td style="text-align:center; border-bottom:1px solid #eee;">${mapaFaltas[nome]}</td>
+            </tr>`;
         });
-        html += `</tbody></table></div>`;
-        divRes.innerHTML = html;
-        
-    } catch(e) {
+
+        html += "</tbody></table>";
+        divRes.innerHTML = nomesOrdenados.length ? html : "Nenhum registro no período.";
+
+    } catch (e) {
         console.error(e);
-        divRes.innerHTML = "Erro ao gerar relatório: " + e.message;
+        alert("Erro ao gerar relatório.");
     } finally {
         loading(false);
     }
