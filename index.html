@@ -255,6 +255,7 @@
             <div class="nav-item" onclick="window.open('reunioes.html', '_blank')"><span>📝</span> Reuniões</div>
         </div>
     </div>
+
 <div id="modal-relatorio" class="modal-overlay">
     <div class="modal-content">
         <h3 style="color:var(--primary); margin-top:0;">📊 Relatório Periódico</h3>
@@ -641,20 +642,16 @@ await registrarLog("Realizou Chamada da Turma " + turmaSelecionada);
     
     alert("Chamada salva!");
 };
-  window.abrirRelatorioMensal = () => {
-    const modal = document.getElementById('modal-relatorio');
-    const inputInicio = document.getElementById('mes-relatorio-inicio');
-    const inputFim = document.getElementById('mes-relatorio-fim');
-    
-    // Pega o mês atual no formato YYYY-MM
-    const mesAtual = new Date().toISOString().substring(0, 7);
-    
-    // Preenche os campos se eles existirem
-    if (inputInicio) inputInicio.value = mesAtual;
-    if (inputFim) inputFim.value = mesAtual;
-    
+window.abrirRelatorioMensal = () => {
+    const hoje = new Date();
+    const mesStr = hoje.toISOString().slice(0, 7); 
+    // Corrigido para os novos IDs
+    setTimeout(() => {
+        if(document.getElementById('mes-relatorio-inicio')) document.getElementById('mes-relatorio-inicio').value = mesStr;
+        if(document.getElementById('mes-relatorio-fim')) document.getElementById('mes-relatorio-fim').value = mesStr;
+    }, 100);
     document.getElementById('resultado-relatorio').innerHTML = "";
-    modal.style.display = 'flex';
+    document.getElementById('modal-relatorio').style.display = 'flex';
 };
 
         // --- CORREÇÃO IMPRESSÃO RELATÓRIO ---
@@ -665,71 +662,59 @@ await registrarLog("Realizou Chamada da Turma " + turmaSelecionada);
         };
 
 window.gerarRelatorioFaltas = async () => {
-    const mesInicio = document.getElementById('mes-relatorio-inicio').value;
-    const mesFim = document.getElementById('mes-relatorio-fim').value;
-
-    if (!mesInicio || !mesFim) {
-        return alert("Por favor, selecione o mês inicial e o final.");
-    }
-    if (mesInicio > mesFim) {
-        return alert("O mês inicial não pode ser depois do final.");
-    }
-
-    loading(true);
+    const inicio = document.getElementById('mes-relatorio-inicio').value;
+    const fim = document.getElementById('mes-relatorio-fim').value;
+    
+    if(!inicio || !fim) return alert("Selecione o período inicial e final.");
+    
     const divRes = document.getElementById('resultado-relatorio');
     divRes.innerHTML = "Processando período...";
+    loading(true);
 
     try {
-        const dataBuscaInicio = `${mesInicio}-01`;
-        const dataBuscaFim = `${mesFim}-31`;
-
-        const q = query(
-            collection(db, "frequencia"),
-            where("turma", "==", usuarioAtual.turma),
-            where("data", ">=", dataBuscaInicio),
-            where("data", "<=", dataBuscaFim)
-        );
-
+        const dataStart = inicio + "-01";
+        const dataEnd = fim + "-31";
+        
+        const q = query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma));
         const snap = await getDocs(q);
-        const mapaFaltas = {};
+        
+        let mapaFaltas = {};
+        listaAlunosCache.forEach(a => mapaFaltas[a.nome] = 0);
+        let diasNoPeriodo = 0;
 
         snap.forEach(docSnap => {
             const dados = docSnap.data();
-            if (dados.detalhes) {
-                dados.detalhes.forEach(aluno => {
-                    if (!mapaFaltas[aluno.nome]) mapaFaltas[aluno.nome] = 0;
-                    if (!aluno.presente) mapaFaltas[aluno.nome]++;
-                });
+            if (dados.data >= dataStart && dados.data <= dataEnd) {
+                diasNoPeriodo++;
+                if(dados.detalhes) {
+                    dados.detalhes.forEach(d => {
+                        if(mapaFaltas[d.nome] === undefined) mapaFaltas[d.nome] = 0;
+                        if(!d.presente) mapaFaltas[d.nome]++;
+                    });
+                }
             }
         });
 
-        let html = `<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
-            <thead style="background:#eee;">
-                <tr><th style="text-align:left; padding:8px; border:1px solid #ddd;">Aluno</th>
-                <th style="text-align:center; padding:8px; border:1px solid #ddd;">Faltas Acumuladas</th></tr>
-            </thead><tbody>`;
+        let html = `<div style="padding:10px;"><p><strong>Dias com chamada no período:</strong> ${diasNoPeriodo}</p>`;
+        html += `<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                <thead style="background:#eee;"><tr><th style="text-align:left; padding:8px;">Aluno</th><th style="text-align:center;">Faltas</th></tr></thead>
+                <tbody>`;
 
-        const nomes = Object.keys(mapaFaltas).sort();
-        if (nomes.length === 0) {
-            divRes.innerHTML = "Nenhum registro encontrado no período.";
-        } else {
-            nomes.forEach(nome => {
-                html += `<tr>
-                    <td style="padding:8px; border:1px solid #ddd;">${nome}</td>
-                    <td style="text-align:center; border:1px solid #ddd; font-weight:bold;">${mapaFaltas[nome]}</td>
-                </tr>`;
-            });
-            html += "</tbody></table>";
-            divRes.innerHTML = html;
-        }
-    } catch (e) {
+        Object.entries(mapaFaltas).sort((a,b) => a[0].localeCompare(b[0])).forEach(([nome, faltas]) => {
+            html += `<tr><td style="padding:8px; border-bottom:1px solid #eee;">${nome}</td><td style="text-align:center; border-bottom:1px solid #eee;">${faltas}</td></tr>`;
+        });
+        html += `</tbody></table></div>`;
+        divRes.innerHTML = html;
+        
+    } catch(e) {
         console.error(e);
-        alert("Erro ao processar: " + e.message);
+        alert("Erro ao gerar: " + e.message);
     } finally {
         loading(false);
     }
 };
 
+        
         
 
         window.carregarPlanejamento = async () => {
