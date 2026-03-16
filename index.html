@@ -641,13 +641,21 @@ await registrarLog("Realizou Chamada da Turma " + turmaSelecionada);
     
     alert("Chamada salva!");
 };
-        window.abrirRelatorioMensal = () => {
-            const hoje = new Date();
-            const mesStr = hoje.toISOString().slice(0, 7); 
-            document.getElementById('mes-relatorio').value = mesStr;
-            document.getElementById('resultado-relatorio').innerHTML = "";
-            document.getElementById('modal-relatorio').style.display = 'flex';
-        };
+  window.abrirRelatorioMensal = () => {
+    const modal = document.getElementById('modal-relatorio');
+    const inputInicio = document.getElementById('mes-relatorio-inicio');
+    const inputFim = document.getElementById('mes-relatorio-fim');
+    
+    // Pega o mês atual no formato YYYY-MM
+    const mesAtual = new Date().toISOString().substring(0, 7);
+    
+    // Preenche os campos se eles existirem
+    if (inputInicio) inputInicio.value = mesAtual;
+    if (inputFim) inputFim.value = mesAtual;
+    
+    document.getElementById('resultado-relatorio').innerHTML = "";
+    modal.style.display = 'flex';
+};
 
         // --- CORREÇÃO IMPRESSÃO RELATÓRIO ---
         window.imprimirRelatorio = () => {
