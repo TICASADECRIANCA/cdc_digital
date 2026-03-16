@@ -107,26 +107,30 @@
             .modal-overlay { align-items: flex-end; }
             .modal-content { border-radius: 15px 15px 0 0; margin: 0; width: 100%; }
         }
-        @media print {
-            .app-header, .nav-tabs, .action-bar, .no-print, #view-login, #view-cadastro, #view-coord, .btn-group { display: none !important; }
-            .modal-overlay { position: static; background: white; height: auto; display: block !important; }
-            .modal-content { box-shadow: none; border: none; max-width: 100%; width: 100%; }
-            body > * { display: none !important; }
-            body > #print-area { display: block !important; }
-            
-            body.printing-report #modal-relatorio { display: block !important; }
-            body.printing-report #modal-relatorio .modal-content { width: 100%; padding:0; }
-            body.printing-report #resultado-relatorio { max-height: none !important; overflow: visible !important; }
-        }
-@media print {
+   @media print {
+    /* Esconde tudo por padrão na impressão */
     body * { visibility: hidden; }
-    #modal-relatorio, #modal-relatorio * { visibility: visible; }
-    #modal-relatorio { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
     .no-print { display: none !important; }
-    .modal-content { box-shadow: none !important; border: none !important; width: 100% !important; max-height: none !important; overflow: visible !important; }
-    table { width: 100%; border: 1px solid #000; border-collapse: collapse; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-    th { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; }
+
+    /* Se estiver imprimindo o Relatório de Faltas (Modal) */
+    body.printing-report #modal-relatorio, 
+    body.printing-report #modal-relatorio * { 
+        visibility: visible; 
+    }
+    body.printing-report #modal-relatorio { 
+        position: absolute; left: 0; top: 0; width: 100%; 
+    }
+
+    /* Se estiver imprimindo Chamada ou Diário (Print Container padrão) */
+    body:not(.printing-report) #print-container, 
+    body:not(.printing-report) #print-container * { 
+        visibility: visible; 
+    }
+    body:not(.printing-report) #print-container { 
+        position: absolute; left: 0; top: 0; width: 100%; 
+    }
+
+    .modal-content { box-shadow: none !important; border: none !important; max-height: none !important; }
 }
         
     </style>
@@ -669,11 +673,11 @@ window.abrirRelatorioMensal = () => {
 };
 
         // --- CORREÇÃO IMPRESSÃO RELATÓRIO ---
-        window.imprimirRelatorio = () => {
-            document.body.classList.add('printing-report');
-            window.print();
-            setTimeout(() => document.body.classList.remove('printing-report'), 1000);
-        };
+  window.imprimirRelatorio = () => {
+    // Adiciona uma classe ao body para o CSS saber que é o relatório acumulado
+    document.body.classList.add('printing-report');
+    window.print();
+};
 
 window.gerarRelatorioFaltas = async () => {
     const inicio = document.getElementById('mes-relatorio-inicio').value;
@@ -728,35 +732,35 @@ window.gerarRelatorioFaltas = async () => {
     }
 };
 
-        window.exportarExcel = () => {
+     window.exportarExcel = () => {
     const tabela = document.querySelector("#resultado-relatorio table");
     if (!tabela) return alert("Gere o relatório primeiro!");
 
     let csv = [];
     const linhas = tabela.querySelectorAll("tr");
     
+    // Cabeçalho personalizado para o CSV
+    csv.push(`Relatorio de Faltas - Turma: ${usuarioAtual.turma}`);
+    csv.push(`Periodo: ${document.getElementById('mes-relatorio-inicio').value} ate ${document.getElementById('mes-relatorio-fim').value}`);
+    csv.push(""); // Linha vazia
+
     for (let i = 0; i < linhas.length; i++) {
         const linha = [], colunas = linhas[i].querySelectorAll("td, th");
         for (let j = 0; j < colunas.length; j++) {
-            // Limpa o texto e remove vírgulas para não quebrar o CSV
             linha.push('"' + colunas[j].innerText.trim() + '"');
         }
-        csv.push(linha.join(";")); // O Excel brasileiro usa ";" como separador
+        csv.push(linha.join(";"));
     }
 
-    const csvContent = "\uFEFF" + csv.join("\n"); // \uFEFF trata acentuação no Excel
+    const csvContent = "\uFEFF" + csv.join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Relatorio_Faltas_${usuarioAtual.turma}.csv`);
-    link.style.visibility = 'hidden';
+    link.setAttribute("href", URL.createObjectURL(blob));
+    link.setAttribute("download", `Faltas_${usuarioAtual.turma}_${new Date().getTime()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 };
-        
         
 
         window.carregarPlanejamento = async () => {
@@ -966,12 +970,16 @@ window.gerarRelatorioFaltas = async () => {
         };
         window.fecharHistorico = () => document.getElementById('modal-historico').style.display = 'none';
 
-        window.imprimirTela = (tipo) => {
-            document.body.classList.remove('printing-report');
-            document.getElementById('p-turma').innerText = usuarioAtual.turma;
-            document.getElementById('p-data').innerText = formatData(document.getElementById(tipo==='freq'?'data-freq':'data-plan').value);
-            window.print();
-        };
+    window.imprimirTela = (tipo) => {
+    // Remove a classe de relatório para garantir que imprima a tela de chamada/diário
+    document.body.classList.remove('printing-report');
+    
+    document.getElementById('p-turma').innerText = usuarioAtual.turma;
+    document.getElementById('p-data').innerText = formatData(document.getElementById(tipo==='freq'?'data-freq':'data-plan').value);
+    
+    // Se for frequência, podemos formatar a tabela de impressão aqui se necessário
+    window.print();
+};
 
         window.removerAluno = async (id) => {
             if(confirm("Remover aluno permanentemente?")) {
