@@ -256,32 +256,29 @@
         </div>
     </div>
 
-    <div id="modal-relatorio" class="modal-overlay">
+ <div id="modal-relatorio" class="modal-overlay">
     <div class="modal-content">
         <h3 style="color:var(--primary); margin-top:0;">📊 Relatório Periódico</h3>
         <div class="no-print" style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #eee;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                 <div>
-                    <label>Mês Inicial:</label>
+                    <label style="font-size: 0.8rem; font-weight: bold;">Mês Inicial:</label>
                     <input type="month" id="mes-relatorio-inicio" style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc;">
                 </div>
                 <div>
-                    <label>Mês Final:</label>
+                    <label style="font-size: 0.8rem; font-weight: bold;">Mês Final:</label>
                     <input type="month" id="mes-relatorio-fim" style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc;">
                 </div>
             </div>
-            <button onclick="window.gerarRelatorioFaltas()" class="btn-action btn-save" style="width:100%; margin-top:10px;">Gerar Relatório</button>
+            <button onclick="window.gerarRelatorioFaltas()" class="btn-action btn-save" style="width:100%;">Gerar Relatório</button>
         </div>
-        <div id="resultado-relatorio" style="max-height:400px; overflow-y:auto; margin-bottom:10px;"></div>
+        <div id="resultado-relatorio" style="max-height:350px; overflow-y:auto; margin-bottom:10px;"></div>
         
         <button onclick="window.imprimirRelatorio()" class="btn-action btn-print no-print" style="width:100%; margin-bottom:10px;">🖨️ Imprimir</button>
         <button onclick="document.getElementById('modal-relatorio').style.display='none'" class="btn-action btn-hist no-print" style="width:100%;">Fechar</button>
     </div>
 </div>
 
-
-
-    
 
     <div id="modal-historico" class="modal-overlay" onclick="if(event.target === this) window.fecharHistorico()">
         <div class="modal-content">
@@ -664,30 +661,34 @@ window.gerarRelatorioFaltas = async () => {
     const mesInicio = document.getElementById('mes-relatorio-inicio').value;
     const mesFim = document.getElementById('mes-relatorio-fim').value;
 
-    if (!mesInicio || !mesFim) return alert("Selecione o período inicial e final.");
-    if (mesInicio > mesFim) return alert("O mês inicial não pode ser maior que o final.");
+    if (!mesInicio || !mesFim) {
+        return alert("Por favor, selecione o mês inicial e o mês final.");
+    }
+    if (mesInicio > mesFim) {
+        return alert("O mês inicial não pode ser posterior ao mês final.");
+    }
 
     loading(true);
     const divRes = document.getElementById('resultado-relatorio');
-    divRes.innerHTML = "Processando período...";
+    divRes.innerHTML = "<p style='text-align:center;'>Processando dados do período...</p>";
 
     try {
-        // Define o intervalo de busca (do primeiro dia do mês inicial ao último do mês final)
-        const dataInicio = `${mesInicio}-01`;
-        const dataFim = `${mesFim}-31`;
+        // Formata as datas para abranger todo o intervalo (ex: 2024-01-01 até 2024-03-31)
+        const dataBuscaInicio = `${mesInicio}-01`;
+        const dataBuscaFim = `${mesFim}-31`;
 
         const q = query(
             collection(db, "frequencia"),
             where("turma", "==", usuarioAtual.turma),
-            where("data", ">=", dataInicio),
-            where("data", "<=", dataFim)
+            where("data", ">=", dataBuscaInicio),
+            where("data", "<=", dataBuscaFim)
         );
 
         const snap = await getDocs(q);
         const mapaFaltas = {};
 
-        snap.forEach(doc => {
-            const dia = doc.data();
+        snap.forEach(docSnap => {
+            const dia = docSnap.data();
             if (dia.detalhes) {
                 dia.detalhes.forEach(aluno => {
                     if (!mapaFaltas[aluno.nome]) mapaFaltas[aluno.nome] = 0;
@@ -696,30 +697,39 @@ window.gerarRelatorioFaltas = async () => {
             }
         });
 
-        // Gera o HTML do resultado
         let html = `<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
             <thead style="background:#eee;">
-                <tr><th style="text-align:left; padding:8px;">Aluno</th><th style="text-align:center;">Total Faltas</th></tr>
+                <tr>
+                    <th style="text-align:left; padding:8px; border:1px solid #ddd;">Aluno</th>
+                    <th style="text-align:center; padding:8px; border:1px solid #ddd;">Total Faltas</th>
+                </tr>
             </thead><tbody>`;
 
         const nomesOrdenados = Object.keys(mapaFaltas).sort();
-        nomesOrdenados.forEach(nome => {
-            html += `<tr>
-                <td style="padding:8px; border-bottom:1px solid #eee;">${nome}</td>
-                <td style="text-align:center; border-bottom:1px solid #eee;">${mapaFaltas[nome]}</td>
-            </tr>`;
-        });
-
-        html += "</tbody></table>";
-        divRes.innerHTML = nomesOrdenados.length ? html : "Nenhum registro no período.";
+        
+        if (nomesOrdenados.length === 0) {
+            divRes.innerHTML = "<p style='text-align:center; padding:20px;'>Nenhum registro de falta encontrado neste período.</p>";
+        } else {
+            nomesOrdenados.forEach(nome => {
+                html += `<tr>
+                    <td style="padding:8px; border:1px solid #ddd;">${nome}</td>
+                    <td style="text-align:center; border:1px solid #ddd; font-weight:bold;">${mapaFaltas[nome]}</td>
+                </tr>`;
+            });
+            html += "</tbody></table>";
+            divRes.innerHTML = html;
+        }
 
     } catch (e) {
-        console.error(e);
-        alert("Erro ao gerar relatório.");
+        console.error("Erro ao gerar relatório:", e);
+        alert("Ocorreu um erro ao processar o relatório.");
     } finally {
         loading(false);
     }
 };
+
+
+        
 
         window.carregarPlanejamento = async () => {
             const dt = document.getElementById('data-plan').value;
