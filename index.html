@@ -107,30 +107,41 @@
             .modal-overlay { align-items: flex-end; }
             .modal-content { border-radius: 15px 15px 0 0; margin: 0; width: 100%; }
         }
-   @media print {
-    /* Esconde tudo por padrão na impressão */
-    body * { visibility: hidden; }
-    .no-print { display: none !important; }
+  
+        @media print {
+    /* Esconde tudo o que não deve sair no papel */
+    body * { visibility: hidden !important; }
+    .no-print, button, .modal-overlay:not(#modal-relatorio) { display: none !important; }
 
-    /* Se estiver imprimindo o Relatório de Faltas (Modal) */
+    /* Caso 1: Impressão da Chamada ou Diário (usa o print-container) */
+    #print-container, #print-container * { 
+        visibility: visible !important; 
+    }
+    #print-container { 
+        position: absolute !important; 
+        left: 0 !important; 
+        top: 0 !important; 
+        width: 100% !important; 
+        display: block !important;
+    }
+
+    /* Caso 2: Impressão do Relatório de Faltas (usa o modal-relatorio) */
     body.printing-report #modal-relatorio, 
     body.printing-report #modal-relatorio * { 
-        visibility: visible; 
+        visibility: visible !important; 
     }
     body.printing-report #modal-relatorio { 
-        position: absolute; left: 0; top: 0; width: 100%; 
+        position: absolute !important; 
+        left: 0 !important; 
+        top: 0 !important; 
+        width: 100% !important; 
+        display: block !important;
+        background: white !important;
     }
-
-    /* Se estiver imprimindo Chamada ou Diário (Print Container padrão) */
-    body:not(.printing-report) #print-container, 
-    body:not(.printing-report) #print-container * { 
-        visibility: visible; 
-    }
-    body:not(.printing-report) #print-container { 
-        position: absolute; left: 0; top: 0; width: 100%; 
-    }
-
-    .modal-content { box-shadow: none !important; border: none !important; max-height: none !important; }
+    
+    /* Ajuste de tabelas para não cortar */
+    table { width: 100% !important; border-collapse: collapse !important; }
+    th, td { border: 1px solid #000 !important; padding: 8px !important; }
 }
         
     </style>
@@ -672,12 +683,22 @@ window.abrirRelatorioMensal = () => {
     document.getElementById('modal-relatorio').style.display = 'flex';
 };
 
-        // --- CORREÇÃO IMPRESSÃO RELATÓRIO ---
-  window.imprimirRelatorio = () => {
-    // Adiciona uma classe ao body para o CSS saber que é o relatório acumulado
+window.imprimirRelatorio = () => {
+    const conteudo = document.getElementById('resultado-relatorio').innerHTML;
+    if(!conteudo || conteudo === "Processando...") {
+        return alert("Gere o relatório primeiro!");
+    }
+    
     document.body.classList.add('printing-report');
     window.print();
+    
+    // Remove a classe após imprimir para não afetar as outras telas
+    setTimeout(() => {
+        document.body.classList.remove('printing-report');
+    }, 1000);
 };
+
+        
 
 window.gerarRelatorioFaltas = async () => {
     const inicio = document.getElementById('mes-relatorio-inicio').value;
@@ -970,14 +991,28 @@ window.gerarRelatorioFaltas = async () => {
         };
         window.fecharHistorico = () => document.getElementById('modal-historico').style.display = 'none';
 
-    window.imprimirTela = (tipo) => {
-    // Remove a classe de relatório para garantir que imprima a tela de chamada/diário
+window.imprimirTela = (tipo) => {
     document.body.classList.remove('printing-report');
     
+    // Preenche o cabeçalho do container de impressão
     document.getElementById('p-turma').innerText = usuarioAtual.turma;
-    document.getElementById('p-data').innerText = formatData(document.getElementById(tipo==='freq'?'data-freq':'data-plan').value);
-    
-    // Se for frequência, podemos formatar a tabela de impressão aqui se necessário
+    const dataValor = document.getElementById(tipo === 'freq' ? 'data-freq' : 'data-plan').value;
+    document.getElementById('p-data').innerText = formatData(dataValor);
+
+    // Se for frequência, clonamos a tabela atual para o container de impressão
+    if(tipo === 'freq') {
+        const tabelaOriginal = document.querySelector('#lista-chamada table');
+        const containerDestino = document.getElementById('print-container');
+        // Mantemos o cabeçalho e adicionamos a tabela
+        containerDestino.innerHTML = `
+            <div style="text-align:center; margin-bottom:20px;">
+                <h2>Lista de Presença</h2>
+                <p>Turma: ${usuarioAtual.turma} | Data: ${formatData(dataValor)}</p>
+            </div>
+            ${tabelaOriginal ? tabelaOriginal.outerHTML : 'Sem dados para imprimir'}
+        `;
+    }
+
     window.print();
 };
 
