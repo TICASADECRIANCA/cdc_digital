@@ -118,6 +118,17 @@
             body.printing-report #modal-relatorio .modal-content { width: 100%; padding:0; }
             body.printing-report #resultado-relatorio { max-height: none !important; overflow: visible !important; }
         }
+@media print {
+    body * { visibility: hidden; }
+    #modal-relatorio, #modal-relatorio * { visibility: visible; }
+    #modal-relatorio { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+    .no-print { display: none !important; }
+    .modal-content { box-shadow: none !important; border: none !important; width: 100% !important; max-height: none !important; overflow: visible !important; }
+    table { width: 100%; border: 1px solid #000; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    th { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; }
+}
+        
     </style>
 </head>
 <body>
@@ -276,6 +287,9 @@
         
         <button onclick="window.imprimirRelatorio()" class="btn-action btn-print no-print" style="width:100%; margin-bottom:10px;">🖨️ Imprimir</button>
         <button onclick="document.getElementById('modal-relatorio').style.display='none'" class="btn-action btn-hist no-print" style="width:100%;">Fechar</button>
+        <button onclick="window.exportarExcel()" class="btn-action no-print" style="width:100%; background:#27ae60; color:white; margin-bottom:10px; border:none; border-radius:8px; padding:12px; font-weight:bold; cursor:pointer;">
+    Excel (.csv)
+</button>    
     </div>
 </div>
     
@@ -714,6 +728,34 @@ window.gerarRelatorioFaltas = async () => {
     }
 };
 
+        window.exportarExcel = () => {
+    const tabela = document.querySelector("#resultado-relatorio table");
+    if (!tabela) return alert("Gere o relatório primeiro!");
+
+    let csv = [];
+    const linhas = tabela.querySelectorAll("tr");
+    
+    for (let i = 0; i < linhas.length; i++) {
+        const linha = [], colunas = linhas[i].querySelectorAll("td, th");
+        for (let j = 0; j < colunas.length; j++) {
+            // Limpa o texto e remove vírgulas para não quebrar o CSV
+            linha.push('"' + colunas[j].innerText.trim() + '"');
+        }
+        csv.push(linha.join(";")); // O Excel brasileiro usa ";" como separador
+    }
+
+    const csvContent = "\uFEFF" + csv.join("\n"); // \uFEFF trata acentuação no Excel
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Relatorio_Faltas_${usuarioAtual.turma}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
         
         
 
