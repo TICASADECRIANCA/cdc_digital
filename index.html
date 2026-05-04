@@ -376,7 +376,86 @@ async function registrarLog(acao) {
     }
 }
         
+// ==========================================
+// --- INTEGRAÇÃO API SOPHIA (CASA+) ---
+// ==========================================
+const SOPHIA_URL = "https://portal.sophia.com.br/SophiAWebApi/9118/api/v1";
+let sophiaToken = null;
 
+async function autenticarSophia() {
+    if (sophiaToken) return sophiaToken; 
+    console.log("🔑 Solicitando token de acesso ao Sophia...");
+    try {
+        const response = await fetch(`${SOPHIA_URL}/Autenticacao`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'text/plain' },
+            body: JSON.stringify({ usuario: "Escola", senha: "1992" })
+        });
+        if (!response.ok) throw new Error(`Erro ${response.status}`);
+        sophiaToken = await response.text(); 
+        return sophiaToken;
+    } catch (e) {
+        console.error("❌ Erro Auth Sophia:", e);
+        return null;
+    }
+}
+
+window.buscarAlunosSophia = async (turmaNome) => {
+    try {
+        const token = await autenticarSophia();
+        if (!token) throw new Error("Sem token");
+
+        // Para este teste, deixei fixo o ID do professor que sabemos que funciona!
+        const idProfessor = "000128"; 
+        
+        const respListas = await fetch(`${SOPHIA_URL}/ListaChamada/Professor/${idProfessor}`, {
+            headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+        });
+        const listasChamada = await respListas.json();
+
+        // Procura a turma exata no Sophia
+        const listaAtual = listasChamada.find(lista => 
+            (lista.Descricao && lista.Descricao.toUpperCase() === turmaNome.toUpperCase()) || 
+            (lista.DescricaoTurma && lista.DescricaoTurma.toUpperCase() === turmaNome.toUpperCase())
+        );
+        
+        if (!listaAtual) {
+            console.warn("⚠️ Turma não encontrada no Sophia. Puxando do Firebase...");
+            return false; 
+        }
+
+        window.idListaAtualSophia = listaAtual.IdListaChamada || listaAtual.Id;
+
+        // Puxa os alunos da turma encontrada
+        const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${window.idListaAtualSophia}`, {
+            headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+        });
+        const alunosSophia = await respAlunos.json();
+
+        // Limpa e preenche a lista do seu sistema com os dados do Sophia
+        listaAlunosCache = [];
+        alunosSophia.forEach(aluno => {
+            listaAlunosCache.push({
+                id: aluno.IdAluno || aluno.Id,
+                nome: aluno.NomeAluno || aluno.Nome,
+                turma: turmaNome,
+                exAluno: false 
+            });
+        });
+
+        listaAlunosCache.sort((a,b) => a.nome.localeCompare(b.nome));
+        renderizarTabelaAlunos(listaAlunosCache, []);
+        return true; 
+
+    } catch (e) {
+        console.error("❌ Erro ao buscar alunos no Sophia:", e);
+        return false;
+    }
+};
+// ==========================================
+
+
+        
         const ESTRUTURA_TURMAS = { 
             "Berçário": [ { nome: "Berçário", letras: ["A", "B"] } ],
             "Infantil 1": [ { nome: "Infantil 1", letras: ["A", "B", "C", "D", "E", "F", "G", "I"] } ],
@@ -488,16 +567,27 @@ async function registrarLog(acao) {
         }
         window.voltarParaCoord = () => { usuarioAtual = perfilCoord; window.showView('coord'); };
 
-        async function entrarTurma(turma, nomeProf) {
-            document.getElementById('display-turma-nome').innerText = nomeProf.split(' ')[0];
-            document.getElementById('display-turma-badge').innerText = turma;
-            window.showView('app');
-            window.mudarAba('freq');
-            await carregarAlunosBase();
-            await carregarFrequencia();
-            await carregarPlanejamento();
-        }
-
+  async function entrarTurma(turma, nomeProf) {
+    document.getElementById('display-turma-nome').innerText = nomeProf.split(' ')[0];
+    document.getElementById('display-turma-badge').innerText = turma;
+    window.showView('app');
+    window.mudarAba('freq');
+    
+    loading(true);
+    
+    // Tenta buscar no Sophia primeiro
+    const sucessoSophia = await window.buscarAlunosSophia(turma);
+    
+    // Se a turma não existir no Sophia ou der erro, puxa do Firebase (segurança)
+    if (!sucessoSophia) {
+        await carregarAlunosBase();
+    }
+    
+    loading(false);
+    
+    await carregarFrequencia();
+    await carregarPlanejamento();
+}
         async function carregarAlunosBase() {
             loading(true);
             try {
