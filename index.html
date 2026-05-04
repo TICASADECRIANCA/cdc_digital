@@ -567,9 +567,8 @@ window.buscarAlunosSophia = async (turmaNome) => {
         }
         window.voltarParaCoord = () => { usuarioAtual = perfilCoord; window.showView('coord'); };
 
-  async function entrarTurma(turma, nomeProf) {
+async function entrarTurma(turma, nomeProf) {
     document.getElementById('display-turma-nome').innerText = nomeProf.split(' ')[0];
-    document.getElementById('display-turma-badge').innerText = turma;
     window.showView('app');
     window.mudarAba('freq');
     
@@ -578,8 +577,11 @@ window.buscarAlunosSophia = async (turmaNome) => {
     // Tenta buscar no Sophia primeiro
     const sucessoSophia = await window.buscarAlunosSophia(turma);
     
-    // Se a turma não existir no Sophia ou der erro, puxa do Firebase (segurança)
-    if (!sucessoSophia) {
+    // Altera a etiqueta amarela/azul no topo da tela para mostrar a origem!
+    if (sucessoSophia) {
+        document.getElementById('display-turma-badge').innerText = turma + " (SOPHIA)";
+    } else {
+        document.getElementById('display-turma-badge').innerText = turma + " (FIREBASE)";
         await carregarAlunosBase();
     }
     
