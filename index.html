@@ -794,7 +794,14 @@ window.salvarChamadaGeral = async () => {
         loading(false);
     }
 };
-   
+// 👉 ADICIONE ESTAS DUAS LINHAS AQUI:
+        const salvouSophia = await window.enviarParaSophiaSilencioso();
+        if (salvouSophia) { alert("Sincronizado também com o SophiA!"); }
+        // 👈 ATÉ AQUI
+
+        alert("Frequência salva com sucesso!"); // Esta linha já é a sua original
+        registrarLog("Salvou Chamada");
+        
 window.abrirRelatorioMensal = () => {
     const hoje = new Date();
     const mesStr = hoje.toISOString().slice(0, 7); 
@@ -1146,6 +1153,52 @@ window.imprimirTela = (tipo) => {
                 window.carregarAlunosBase().then(() => window.carregarFrequencia());
             }
         };
+   // --- MÓDULO ISOLADO: ENVIO PARA O SOPHIA ---
+window.enviarParaSophiaSilencioso = async () => {
+    try {
+        console.log("📡 Iniciando envio para o SophiA em segundo plano...");
+        const token = await autenticarSophia();
+        const idProf = window.idProfessorSophiAtual;
+        const idLista = window.idListaAtualSophia;
+
+        if (!idProf || !idLista) {
+            console.warn("⚠️ Não foi possível enviar ao SophiA: IDs ausentes.");
+            return false;
+        }
+
+        const payload = {
+            codigoProfessor: parseInt(idProf),
+            quantidadeAula: 1, 
+            codigoListaChamada: parseInt(idLista),
+            status: 1, 
+            alunos: listaAlunosCache.map(aluno => ({
+                codigoListaChamadaAula: parseInt(aluno.codigoListaChamadaAula) || 0,
+                codigoMatricula: parseInt(aluno.id),
+                falta: aluno.presenca ? 0 : 1, 
+                ocorrencias: []
+            }))
+        };
+
+        const response = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Token': token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error(await response.text());
+        
+        console.log("✅ SophiA atualizado com sucesso!");
+        return true;
+    } catch (e) {
+        console.error("❌ Erro ao enviar para o SophiA:", e);
+        return false;
+    }
+};
+    
     </script>
 </body>
 </html>
