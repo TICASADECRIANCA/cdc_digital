@@ -461,42 +461,44 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
         window.idListaAtualSophia = listaAtual.codigoLista;
 
         // 3. BUSCA OS ALUNOS (Com proteção contra erros)
+      // ---------------------------------------------------------
+        // 3. BUSCA OS ALUNOS (Com filtro de duplicados)
+        // ---------------------------------------------------------
         const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${window.idListaAtualSophia}`, {
             headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
         });
         
-        const alunosSophia = await respAlunos.json();
-
-        console.log("📡 Alunos devolvidos pelo SophiA (Dados Brutos):", alunosSophia);
+        const alunosBrutos = await respAlunos.json();
+        console.log("📡 Alunos brutos recebidos:", alunosBrutos.length);
 
         listaAlunosCache = [];
-        alunosSophia.forEach(aluno => {
-            listaAlunosCache.push({
-                // Tapa-buracos para evitar que a variável fique "undefined"
-                id: aluno.codigoMatricula || aluno.codigo || aluno.id || "SEM-ID",
-                nome: aluno.nomeAluno || aluno.nome || aluno.Nome || "ALUNO DESCONHECIDO",
-                turma: turmaNome,
-                exAluno: false 
-                    });
-            // Dentro do seu forEach na função buscarAlunosSophia:
-listaAlunosCache.push({
-    id: aluno.codigoMatricula || aluno.codigo || aluno.id || "SEM-ID",
-    nome: aluno.nomeAluno || aluno.nome || aluno.Nome || "ALUNO DESCONHECIDO",
-    // ADICIONE ESTA LINHA:
-    codigoListaChamadaAula: aluno.codigoListaChamadaAula, 
-    turma: turmaNome,
-    presenca: true, // Começamos assumindo que todos estão presentes
-    exAluno: false 
-});
+        const idsAdicionados = new Set(); // Conjunto para rastrear IDs únicos
+
+        alunosBrutos.forEach(aluno => {
+            const idAluno = aluno.codigoMatricula || aluno.codigo || aluno.id;
+            
+            // SÓ ADICIONA SE O ID AINDA NÃO ESTIVER NA LISTA
+            if (idAluno && !idsAdicionados.has(idAluno)) {
+                idsAdicionados.add(idAluno);
+                
+                listaAlunosCache.push({
+                    id: idAluno,
+                    nome: aluno.nomeAluno || aluno.nome || aluno.Nome || "ALUNO DESCONHECIDO",
+                    codigoListaChamadaAula: aluno.codigoListaChamadaAula, 
+                    turma: turmaNome,
+                    presenca: true,
+                    exAluno: false 
+                });
+            }
         });
+
+        console.log("✅ Alunos processados (sem duplicados):", listaAlunosCache.length);
 
         // Ordenação segura
         listaAlunosCache.sort((a,b) => (a.nome || "").localeCompare(b.nome || ""));
         
         renderizarTabelaAlunos(listaAlunosCache, []);
-        
-        console.log("✅ Dados carregados do SophiA com SUCESSO e de forma 100% DINÂMICA!");
-        return true; 
+        return true;
 
     } catch (e) {
         console.error("❌ Erro fatal:", e);
