@@ -361,7 +361,7 @@
             }
         }
 
-        window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
+      window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
             try {
                 const token = await autenticarSophia();
                 if (!token) return false;
@@ -386,22 +386,36 @@
                 console.log(`✅ Professor encontrado! O ID dele no SophiA é: ${idProfessorDinamico}`);
                 window.idProfessorSophiAtual = idProfessorDinamico; 
 
-                // 2. BUSCA AS LISTAS DO PROFESSOR
+                // 2. BUSCA AS LISTAS DO PROFESSOR (COM O CAMINHO CORRETO)
+                console.log(`🔍 2. Buscando listas para o professor ID: ${idProfessorDinamico}...`);
                 const respListas = await fetch(`${SOPHIA_URL}/ListaChamada/professor/${idProfessorDinamico}`, {
                     headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
                 });
+                
+                if (!respListas.ok) {
+                    console.warn(`⚠️ Nenhuma lista encontrada no SophiA (Erro ${respListas.status}). Usando base do CASA+ (Firebase).`);
+                    return false; 
+                }
+
                 const listas = await respListas.json();
                 const turmaSophiA = normalizar(turmaNome);
                 const listaCerta = listas.find(l => normalizar(l.nomeListaChamada).includes(turmaSophiA) || normalizar(l.nomeTurma).includes(turmaSophiA));
                 
-                if (!listaCerta) return false;
+                if (!listaCerta) {
+                    console.warn(`⚠️ Turma "${turmaNome}" não encontrada na lista do SophiA. Usando Firebase.`);
+                    return false;
+                }
+                
                 window.idListaAtualSophia = listaCerta.codigoListaChamada;
 
-                // 3. BUSCA OS ALUNOS (Com filtro de duplicados)
+                // 3. BUSCA OS ALUNOS
+                console.log(`🔍 3. Buscando alunos da lista ID: ${window.idListaAtualSophia}...`);
                 const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${window.idListaAtualSophia}`, {
                     headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
                 });
                 
+                if (!respAlunos.ok) return false;
+
                 const alunosBrutos = await respAlunos.json();
                 console.log("📡 Alunos brutos recebidos:", alunosBrutos.length);
 
@@ -428,8 +442,8 @@
                 renderizarTabelaAlunos(listaAlunosCache, []);
                 return true;
             } catch (e) {
-                console.error("❌ Erro fatal:", e);
-                return false;
+                console.error("❌ Erro ao buscar dados do SophiA:", e);
+                return false; 
             }
         };
 
