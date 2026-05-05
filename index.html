@@ -387,7 +387,7 @@
                 window.idProfessorSophiAtual = idProfessorDinamico; 
 
                 // 2. BUSCA AS LISTAS DO PROFESSOR
-                const respListas = await fetch(`${SOPHIA_URL}/ListaChamada/Colaboradores/${idProfessorDinamico}`, {
+                const respListas = await fetch(`${SOPHIA_URL}/ListaChamada/professor/${idProfessorDinamico}`, {
                     headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
                 });
                 const listas = await respListas.json();
