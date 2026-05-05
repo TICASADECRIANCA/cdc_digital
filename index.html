@@ -475,7 +475,7 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
 
         window.idListaAtualSophia = listaAtual.codigoLista;
 
-        // ---------------------------------------------------------
+       // ---------------------------------------------------------
         // 3. BUSCA OS ALUNOS
         // ---------------------------------------------------------
         const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${window.idListaAtualSophia}`, {
@@ -484,27 +484,27 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
         
         const alunosSophia = await respAlunos.json();
 
+        // --- NOVO RAIO-X: Vamos ver o que vem do SophiA! ---
+        console.log("📡 Alunos devolvidos pelo SophiA (Dados Brutos):", alunosSophia);
+
         listaAlunosCache = [];
         alunosSophia.forEach(aluno => {
             listaAlunosCache.push({
-                id: aluno.codigoMatricula,
-                nome: aluno.nomeAluno,
+                // Coloquei uns "tapa-buracos" temporários até vermos o nome certo dos campos
+                id: aluno.codigoMatricula || aluno.codigo || aluno.id || "SEM-ID",
+                nome: aluno.nomeAluno || aluno.nome || aluno.Nome || "ALUNO DESCONHECIDO",
                 turma: turmaNome,
                 exAluno: false 
             });
         });
 
-        listaAlunosCache.sort((a,b) => a.nome.localeCompare(b.nome));
+        // Ordenação blindada para não dar mais aquele erro
+        listaAlunosCache.sort((a,b) => (a.nome || "").localeCompare(b.nome || ""));
+        
         renderizarTabelaAlunos(listaAlunosCache, []);
         
         console.log("✅ Dados carregados do SophiA com SUCESSO e de forma 100% DINÂMICA!");
-        return true; 
-
-    } catch (e) {
-        console.error("❌ Erro fatal:", e);
-        return false;
-    }
-};
+        return true;
 // ==========================================
 
 
