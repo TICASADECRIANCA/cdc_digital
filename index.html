@@ -751,36 +751,69 @@ async function entrarTurma(turma, nomeProf) {
 
             } catch(e){ console.error(e); } finally { loading(false); }
         };
-
-  window.salvarChamadaGeral = async (idProfessor) => {
-    loading(true); // Ativa o "carregando" na tela
-    
+// --- FUNÇÃO 1: Grava no SophiA ---
+window.salvarChamadaSophia = async (idProfessor) => {
     try {
-        console.log("🚀 Iniciando salvamento duplo (SophiA + Firebase)...");
+        const token = await autenticarSophia();
+        if (!token) throw new Error("Sem token");
+
+        const payload = {
+            codigoProfessor: parseInt(idProfessor),
+            quantidadeAula: 1, 
+            codigoListaChamada: parseInt(window.idListaAtualSophia),
+            status: 1,
+            alunos: listaAlunosCache.map(aluno => ({
+                codigoListaChamadaAula: aluno.codigoListaChamadaAula || 0,
+                codigoMatricula: parseInt(aluno.id),
+                falta: aluno.presenca ? 0 : 1, 
+                ocorrencias: []
+            }))
+        };
+
+        const response = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Token': token,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error("Erro no SophiA: " + await response.text());
+        return true;
+    } catch (e) {
+        console.error("❌ Erro ao salvar no SophiA:", e);
+        return false;
+    }
+};
+
+// --- FUNÇÃO 2: Orquestradora (Chama a 1 e salva no Firebase) ---
+window.salvarChamadaGeral = async (idProfessor) => {
+    loading(true);
+    try {
+        console.log("🚀 Iniciando salvamento duplo...");
 
         // 1. Tenta salvar no SophiA
-        const salvouSophia = await salvarChamadaSophia(idProfessor);
+        const sucessoSophia = await window.salvarChamadaSophia(idProfessor);
         
-        // 2. Tenta salvar no Firebase (substitua 'salvarNoFirebaseOriginal' pelo nome da sua função atual)
-        // Certifique-se de que ela salva o 'listaAlunosCache' no seu banco
-        const salvouFirebase = await salvarChamadaGeral(); 
+        // 2. Tenta salvar no Firebase (substitua pelo nome real da sua função de salvar no Firebase)
+        const sucessoFirebase = await salvarNoFirebaseOriginal(); 
 
-        // 3. Resultado Final
-        if (salvouSophia && salvouFirebase) {
-            alert("✅ Chamada registrada no SophiA e atualizada no CASA+ com sucesso!");
-        } else if (salvouSophia) {
-            alert("⚠️ Chamada salva no SophiA, mas houve um erro ao atualizar o histórico no Firebase.");
-        } else if (salvouFirebase) {
-            alert("⚠️ Chamada salva no Firebase, mas houve falha na sincronização com o SophiA.");
+        if (sucessoSophia && sucessoFirebase) {
+            alert("✅ Chamada registrada no SophiA e atualizada no CASA+!");
+        } else if (sucessoSophia) {
+            alert("⚠️ Salvo no SophiA, mas erro ao salvar no Firebase.");
+        } else if (sucessoFirebase) {
+            alert("⚠️ Salvo no Firebase, mas erro na sincronização com SophiA.");
         } else {
-            alert("❌ Erro grave: Não foi possível salvar em nenhum dos sistemas.");
+            alert("❌ Erro ao salvar em ambos os sistemas.");
         }
-
     } catch (e) {
-        console.error("Erro no processo de salvamento:", e);
-        alert("Erro inesperado ao salvar. Verifique sua conexão.");
+        console.error("Erro geral:", e);
     } finally {
-        loading(false); // Desativa o "carregando"
+        loading(false);
     }
 };
 window.abrirRelatorioMensal = () => {
