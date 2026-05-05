@@ -754,114 +754,45 @@ async function entrarTurma(turma, nomeProf) {
 
             } catch(e){ console.error(e); } finally { loading(false); }
         };
-window.salvarChamada = async () => {
-    // 1. Coleta de dados básicos (sua lógica original)
-    const data = document.getElementById('data-freq').value;
-    if (!data) return alert("Selecione uma data antes de salvar.");
-
-    const detalhes = [];
+window.salvarChamadaGeral = async () => {
+    console.log("🚩 Botão Salvar clicado!");
     
-    // Validamos se temos alunos na lista
-    if (!listaAlunosCache || listaAlunosCache.length === 0) {
-        return alert("Nenhum dado encontrado para salvar nesta turma.");
-    }
-
-    loading(true);
+    // VERIFICAÇÃO DO FIREBASE (CASA+)
+    // Aqui, eu preciso que você mude o nome 'salvarChamadaNoFirebase' 
+    // para o nome da função que você usava antes no seu projeto.
+    const nomeDaSuaFuncaoOriginal = "salvarChamada"; // <--- MUDE AQUI!
 
     try {
-        // --- PARTE A: SALVAMENTO NO SOPHIA ---
-        console.log("📡 Sincronizando com SophiA...");
-        const sucessoSophia = await salvarNoSophiA_Interno();
+        loading(true);
 
-        // --- PARTE B: SALVAMENTO NO FIREBASE (Sua lógica original adaptada) ---
-        console.log("🔥 Salvando no Firebase (CASA+)...");
+        // 1. TENTA SOPHIA
+        console.log("📡 Enviando para o SophiA...");
+        const sucessoSophia = await window.salvarChamadaSophia();
         
-        // Transformamos o cache no formato que seu Firebase espera
-        listaAlunosCache.forEach(aluno => {
-            detalhes.push({
-                nome: aluno.nome,
-                presente: aluno.presenca // Certifique-se que o botão da tela muda este valor
-            });
-        });
-
-        // Mantendo seu padrão de ID: TurmaSemEspaço_Data
-        const idDoc = `${usuarioAtual.turma.replace(/\s/g,'')}_${data}`;
-        
-        await setDoc(doc(db, "frequencia", idDoc), {
-            turma: usuarioAtual.turma,
-            data: data,
-            detalhes: detalhes,
-            professor: usuarioAtual.nome,
-            atualizadoEm: new Date().toISOString(),
-            integradoSophiA: sucessoSophia // Novo campo para seu controle
-        });
-
-        // Logs de auditoria (seus originais)
-        await registrarLog("Salvou Chamada");
-        await registrarLog("Realizou Chamada da Turma " + (typeof turmaSelecionada !== 'undefined' ? turmaSelecionada : usuarioAtual.turma));
-
-        if (sucessoSophia) {
-            alert("✅ Chamada salva com sucesso no CASA+ e no SophiA!");
+        // 2. TENTA FIREBASE (CASA+)
+        let sucessoFirebase = false;
+        if (typeof window[nomeDaSuaFuncaoOriginal] === "function") {
+            console.log("🔥 Executando salvamento no Firebase...");
+            await window[nomeDaSuaFuncaoOriginal](); 
+            sucessoFirebase = true;
         } else {
-            alert("⚠️ Chamada salva no CASA+, mas o SophiA recusou a integração. Verifique o console.");
+            console.error(`❌ ERRO: A função [${nomeDaSuaFuncaoOriginal}] não foi encontrada no código!`);
+            alert(`Atenção: O histórico do CASA+ não foi salvo porque a função ${nomeDaSuaFuncaoOriginal} não foi encontrada.`);
+        }
+
+        if (sucessoSophia && sucessoFirebase) {
+            alert("✅ SUCESSO TOTAL: SophiA e CASA+ atualizados!");
+        } else if (sucessoSophia) {
+            alert("⚠️ Salvo no SophiA, mas o CASA+ (Firebase) falhou.");
+        } else if (sucessoFirebase) {
+            alert("⚠️ Salvo no CASA+, mas o SophiA recusou os dados.");
         }
 
     } catch (e) {
-        console.error("Erro crítico no processo de salvamento:", e);
-        alert("Erro técnico ao salvar: " + e.message);
+        console.error("❌ Erro crítico no salvamento:", e);
     } finally {
         loading(false);
     }
-};
-
-// --- FUNÇÃO AUXILIAR: ENVIO PARA O SOPHIA ---
-async function salvarNoSophiA_Interno() {
-    try {
-        const token = await autenticarSophia();
-        const idProf = window.idProfessorSophiAtual; // Capturado na busca
-        const idLista = window.idListaAtualSophia;   // Capturado na busca
-
-        if (!idProf || !idLista) {
-            console.warn("⚠️ IDs do SophiA ausentes (Prof ou Lista).");
-            return false;
-        }
-
-        const payload = {
-            codigoProfessor: parseInt(idProf),
-            quantidadeAula: 1, 
-            codigoListaChamada: parseInt(idLista),
-            status: 1, // Tente mudar para 2 se o status 1 não registrar no diário oficial
-            alunos: listaAlunosCache.map(aluno => ({
-                codigoListaChamadaAula: parseInt(aluno.codigoListaChamadaAula) || 0,
-                codigoMatricula: parseInt(aluno.id),
-                falta: aluno.presenca ? 0 : 1, // 0 presenca, 1 falta
-                ocorrencias: []
-            }))
-        };
-
-        const response = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Token': token,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-            const erroTxt = await response.text();
-            console.error("❌ Resposta negativa do SophiA:", erroTxt);
-            return false;
-        }
-
-        console.log("✅ SophiA respondeu com Sucesso!");
-        return true;
-    } catch (e) {
-        console.error("❌ Falha na comunicação com SophiA:", e);
-        return false;
-    }
-}
 };
    
 window.abrirRelatorioMensal = () => {
