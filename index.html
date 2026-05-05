@@ -400,7 +400,6 @@ async function autenticarSophia() {
     }
 }
 
-// Agora recebe a turma e o nome do professor
 window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
     try {
         const token = await autenticarSophia();
@@ -408,7 +407,7 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
 
         console.log(`🔍 1. Buscando ID do professor "${nomeProf}" no SophiA...`);
         
-        // BUSCA O ID DO PROFESSOR DINAMICAMENTE
+        // 1. BUSCA O PROFESSOR
         const respColab = await fetch(`${SOPHIA_URL}/Colaboradores`, {
             headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
         });
@@ -416,11 +415,9 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
         if (!respColab.ok) throw new Error("Erro ao buscar professores.");
         const colaboradores = await respColab.json();
 
-        // Limpa os nomes para comparar (tira acentos, deixa tudo maiúsculo)
         const normalizar = (str) => (str || "").toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
         const nomeProfLimpo = normalizar(nomeProf);
 
-        // Encontra o professor na lista do SophiA
         const professorSophia = colaboradores.find(c => normalizar(c.nome) === nomeProfLimpo || normalizar(c.nome).includes(nomeProfLimpo));
 
         if (!professorSophia) {
@@ -428,17 +425,12 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
             return false;
         }
 
-        // Pega o ID dinâmico que o SophiA devolveu (ajuste "codigo" se na API for outro nome, ex: idColaborador)
         const idProfessorDinamico = professorSophia.codigo || professorSophia.id; 
         console.log(`✅ Professor encontrado! O ID dele no SophiA é: ${idProfessorDinamico}`);
 
-       
-        // ---------------------------------------------------------
-        // 2. AGORA BUSCA AS TURMAS USANDO O ID DINÂMICO (ANO INTEIRO)
-        // ---------------------------------------------------------
+        // 2. BUSCA AS TURMAS (ANO INTEIRO)
         const hoje = new Date();
         const anoAtual = hoje.getFullYear();
-        // Mudamos para buscar de 1º de Janeiro até 31 de Dezembro!
         const inicioAno = `${anoAtual}-01-01T00:00:00`;
         const fimAno = `${anoAtual}-12-31T23:59:59`;
         
@@ -452,19 +444,11 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
         if (!respListas.ok) throw new Error("Erro ao buscar turmas.");
         const listasChamada = await respListas.json();
 
-        // Isso vai mostrar no console todas as turmas que o SophiA devolveu
-        console.log("📡 Turmas devolvidas pelo SophiA:", listasChamada.map(l => l.turma));
-
         const normalizarTurma = (str) => (str || "").toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
         
         const listaAtual = listasChamada.find(lista => {
             const nomeSophia = normalizarTurma(lista.turma);
             const nomeCASA = normalizarTurma(turmaNome);
-            
-            // O Raio-X da comparação!
-            console.log(`⚖️ Comparando -> SophiA: [${nomeSophia}] | CASA+: [${nomeCASA}]`);
-            
-            // Deixei ainda mais tolerante: se um nome contiver o outro, ele aceita!
             return nomeSophia === nomeCASA || nomeSophia.includes(nomeCASA) || nomeCASA.includes(nomeSophia);
         });
         
@@ -475,22 +459,19 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
 
         window.idListaAtualSophia = listaAtual.codigoLista;
 
-       // ---------------------------------------------------------
-        // 3. BUSCA OS ALUNOS
-        // ---------------------------------------------------------
+        // 3. BUSCA OS ALUNOS (Com proteção contra erros)
         const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${window.idListaAtualSophia}`, {
             headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
         });
         
         const alunosSophia = await respAlunos.json();
 
-        // --- NOVO RAIO-X: Vamos ver o que vem do SophiA! ---
         console.log("📡 Alunos devolvidos pelo SophiA (Dados Brutos):", alunosSophia);
 
         listaAlunosCache = [];
         alunosSophia.forEach(aluno => {
             listaAlunosCache.push({
-                // Coloquei uns "tapa-buracos" temporários até vermos o nome certo dos campos
+                // Tapa-buracos para evitar que a variável fique "undefined"
                 id: aluno.codigoMatricula || aluno.codigo || aluno.id || "SEM-ID",
                 nome: aluno.nomeAluno || aluno.nome || aluno.Nome || "ALUNO DESCONHECIDO",
                 turma: turmaNome,
@@ -498,14 +479,20 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
             });
         });
 
-        // Ordenação blindada para não dar mais aquele erro
+        // Ordenação segura
         listaAlunosCache.sort((a,b) => (a.nome || "").localeCompare(b.nome || ""));
         
         renderizarTabelaAlunos(listaAlunosCache, []);
         
         console.log("✅ Dados carregados do SophiA com SUCESSO e de forma 100% DINÂMICA!");
-        return true;
-// ==========================================
+        return true; 
+
+    } catch (e) {
+        console.error("❌ Erro fatal:", e);
+        return false;
+    }
+};
+
 
 
         
