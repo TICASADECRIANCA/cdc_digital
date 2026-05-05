@@ -432,16 +432,19 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
         const idProfessorDinamico = professorSophia.codigo || professorSophia.id; 
         console.log(`✅ Professor encontrado! O ID dele no SophiA é: ${idProfessorDinamico}`);
 
+       
         // ---------------------------------------------------------
-        // 2. AGORA BUSCA AS TURMAS USANDO O ID DINÂMICO
+        // 2. AGORA BUSCA AS TURMAS USANDO O ID DINÂMICO (ANO INTEIRO)
         // ---------------------------------------------------------
         const hoje = new Date();
-        const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0] + "T00:00:00";
-        const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().split('T')[0] + "T23:59:59";
+        const anoAtual = hoje.getFullYear();
+        // Mudamos para buscar de 1º de Janeiro até 31 de Dezembro!
+        const inicioAno = `${anoAtual}-01-01T00:00:00`;
+        const fimAno = `${anoAtual}-12-31T23:59:59`;
         
-        const urlTurmas = `${SOPHIA_URL}/ListaChamada/Professor/${idProfessorDinamico}?DataInicial=${inicioMes}&DataFinal=${fimMes}&Status=-1`;
+        const urlTurmas = `${SOPHIA_URL}/ListaChamada/Professor/${idProfessorDinamico}?DataInicial=${inicioAno}&DataFinal=${fimAno}&Status=-1`;
 
-        console.log(`🔍 2. Buscando turmas do professor ID ${idProfessorDinamico}...`);
+        console.log(`🔍 2. Buscando turmas do professor ID ${idProfessorDinamico} no ano todo...`);
         const respListas = await fetch(urlTurmas, {
             headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
         });
@@ -449,12 +452,24 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
         if (!respListas.ok) throw new Error("Erro ao buscar turmas.");
         const listasChamada = await respListas.json();
 
+        // Isso vai mostrar no console todas as turmas que o SophiA devolveu
+        console.log("📡 Turmas devolvidas pelo SophiA:", listasChamada.map(l => l.turma));
+
         const normalizarTurma = (str) => (str || "").toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
         
-        const listaAtual = listasChamada.find(lista => normalizarTurma(lista.turma) === normalizarTurma(turmaNome));
+        const listaAtual = listasChamada.find(lista => {
+            const nomeSophia = normalizarTurma(lista.turma);
+            const nomeCASA = normalizarTurma(turmaNome);
+            
+            // O Raio-X da comparação!
+            console.log(`⚖️ Comparando -> SophiA: [${nomeSophia}] | CASA+: [${nomeCASA}]`);
+            
+            // Deixei ainda mais tolerante: se um nome contiver o outro, ele aceita!
+            return nomeSophia === nomeCASA || nomeSophia.includes(nomeCASA) || nomeCASA.includes(nomeSophia);
+        });
         
         if (!listaAtual) {
-            console.warn("❌ Turma não encontrada para este professor neste mês.");
+            console.warn(`❌ Turma "${turmaNome}" não encontrada para este professor neste ano.`);
             return false;
         }
 
