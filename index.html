@@ -400,62 +400,80 @@ async function autenticarSophia() {
     }
 }
 
-window.buscarAlunosSophia = async (turmaNome) => {
+// Agora recebe a turma e o nome do professor
+window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
     try {
         const token = await autenticarSophia();
-        if (!token) throw new Error("Sem token");
+        if (!token) return false;
 
-        const idProfessor = "792"; // O ID confirmado que funciona
+        console.log(`🔍 1. Buscando ID do professor "${nomeProf}" no SophiA...`);
         
-        // Define o intervalo de busca (hoje e os próximos 3 dias, para garantir)
+        // BUSCA O ID DO PROFESSOR DINAMICAMENTE
+        const respColab = await fetch(`${SOPHIA_URL}/Colaboradores`, {
+            headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
+        });
+        
+        if (!respColab.ok) throw new Error("Erro ao buscar professores.");
+        const colaboradores = await respColab.json();
+
+        // Limpa os nomes para comparar (tira acentos, deixa tudo maiúsculo)
+        const normalizar = (str) => (str || "").toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        const nomeProfLimpo = normalizar(nomeProf);
+
+        // Encontra o professor na lista do SophiA
+        const professorSophia = colaboradores.find(c => normalizar(c.nome) === nomeProfLimpo || normalizar(c.nome).includes(nomeProfLimpo));
+
+        if (!professorSophia) {
+            console.warn(`❌ Professor "${nomeProf}" não encontrado no SophiA.`);
+            return false;
+        }
+
+        // Pega o ID dinâmico que o SophiA devolveu (ajuste "codigo" se na API for outro nome, ex: idColaborador)
+        const idProfessorDinamico = professorSophia.codigo || professorSophia.id; 
+        console.log(`✅ Professor encontrado! O ID dele no SophiA é: ${idProfessorDinamico}`);
+
+        // ---------------------------------------------------------
+        // 2. AGORA BUSCA AS TURMAS USANDO O ID DINÂMICO
+        // ---------------------------------------------------------
         const hoje = new Date();
-        const dataFim = new Date();
-        dataFim.setDate(hoje.getDate() + 3);
+        const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0] + "T00:00:00";
+        const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().split('T')[0] + "T23:59:59";
         
-        const formatarData = (d) => d.toISOString().split('T')[0] + "T00:00:00";
-        
-        const url = `${SOPHIA_URL}/ListaChamada/Professor/${idProfessor}?DataInicial=${formatarData(hoje)}&DataFinal=${formatarData(dataFim)}&Status=-1`;
+        const urlTurmas = `${SOPHIA_URL}/ListaChamada/Professor/${idProfessorDinamico}?DataInicial=${inicioMes}&DataFinal=${fimMes}&Status=-1`;
 
-        const respListas = await fetch(url, {
-            headers: { 
-                'Authorization': `Bearer ${token}`, 
-                'Token': token, // <--- O segredo que descobrimos!
-                'Accept': 'application/json' 
-            }
+        console.log(`🔍 2. Buscando turmas do professor ID ${idProfessorDinamico}...`);
+        const respListas = await fetch(urlTurmas, {
+            headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
         });
 
-        if (!respListas.ok) throw new Error("Erro ao buscar listas");
+        if (!respListas.ok) throw new Error("Erro ao buscar turmas.");
         const listasChamada = await respListas.json();
 
-        // Procura a turma exata pelo nome
-        const listaAtual = listasChamada.find(lista => 
-            lista.turma && lista.turma.toUpperCase().includes(turmaNome.toUpperCase())
-        );
+        const normalizarTurma = (str) => (str || "").toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
+        
+        const listaAtual = listasChamada.find(lista => normalizarTurma(lista.turma) === normalizarTurma(turmaNome));
         
         if (!listaAtual) {
-            console.warn("⚠️ Nenhuma aula encontrada para hoje/proximos dias no SophiA.");
-            return false; 
+            console.warn("❌ Turma não encontrada para este professor neste mês.");
+            return false;
         }
 
         window.idListaAtualSophia = listaAtual.codigoLista;
 
-        // Puxa os alunos
+        // ---------------------------------------------------------
+        // 3. BUSCA OS ALUNOS
+        // ---------------------------------------------------------
         const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${window.idListaAtualSophia}`, {
-            headers: { 
-                'Authorization': `Bearer ${token}`, 
-                'Token': token, 
-                'Accept': 'application/json' 
-            }
+            headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
         });
         
         const alunosSophia = await respAlunos.json();
 
-        // Preenche a lista
         listaAlunosCache = [];
         alunosSophia.forEach(aluno => {
             listaAlunosCache.push({
-                id: aluno.codigoMatricula, // Ajustado conforme retorno da API
-                nome: aluno.nomeAluno,     // Ajustado conforme retorno da API
+                id: aluno.codigoMatricula,
+                nome: aluno.nomeAluno,
                 turma: turmaNome,
                 exAluno: false 
             });
@@ -463,11 +481,12 @@ window.buscarAlunosSophia = async (turmaNome) => {
 
         listaAlunosCache.sort((a,b) => a.nome.localeCompare(b.nome));
         renderizarTabelaAlunos(listaAlunosCache, []);
-        console.log("✅ Dados carregados do SophiA com sucesso!");
+        
+        console.log("✅ Dados carregados do SophiA com SUCESSO e de forma 100% DINÂMICA!");
         return true; 
 
     } catch (e) {
-        console.error("❌ Erro ao buscar alunos no Sophia:", e);
+        console.error("❌ Erro fatal:", e);
         return false;
     }
 };
@@ -593,10 +612,9 @@ async function entrarTurma(turma, nomeProf) {
     
     loading(true);
     
-    // Tenta buscar no Sophia primeiro
-    const sucessoSophia = await window.buscarAlunosSophia(turma);
+    // Agora passamos também o nome do professor para a função!
+    const sucessoSophia = await window.buscarAlunosSophia(turma, nomeProf);
     
-    // Altera a etiqueta amarela/azul no topo da tela para mostrar a origem!
     if (sucessoSophia) {
         document.getElementById('display-turma-badge').innerText = turma + " (SOPHIA)";
     } else {
