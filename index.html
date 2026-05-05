@@ -476,7 +476,17 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
                 nome: aluno.nomeAluno || aluno.nome || aluno.Nome || "ALUNO DESCONHECIDO",
                 turma: turmaNome,
                 exAluno: false 
-            });
+                    });
+            // Dentro do seu forEach na função buscarAlunosSophia:
+listaAlunosCache.push({
+    id: aluno.codigoMatricula || aluno.codigo || aluno.id || "SEM-ID",
+    nome: aluno.nomeAluno || aluno.nome || aluno.Nome || "ALUNO DESCONHECIDO",
+    // ADICIONE ESTA LINHA:
+    codigoListaChamadaAula: aluno.codigoListaChamadaAula, 
+    turma: turmaNome,
+    presenca: true, // Começamos assumindo que todos estão presentes
+    exAluno: false 
+});
         });
 
         // Ordenação segura
@@ -742,65 +752,36 @@ async function entrarTurma(turma, nomeProf) {
             } catch(e){ console.error(e); } finally { loading(false); }
         };
 
-        window.salvarChamada = async () => {
-    const data = document.getElementById('data-freq').value;
-    const detalhes = [];
+  window.salvarChamadaGeral = async (idProfessor) => {
+    loading(true); // Ativa o "carregando" na tela
     
-    // Verifica se a lista mobile está visível
-    const isMobile = window.innerWidth <= 768;
-    const container = isMobile ? document.getElementById('mobile-lista') : document.getElementById('tbody-alunos');
-    
-    // No mobile buscamos pelos cards, no PC pelas linhas da tabela
-    const itens = isMobile ? container.querySelectorAll('.student-card') : container.querySelectorAll('tr');
+    try {
+        console.log("🚀 Iniciando salvamento duplo (SophiA + Firebase)...");
 
-    if (itens.length === 0) return alert("Nenhum dado encontrado para salvar nesta turma.");
+        // 1. Tenta salvar no SophiA
+        const salvouSophia = await salvarChamadaSophia(idProfessor);
+        
+        // 2. Tenta salvar no Firebase (substitua 'salvarNoFirebaseOriginal' pelo nome da sua função atual)
+        // Certifique-se de que ela salva o 'listaAlunosCache' no seu banco
+        const salvouFirebase = await salvarChamadaGeral(); 
 
-    itens.forEach(item => {
-        const btn = item.querySelector('.toggle-btn');
-        // Ignora botões de ex-alunos se existirem na sua lógica
-        if (btn.classList.contains('ex-btn')) return;
-
-        let nomeAluno;
-        if (isMobile) {
-            // No mobile, removemos o "1. " (número e ponto) do início do nome
-            const nomeRaw = item.querySelector('strong').innerText;
-            nomeAluno = nomeRaw.substring(nomeRaw.indexOf(' ') + 1);
+        // 3. Resultado Final
+        if (salvouSophia && salvouFirebase) {
+            alert("✅ Chamada registrada no SophiA e atualizada no CASA+ com sucesso!");
+        } else if (salvouSophia) {
+            alert("⚠️ Chamada salva no SophiA, mas houve um erro ao atualizar o histórico no Firebase.");
+        } else if (salvouFirebase) {
+            alert("⚠️ Chamada salva no Firebase, mas houve falha na sincronização com o SophiA.");
         } else {
-            // No PC, pega o texto da segunda coluna (índice 1)
-            nomeAluno = item.cells[1].innerText;
+            alert("❌ Erro grave: Não foi possível salvar em nenhum dos sistemas.");
         }
 
-        // Limpa qualquer texto extra como "(Ex-Aluno)"
-        nomeAluno = nomeAluno.replace('(Ex-Aluno)', '').trim();
-
-        detalhes.push({
-            nome: nomeAluno,
-            presente: btn.innerText === "Presente"
-        });
-    });
-
-    loading(true);
-    try {
-        // Mantendo o padrão de ID que você já usa no banco
-        const idDoc = `${usuarioAtual.turma.replace(/\s/g,'')}_${data}`;
-        await setDoc(doc(db, "frequencia", idDoc), {
-            turma: usuarioAtual.turma,
-            data: data,
-            detalhes: detalhes,
-            professor: usuarioAtual.nome,
-            atualizadoEm: new Date().toISOString()
-        });
-        alert("Frequência salva com sucesso!");
-        registrarLog("Salvou Chamada");
     } catch (e) {
-        console.error("Erro ao salvar:", e);
-        alert("Erro técnico ao salvar: " + e.message);
+        console.error("Erro no processo de salvamento:", e);
+        alert("Erro inesperado ao salvar. Verifique sua conexão.");
     } finally {
-        loading(false);
+        loading(false); // Desativa o "carregando"
     }
-await registrarLog("Realizou Chamada da Turma " + turmaSelecionada);
-    
-    alert("Chamada salva!");
 };
 window.abrirRelatorioMensal = () => {
     const hoje = new Date();
