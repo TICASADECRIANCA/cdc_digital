@@ -22,12 +22,7 @@
         input, select, textarea { font-family: inherit; font-size: 16px; }
 
         /* AUTH COM FUNDO */
-        .auth-container { 
-            position: absolute; top:0; left:0; width:100%; height:100%; z-index:99; 
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fundo_escola.jpg');
-            background-size: cover; background-position: center;
-            display: flex; justify-content: center; align-items: center; padding: 20px; 
-        }
+        .auth-container { position: absolute; top:0; left:0; width:100%; height:100%; z-index:99; background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fundo_escola.jpg'); background-size: cover; background-position: center; display: flex; justify-content: center; align-items: center; padding: 20px; }
         .card-auth { background: rgba(255, 255, 255, 0.95); padding: 2rem; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); width: 100%; max-width: 380px; text-align: center; backdrop-filter: blur(5px); }
         .card-auth img { width: 120px; margin-bottom: 20px; }
         .card-auth input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
@@ -109,40 +104,15 @@
         }
   
         @media print {
-    /* Esconde tudo o que não deve sair no papel */
-    body * { visibility: hidden !important; }
-    .no-print, button, .modal-overlay:not(#modal-relatorio) { display: none !important; }
-
-    /* Caso 1: Impressão da Chamada ou Diário (usa o print-container) */
-    #print-container, #print-container * { 
-        visibility: visible !important; 
-    }
-    #print-container { 
-        position: absolute !important; 
-        left: 0 !important; 
-        top: 0 !important; 
-        width: 100% !important; 
-        display: block !important;
-    }
-
-    /* Caso 2: Impressão do Relatório de Faltas (usa o modal-relatorio) */
-    body.printing-report #modal-relatorio, 
-    body.printing-report #modal-relatorio * { 
-        visibility: visible !important; 
-    }
-    body.printing-report #modal-relatorio { 
-        position: absolute !important; 
-        left: 0 !important; 
-        top: 0 !important; 
-        width: 100% !important; 
-        display: block !important;
-        background: white !important;
-    }
-    
-    /* Ajuste de tabelas para não cortar */
-    table { width: 100% !important; border-collapse: collapse !important; }
-    th, td { border: 1px solid #000 !important; padding: 8px !important; }
-}
+            body * { visibility: hidden !important; }
+            .no-print, button, .modal-overlay:not(#modal-relatorio) { display: none !important; }
+            #print-container, #print-container * { visibility: visible !important; }
+            #print-container { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; display: block !important; }
+            body.printing-report #modal-relatorio, body.printing-report #modal-relatorio * { visibility: visible !important; }
+            body.printing-report #modal-relatorio { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; display: block !important; background: white !important; }
+            table { width: 100% !important; border-collapse: collapse !important; }
+            th, td { border: 1px solid #000 !important; padding: 8px !important; }
+        }
         
     </style>
 </head>
@@ -226,7 +196,6 @@
         </div>
         
         <div class="main-content">
-            
             <div id="tab-freq" class="view-section">
                 <div class="action-bar">
                     <div class="date-control">
@@ -302,13 +271,10 @@
         
         <button onclick="window.imprimirRelatorio()" class="btn-action btn-print no-print" style="width:100%; margin-bottom:10px;">🖨️ Imprimir</button>
         <button onclick="document.getElementById('modal-relatorio').style.display='none'" class="btn-action btn-hist no-print" style="width:100%;">Fechar</button>
-        <button onclick="window.exportarExcel()" class="btn-action no-print" style="width:100%; background:#27ae60; color:white; margin-bottom:10px; border:none; border-radius:8px; padding:12px; font-weight:bold; cursor:pointer;">
-    Excel (.csv)
-</button>    
+        <button onclick="window.exportarExcel()" class="btn-action no-print" style="width:100%; background:#27ae60; color:white; margin-bottom:10px; border:none; border-radius:8px; padding:12px; font-weight:bold; cursor:pointer;">Excel (.csv)</button>    
     </div>
 </div>
     
-
     <div id="modal-historico" class="modal-overlay" onclick="if(event.target === this) window.fecharHistorico()">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -322,27 +288,23 @@
     <div id="modal-admin" class="modal-overlay">
         <div class="modal-content">
             <h2 style="color:var(--primary); margin-top:0;">Secretaria (Gestão)</h2>
-            
             <div style="border:1px solid #ddd; padding:15px; border-radius:8px; margin-bottom:20px; background:#f9f9f9;">
                 <h4 style="margin:0 0 10px 0;">Importar Alunos (Massa)</h4>
                 <p style="font-size:0.8rem; color:#666; margin-bottom:5px;">Formato: <strong>Nome, Turma</strong></p>
                 <textarea id="lista-alunos-massa" style="width:100%; height:100px; margin-bottom:10px;"></textarea>
                 <button onclick="window.importarAlunosMassa()" class="btn-action btn-save" style="width:100%;">Importar Alunos</button>
             </div>
-            
             <div style="border:1px solid #ddd; padding:15px; border-radius:8px; margin-bottom:20px; background:#f9f9f9;">
                 <h4 style="margin:0 0 10px 0;">Criar Contas (Professores)</h4>
                 <p style="font-size:0.8rem; color:#666; margin-bottom:5px;">Formato: <strong>Nome, Turma, Email, Senha</strong></p>
                 <textarea id="lista-profs-import" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
                 <button onclick="window.processarImportacaoProfs()" class="btn-action btn-save" style="width:100%;">Criar Professores</button>
             </div>
-            
             <div style="border:1px solid #e67e22; padding:15px; border-radius:8px; background:#fffaf0; margin-bottom:20px;">
                 <h4 style="color:#e67e22; margin:0 0 10px 0;">🛠️ Manutenção</h4>
                 <button onclick="window.removerDuplicados()" class="btn-action btn-fix" style="width:100%; margin-bottom:10px;">Remover Alunos Duplicados</button>
                 <button onclick="window.limparBancoAlunos()" class="btn-action btn-del" style="width:100%;">Excluir TODOS os Alunos</button>
             </div>
-
             <button onclick="document.getElementById('modal-admin').style.display='none'" class="btn-action btn-hist" style="width:100%;">Fechar Painel</button>
         </div>
     </div>
@@ -355,181 +317,149 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-// NOVA FUNÇÃO: Registra o que acontece no sistema
-async function registrarLog(acao) {
-    console.log("Tentando registrar log:", acao); // Isto vai aparecer no F12
-    if (!usuarioAtual) {
-        console.warn("Log não registrado: Nenhum usuário logado.");
-        return;
-    }
-    try {
-        const docRef = await addDoc(collection(db, "logs_auditoria"), {
-            usuario: usuarioAtual.nome,
-            email: usuarioAtual.email || "Acesso Manual",
-            turma: usuarioAtual.turma,
-            acao: acao,
-            data: serverTimestamp()
-        });
-        console.log("Log gravado com sucesso! ID:", docRef.id);
-    } catch (e) {
-        console.error("ERRO AO GRAVAR NO FIREBASE:", e);
-    }
-}
-        
-// ==========================================
-// --- INTEGRAÇÃO API SOPHIA (CASA+) ---
-// ==========================================
-const SOPHIA_URL = "https://portal.sophia.com.br/SophiAWebApi/9118/api/v1";
-let sophiaToken = null;
-
-async function autenticarSophia() {
-    if (sophiaToken) return sophiaToken; 
-    console.log("🔑 Solicitando token de acesso ao Sophia...");
-    try {
-        const response = await fetch(`${SOPHIA_URL}/Autenticacao`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'text/plain' },
-            body: JSON.stringify({ usuario: "Escola", senha: "1992" })
-        });
-        if (!response.ok) throw new Error(`Erro ${response.status}`);
-        sophiaToken = await response.text(); 
-        return sophiaToken;
-    } catch (e) {
-        console.error("❌ Erro Auth Sophia:", e);
-        return null;
-    }
-}
-
-window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
-    try {
-        const token = await autenticarSophia();
-        if (!token) return false;
-
-        console.log(`🔍 1. Buscando ID do professor "${nomeProf}" no SophiA...`);
-        
-        // 1. BUSCA O PROFESSOR
-        const respColab = await fetch(`${SOPHIA_URL}/Colaboradores`, {
-            headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
-        });
-        
-        if (!respColab.ok) throw new Error("Erro ao buscar professores.");
-        const colaboradores = await respColab.json();
-
-        const normalizar = (str) => (str || "").toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-        const nomeProfLimpo = normalizar(nomeProf);
-
-        const professorSophia = colaboradores.find(c => normalizar(c.nome) === nomeProfLimpo || normalizar(c.nome).includes(nomeProfLimpo));
-
-        if (!professorSophia) {
-            console.warn(`❌ Professor "${nomeProf}" não encontrado no SophiA.`);
-            return false;
-        }
-
-        const idProfessorDinamico = professorSophia.codigo || professorSophia.id; 
-        console.log(`✅ Professor encontrado! O ID dele no SophiA é: ${idProfessorDinamico}`);
-        window.idProfessorSophiAtual = idProfessorDinamico;
-
-        // 2. BUSCA AS TURMAS (ANO INTEIRO)
-        const hoje = new Date();
-        const anoAtual = hoje.getFullYear();
-        const inicioAno = `${anoAtual}-01-01T00:00:00`;
-        const fimAno = `${anoAtual}-12-31T23:59:59`;
-        
-        const urlTurmas = `${SOPHIA_URL}/ListaChamada/Professor/${idProfessorDinamico}?DataInicial=${inicioAno}&DataFinal=${fimAno}&Status=-1`;
-
-        console.log(`🔍 2. Buscando turmas do professor ID ${idProfessorDinamico} no ano todo...`);
-        const respListas = await fetch(urlTurmas, {
-            headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
-        });
-
-        if (!respListas.ok) throw new Error("Erro ao buscar turmas.");
-        const listasChamada = await respListas.json();
-
-        const normalizarTurma = (str) => (str || "").toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
-        
-        const listaAtual = listasChamada.find(lista => {
-            const nomeSophia = normalizarTurma(lista.turma);
-            const nomeCASA = normalizarTurma(turmaNome);
-            return nomeSophia === nomeCASA || nomeSophia.includes(nomeCASA) || nomeCASA.includes(nomeSophia);
-        });
-        
-        if (!listaAtual) {
-            console.warn(`❌ Turma "${turmaNome}" não encontrada para este professor neste ano.`);
-            return false;
-        }
-
-        window.idListaAtualSophia = listaAtual.codigoLista;
-
-        // 3. BUSCA OS ALUNOS (Com proteção contra erros)
-      // ---------------------------------------------------------
-        // 3. BUSCA OS ALUNOS (Com filtro de duplicados)
-        // ---------------------------------------------------------
-        const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${window.idListaAtualSophia}`, {
-            headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
-        });
-        
-        const alunosBrutos = await respAlunos.json();
-        console.log("📡 Alunos brutos recebidos:", alunosBrutos.length);
-
-        listaAlunosCache = [];
-        const idsAdicionados = new Set(); // Conjunto para rastrear IDs únicos
-
-        alunosBrutos.forEach(aluno => {
-            const idAluno = aluno.codigoMatricula || aluno.codigo || aluno.id;
-            
-            // SÓ ADICIONA SE O ID AINDA NÃO ESTIVER NA LISTA
-            if (idAluno && !idsAdicionados.has(idAluno)) {
-                idsAdicionados.add(idAluno);
-                
-                listaAlunosCache.push({
-                    id: idAluno,
-                    nome: aluno.nomeAluno || aluno.nome || aluno.Nome || "ALUNO DESCONHECIDO",
-                    codigoListaChamadaAula: aluno.codigoListaChamadaAula, 
-                    turma: turmaNome,
-                    presenca: true,
-                    exAluno: false 
-                });
+        async function registrarLog(acao) {
+            console.log("Tentando registrar log:", acao);
+            if (!usuarioAtual) {
+                console.warn("Log não registrado: Nenhum usuário logado.");
+                return;
             }
-        });
-
-        console.log("✅ Alunos processados (sem duplicados):", listaAlunosCache.length);
-
-        // Ordenação segura
-        listaAlunosCache.sort((a,b) => (a.nome || "").localeCompare(b.nome || ""));
+            try {
+                const docRef = await addDoc(collection(db, "logs_auditoria"), {
+                    usuario: usuarioAtual.nome,
+                    email: usuarioAtual.email || "Acesso Manual",
+                    turma: usuarioAtual.turma,
+                    acao: acao,
+                    data: serverTimestamp()
+                });
+                console.log("Log gravado com sucesso! ID:", docRef.id);
+            } catch (e) {
+                console.error("ERRO AO GRAVAR NO FIREBASE:", e);
+            }
+        }
         
-        renderizarTabelaAlunos(listaAlunosCache, []);
-        return true;
+        // ==========================================
+        // --- INTEGRAÇÃO API SOPHIA (CASA+) ---
+        // ==========================================
+        const SOPHIA_URL = "https://portal.sophia.com.br/SophiAWebApi/9118/api/v1";
+        let sophiaToken = null;
 
-    } catch (e) {
-        console.error("❌ Erro fatal:", e);
-        return false;
-    }
-};
+        async function autenticarSophia() {
+            if (sophiaToken) return sophiaToken;
+            console.log("🔑 Solicitando token de acesso ao Sophia...");
+            try {
+                const response = await fetch(`${SOPHIA_URL}/Autenticacao`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'text/plain' },
+                    body: JSON.stringify({ usuario: "Escola", senha: "1992" })
+                });
+                if (!response.ok) throw new Error(`Erro ${response.status}`);
+                sophiaToken = await response.text(); 
+                return sophiaToken;
+            } catch (e) {
+                console.error("❌ Erro Auth Sophia:", e);
+                return null;
+            }
+        }
 
+        window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
+            try {
+                const token = await autenticarSophia();
+                if (!token) return false;
 
+                console.log(`🔍 1. Buscando ID do professor "${nomeProf}" no SophiA...`);
+                const respColab = await fetch(`${SOPHIA_URL}/Colaboradores`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
+                });
+                if (!respColab.ok) throw new Error("Erro ao buscar professores.");
+                const colaboradores = await respColab.json();
+                
+                const normalizar = (str) => (str || "").toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+                const nomeProfLimpo = normalizar(nomeProf);
+                
+                const professorSophia = colaboradores.find(c => normalizar(c.nome) === nomeProfLimpo || normalizar(c.nome).includes(nomeProfLimpo));
+                if (!professorSophia) {
+                    console.warn(`❌ Professor "${nomeProf}" não encontrado no SophiA.`);
+                    return false;
+                }
 
-        
-        const ESTRUTURA_TURMAS = { 
-            "Berçário": [ { nome: "Berçário", letras: ["A", "B"] } ],
-            "Infantil 1": [ { nome: "Infantil 1", letras: ["A", "B", "C", "D", "E", "F", "G", "I"] } ],
-            "Infantil 2": [ { nome: "Infantil 2", letras: ["A", "B", "C", "D", "E", "F", "G", "I", "J"] } ], 
-            "Infantil 3": [ { nome: "Infantil 3", letras: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"] } ], 
-            "Infantil 4": [ { nome: "Infantil 4", letras: ["A", "B", "C", "D", "E", "F", "G", "I", "J"] } ], 
-            "Infantil 5": [ { nome: "Infantil 5", letras: ["A", "B", "C", "D", "E", "F", "G", "I"] } ],
-            "Ensino Fundamental": [ { nome: "1º Ano", letras: ["A", "B", "C", "D", "I"] } ],
-            "Esportes e Extras": [
-                { nome: "Futsal", letras: ["A"] },
-                { nome: "Dança", letras: ["A"] },
-                { nome: "Ginástica Rítmica", letras: ["A"] },
-                { nome: "Judô", letras: ["A"] }
-            ],
-            "Sistema integral": [ { nome: "Integral", letras: ["1", "2"] } ]
+                const idProfessorDinamico = professorSophia.codigo || professorSophia.id;
+                console.log(`✅ Professor encontrado! O ID dele no SophiA é: ${idProfessorDinamico}`);
+                window.idProfessorSophiAtual = idProfessorDinamico; 
 
+                // 2. BUSCA AS LISTAS DO PROFESSOR
+                const respListas = await fetch(`${SOPHIA_URL}/ListaChamada/Colaborador/${idProfessorDinamico}`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
+                });
+                const listas = await respListas.json();
+                const turmaSophiA = normalizar(turmaNome);
+                const listaCerta = listas.find(l => normalizar(l.nomeListaChamada).includes(turmaSophiA) || normalizar(l.nomeTurma).includes(turmaSophiA));
+                
+                if (!listaCerta) return false;
+                window.idListaAtualSophia = listaCerta.codigoListaChamada;
+
+                // 3. BUSCA OS ALUNOS (Com filtro de duplicados)
+                const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${window.idListaAtualSophia}`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
+                });
+                
+                const alunosBrutos = await respAlunos.json();
+                console.log("📡 Alunos brutos recebidos:", alunosBrutos.length);
+
+                listaAlunosCache = [];
+                const idsAdicionados = new Set();
+
+                alunosBrutos.forEach(aluno => {
+                    const idAluno = aluno.codigoMatricula || aluno.codigo || aluno.id;
+                    if (idAluno && !idsAdicionados.has(idAluno)) {
+                        idsAdicionados.add(idAluno);
+                        listaAlunosCache.push({
+                            id: idAluno,
+                            nome: aluno.nomeAluno || aluno.nome || aluno.Nome || "ALUNO DESCONHECIDO",
+                            codigoListaChamadaAula: aluno.codigoListaChamadaAula, 
+                            turma: turmaNome,
+                            presenca: true,
+                            exAluno: false 
+                        });
+                    }
+                });
+
+                console.log("✅ Alunos processados (sem duplicados):", listaAlunosCache.length);
+                listaAlunosCache.sort((a,b) => (a.nome || "").localeCompare(b.nome || ""));
+                renderizarTabelaAlunos(listaAlunosCache, []);
+                return true;
+            } catch (e) {
+                console.error("❌ Erro fatal:", e);
+                return false;
+            }
         };
 
-        const REGRAS_COORDENACAO = {
-            "CRISTIANE": ["Berçário A", "Infantil 1 A", "Infantil 1 B", "Infantil 1 C", "Infantil 1 D", "Infantil 1 E", "Infantil 1 F", "Infantil 1 G"],
-            "ADNA": ["Berçário B", "Infantil 1 I", "Infantil 2 A", "Infantil 2 B", "Infantil 2 C", "Infantil 2 D", "Infantil 2 E", "Infantil 2 F", "Infantil 2 G", "Infantil 2 I", "Infantil 2 J"],
+        const ESTRUTURA_TURMAS = {
+            "Berçário": [ { nome: "Berçário", letras: ["A", "B"] } ],
+            "Infantil 1": [ { nome: "Infantil 1", letras: ["A", "B", "C", "D", "E", "F", "G", "I"] } ],
+            "Infantil 2": [ { nome: "Infantil 2", letras: ["A", "B", "C", "D", "E", "F", "G", "I", "J"] } ],
+            "Infantil 3": [ { nome: "Infantil 3", letras: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"] } ],
+            "Infantil 4": [ { nome: "Infantil 4", letras: ["A", "B", "C", "D", "E", "F", "G", "I", "J"] } ],
+            "Infantil 5": [ { nome: "Infantil 5", letras: ["A", "B", "C", "D", "E", "F", "G", "I"] } ],
+            "Fundamental 1": [
+                { nome: "1º Ano", letras: ["A", "B", "C", "D", "I"] },
+                { nome: "2º Ano", letras: ["A", "B", "C", "D", "I"] },
+                { nome: "3º Ano", letras: ["A", "B", "C", "D", "I"] },
+                { nome: "4º Ano", letras: ["A", "B", "C", "I"] },
+                { nome: "5º Ano", letras: ["A", "B", "C", "I"] }
+            ],
+            "Integral": [ { nome: "Integral", letras: ["1", "2"] } ],
+            "Atividades Extras": [
+                { nome: "Futsal", letras: ["A", "B", "C"] },
+                { nome: "Dança", letras: ["A", "B", "C"] },
+                { nome: "Ginástica Rítmica", letras: ["A", "B"] },
+                { nome: "Judô", letras: ["A", "B"] }
+            ]
+        };
+
+        const PERFIS_COORDENACAO = {
+            "GERAL": "ALL",
+            "CRISTIANE": ["Berçário A", "Berçário B", "Infantil 1 A", "Infantil 1 B", "Infantil 1 C", "Infantil 1 D", "Infantil 1 E", "Infantil 1 F", "Infantil 1 G", "Infantil 1 I", "Infantil 2 A", "Infantil 2 B", "Infantil 2 C", "Infantil 2 D", "Infantil 2 E", "Infantil 2 F", "Infantil 2 G", "Infantil 2 I", "Infantil 2 J"],
+            "ADNA": ["2º Ano A", "2º Ano B", "2º Ano C", "2º Ano D", "2º Ano I", "3º Ano A", "3º Ano B", "3º Ano C", "3º Ano D", "3º Ano I", "4º Ano A", "4º Ano B", "4º Ano C", "4º Ano I", "5º Ano A", "5º Ano B", "5º Ano C", "5º Ano I"],
             "NAYARA": ["Infantil 3 A", "Infantil 3 B", "Infantil 3 C", "Infantil 3 D", "Infantil 3 E", "Infantil 3 F", "Infantil 3 G", "Infantil 3 H"],
             "LUDMILLA": ["Infantil 3 I", "Infantil 3 J", "Infantil 4 I", "Infantil 4 J", "Infantil 5 A", "Infantil 5 B", "Infantil 5 C", "Infantil 5 D", "Infantil 5 E", "Infantil 5 F", "Infantil 5 G", "Infantil 5 I", "1º Ano I"],
             "ELIONEIDE": ["Infantil 4 A", "Infantil 4 B", "Infantil 4 C", "Infantil 4 D", "Infantil 4 E", "Infantil 4 F", "Infantil 4 G"],
@@ -539,8 +469,7 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
         };
 
         const SENHAS = { CADASTRO: "$2026", SECRETARIA: "$2026", EDICAO: "1992" };
-
-        let usuarioAtual = null; 
+        let usuarioAtual = null;
         let perfilCoord = null;
         let listaAlunosCache = [];
 
@@ -553,7 +482,9 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
             document.getElementById('data-freq').value = getHoje();
             document.getElementById('data-plan').value = getHoje();
             ['login-email', 'login-senha'].forEach(id => {
-                document.getElementById(id).addEventListener('keypress', (e) => { if(e.key === 'Enter') window.fazerLogin(); });
+                document.getElementById(id).addEventListener('keypress', (e) => {
+                    if(e.key === 'Enter') window.fazerLogin();
+                });
             });
         };
 
@@ -561,7 +492,7 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
             ['view-login', 'view-cadastro', 'view-coord', 'app-painel'].forEach(id => document.getElementById(id).classList.add('hidden'));
             const el = document.getElementById(viewName === 'login' ? 'view-login' : viewName === 'cadastro' ? 'view-cadastro' : viewName === 'coord' ? 'view-coord' : 'app-painel');
             el.classList.remove('hidden');
-            if(viewName === 'app') el.style.display = 'flex'; 
+            if(viewName === 'app') el.style.display = 'flex';
         };
 
         window.mudarAba = (aba) => {
@@ -572,36 +503,57 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
         };
 
         window.fazerLogin = async () => {
-            const email = document.getElementById('login-email').value.trim();
-            const senha = document.getElementById('login-senha').value.trim();
-            if(!email || !senha) return alert("Preencha tudo.");
+            const em = document.getElementById('login-email').value.trim();
+            const se = document.getElementById('login-senha').value;
+            if(!em || !se) return alert("Preencha tudo.");
             loading(true);
             try {
-                const q = query(collection(db, "professores"), where("email", "==", email), where("senha", "==", senha));
-                const snap = await getDocs(q);
-                if(snap.empty) alert("Dados incorretos.");
-                else {
-                    const user = snap.docs[0].data();
-                    registrarLog("Fez Login");
-                    if(user.turma === "COORD" || user.acessos?.length) {
-                        usuarioAtual = user; perfilCoord = user;
-                        window.showView('coord');
-                        renderCoordPainel(user.acessos || []);
-                    } else {
-                        usuarioAtual = user; perfilCoord = null;
-                        document.getElementById('btn-voltar-coord').classList.add('hidden');
-                        entrarTurma(user.turma, user.nome);
-                    }
+                const s = await getDocs(query(collection(db, "professores"), where("email", "==", em), where("senha", "==", se)));
+                if(s.empty) return alert("Credenciais inválidas.");
+                const data = s.docs[0].data();
+                if(data.acessos) {
+                    perfilCoord = { nome: data.nome, acessos: data.acessos, perfil: data.turma };
+                    montarPainelCoord();
+                    window.showView('coord');
+                } else {
+                    usuarioAtual = { nome: data.nome, turma: data.turma, email: em };
+                    await entrarTurma(data.turma, data.nome);
                 }
-            } catch(e) { console.error(e); alert("Erro de conexão."); } finally { loading(false); }
+                registrarLog("Fez Login");
+            } catch(e) { alert("Erro de rede."); } finally { loading(false); }
         };
 
-        window.fazerLogout = () => { usuarioAtual = null; window.showView('login'); };
+        window.fazerLogout = () => {
+            registrarLog("Fez Logout");
+            usuarioAtual = null; perfilCoord = null;
+            document.getElementById('login-senha').value = '';
+            window.showView('login');
+        };
 
-        function renderCoordPainel(acessos) {
-            const container = document.getElementById('container-turmas'); container.innerHTML = "";
-            const isGeral = acessos.includes("TODAS");
-            for (const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) {
+        function carregarOpcoesTurma() {
+            const s1 = document.getElementById('cad-turma-unica');
+            const contC = document.getElementById('container-checkboxes');
+            s1.innerHTML = '<option value="" disabled selected>Selecione a Turma</option>';
+            contC.innerHTML = '';
+            for(const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) {
+                const og = document.createElement('optgroup'); og.label = g;
+                ls.forEach(se => {
+                    se.letras.forEach(l => {
+                        const nt = `${se.nome} ${l}`;
+                        og.innerHTML += `<option value="${nt}">${nt}</option>`;
+                        contC.innerHTML += `<label style="display:block;margin-bottom:5px;"><input type="checkbox" value="${nt}"> ${nt}</label>`;
+                    });
+                });
+                s1.appendChild(og);
+            }
+        }
+
+        function montarPainelCoord() {
+            const container = document.getElementById('container-turmas');
+            container.innerHTML = "";
+            const acessos = perfilCoord.acessos;
+            const isGeral = acessos === "ALL";
+            for(const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) {
                 ls.forEach(se => se.letras.forEach(l => {
                     const nomeTurma = `${se.nome} ${l}`;
                     if(isGeral || acessos.includes(nomeTurma)) {
@@ -618,30 +570,29 @@ window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
                 }));
             }
         }
+
         window.voltarParaCoord = () => { usuarioAtual = perfilCoord; window.showView('coord'); };
 
-async function entrarTurma(turma, nomeProf) {
-    document.getElementById('display-turma-nome').innerText = nomeProf.split(' ')[0];
-    window.showView('app');
-    window.mudarAba('freq');
-    
-    loading(true);
-    
-    // Agora passamos também o nome do professor para a função!
-    const sucessoSophia = await window.buscarAlunosSophia(turma, nomeProf);
-    
-    if (sucessoSophia) {
-        document.getElementById('display-turma-badge').innerText = turma + " (SOPHIA)";
-    } else {
-        document.getElementById('display-turma-badge').innerText = turma + " (FIREBASE)";
-        await carregarAlunosBase();
-    }
-    
-    loading(false);
-    
-    await carregarFrequencia();
-    await carregarPlanejamento();
-}
+        async function entrarTurma(turma, nomeProf) {
+            document.getElementById('display-turma-nome').innerText = nomeProf.split(' ')[0];
+            window.showView('app');
+            window.mudarAba('freq');
+            loading(true);
+            
+            const sucessoSophia = await window.buscarAlunosSophia(turma, nomeProf);
+            if (sucessoSophia) {
+                document.getElementById('display-turma-badge').innerText = turma + " (SOPHIA)";
+            } else {
+                document.getElementById('display-turma-badge').innerText = turma + " (FIREBASE)";
+                await carregarAlunosBase();
+            }
+            loading(false);
+            
+            // CORREÇÃO: As funções de carregar precisam do window. para serem reconhecidas aqui!
+            await window.carregarFrequencia();
+            await window.carregarPlanejamento();
+        }
+
         async function carregarAlunosBase() {
             loading(true);
             try {
@@ -653,268 +604,273 @@ async function entrarTurma(turma, nomeProf) {
             } catch(e) { console.log(e); } finally { loading(false); }
         }
 
-        // --- RENDERIZADOR ---
         function renderizarTabelaAlunos(listaExibicao, faltosos = []) {
             const tbody = document.getElementById('tbody-alunos');
             const listaMob = document.getElementById('mobile-lista');
             tbody.innerHTML = ""; listaMob.innerHTML = "";
-
             if(listaExibicao.length === 0) document.getElementById('empty-msg').style.display = 'block';
             else document.getElementById('empty-msg').style.display = 'none';
 
-            listaExibicao.forEach((aluno, idx) => {
-                const isExAluno = aluno.exAluno;
+            listaExibicao.forEach((a, i) => {
+                const presente = !faltosos.includes(a.nome);
+                a.presenca = presente; // Garante que a lista cache reflita o visual
                 
-                // Determina status
-                let foiFalta = false;
-                if(isExAluno) {
-                    // Para ex-aluno, usamos o status guardado no histórico
-                    foiFalta = !aluno.statusHistorico; 
-                } else {
-                    foiFalta = faltosos.includes(aluno.nome);
-                }
-                
-                let statusClass = foiFalta ? "ausente" : "presente";
-                let statusText = foiFalta ? "Ausente" : "Presente";
+                const btnClass = a.exAluno ? 'ex-btn' : (presente ? 'presente' : 'ausente');
+                const btnText = a.exAluno ? (a.statusHistorico ? 'Presente' : 'Ausente') : (presente ? 'Presente' : 'Ausente');
+                const onClick = a.exAluno ? '' : `onclick="window.alternarPresenca(this, ${i})"`;
+                const tagRemovido = a.exAluno ? '<span class="texto-removido"> (Removido do Sistema)</span>' : '';
 
-                const tr = document.createElement('tr');
-                const btnDel = (perfilCoord && !isExAluno) ? `<button onclick="window.removerAluno('${aluno.id}')" style="background:none; border:none; color:red;">🗑️</button>` : '';
-                
-                // Se for ex-aluno, botão visual, senão botão funcional
-                let btnHtml;
-                if(isExAluno) {
-                    btnHtml = `<button class="toggle-btn ${statusClass} ex-btn">${statusText}</button>`;
-                } else {
-                    btnHtml = `<button class="toggle-btn ${statusClass}" onclick="window.togglePresenca(this, '${aluno.id}')">${statusText}</button>`;
-                }
+                tbody.innerHTML += `<tr id="row-${i}"><td>${i+1}</td><td>${a.nome}${tagRemovido}</td><td style="text-align:center"><button class="toggle-btn ${btnClass}" ${onClick}>${btnText}</button></td><td class="no-print"><button onclick="window.apagarAluno('${a.id}')" class="btn-action btn-del" style="padding:4px 8px; font-size:0.8rem;" ${a.exAluno ? 'disabled' : ''}>🗑️</button></td></tr>`;
 
-                tr.innerHTML = `<td>${idx+1}</td>
-                                <td>${aluno.nome} ${isExAluno ? '<span class="texto-removido">(Ex-Aluno)</span>':''}</td>
-                                <td style="text-align:center">${btnHtml}</td>
-                                <td class="no-print" style="text-align:center">${btnDel}</td>`;
-                tbody.appendChild(tr);
-
-                const card = document.createElement('div');
-                card.className = `student-card status-${statusClass} ${isExAluno ? 'status-exaluno' : ''}`;
-                card.innerHTML = `
-                    <div class="student-info"><strong>${idx+1}. ${aluno.nome} ${isExAluno ? '<span class="texto-removido">(Ex-Aluno)</span>':''}</strong><span>${isExAluno ? 'Removido' : usuarioAtual.turma}</span></div>
-                    ${isExAluno ? `<button class="toggle-btn ${statusClass} ex-btn">${statusText}</button>` : `<button class="toggle-btn ${statusClass}" onclick="window.togglePresenca(this, '${aluno.id}', true)">${statusText}</button>`}
-                `;
-                listaMob.appendChild(card);
+                listaMob.innerHTML += `<div class="student-card status-${btnClass}" id="card-${i}">
+                    <div class="student-info"><strong>${i+1}. ${a.nome}${tagRemovido}</strong></div>
+                    <button class="toggle-btn ${btnClass}" ${onClick}>${btnText}</button>
+                </div>`;
             });
         }
 
-        window.togglePresenca = (btn, id, isMobile) => {
+        window.alternarPresenca = (btn, i) => {
             const isPres = btn.innerText === "Presente";
             const novoStatus = isPres ? "Ausente" : "Presente";
             const novaClasse = isPres ? "ausente" : "presente";
+            
             btn.className = `toggle-btn ${novaClasse}`;
             btn.innerText = novoStatus;
-            if(isMobile) {
-                const card = document.getElementById(`card-${id}`);
+            
+            if(window.innerWidth <= 768) {
+                const card = document.getElementById(`card-${i}`);
                 if(card) card.className = `student-card status-${novaClasse}`;
+            }
+
+            if(listaAlunosCache[i]) {
+                listaAlunosCache[i].presenca = !isPres; 
             }
         };
 
-        // --- CARREGAR FREQUENCIA COM HISTORICO DE REMOVIDOS ---
         window.carregarFrequencia = async () => {
             const dt = document.getElementById('data-freq').value;
-            if(dt > getHoje()) { alert("Data futura não permitida."); document.getElementById('data-freq').value = getHoje(); return; }
+            if(dt > getHoje()) {
+                alert("Data futura não permitida.");
+                document.getElementById('data-freq').value = getHoje();
+                return;
+            }
             loading(true);
-
             try {
                 const q = query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma), where("data", "==", dt));
                 const snap = await getDocs(q);
-                
-                let listaFinal = [...listaAlunosCache]; 
+                let listaFinal = [...listaAlunosCache];
                 let faltosos = [];
-
                 if(!snap.empty) {
                     const dados = snap.docs[0].data();
                     if(dados.detalhes) {
                         faltosos = dados.detalhes.filter(d => !d.presente).map(d => d.nome);
-                        
-                        // Verifica alunos do histórico que sumiram da lista
                         dados.detalhes.forEach(hist => {
                             const existe = listaFinal.find(a => a.nome === hist.nome);
                             if(!existe) {
-                                listaFinal.push({
-                                    nome: hist.nome,
-                                    id: null,
-                                    exAluno: true,
-                                    statusHistorico: hist.presente 
-                                });
+                                listaFinal.push({ nome: hist.nome, id: null, exAluno: true, statusHistorico: hist.presente });
                             }
                         });
                     }
                 }
-                
                 listaFinal.sort((a,b) => a.nome.localeCompare(b.nome));
                 renderizarTabelaAlunos(listaFinal, faltosos);
-
             } catch(e){ console.error(e); } finally { loading(false); }
         };
-window.salvarChamadaGeral = async () => {
-    console.log("🚩 Botão Salvar clicado!");
-    
-    // VERIFICAÇÃO DO FIREBASE (CASA+)
-    // Aqui, eu preciso que você mude o nome 'salvarChamadaNoFirebase' 
-    // para o nome da função que você usava antes no seu projeto.
-    const nomeDaSuaFuncaoOriginal = "salvarChamada"; // <--- MUDE AQUI!
 
-    try {
-        loading(true);
+        // --- ORQUESTRADOR MASTER DE SALVAMENTO ---
+        window.salvarChamadaGeral = async () => {
+            const data = document.getElementById('data-freq').value;
+            if (!data) return alert("Selecione uma data antes de salvar.");
 
-        // 1. TENTA SOPHIA
-        console.log("📡 Enviando para o SophiA...");
-        const sucessoSophia = await window.salvarChamadaSophia();
-        
-        // 2. TENTA FIREBASE (CASA+)
-        let sucessoFirebase = false;
-        if (typeof window[nomeDaSuaFuncaoOriginal] === "function") {
-            console.log("🔥 Executando salvamento no Firebase...");
-            await window[nomeDaSuaFuncaoOriginal](); 
-            sucessoFirebase = true;
-        } else {
-            console.error(`❌ ERRO: A função [${nomeDaSuaFuncaoOriginal}] não foi encontrada no código!`);
-            alert(`Atenção: O histórico do CASA+ não foi salvo porque a função ${nomeDaSuaFuncaoOriginal} não foi encontrada.`);
-        }
+            const detalhes = [];
+            
+            if (!listaAlunosCache || listaAlunosCache.length === 0) {
+                return alert("Nenhum dado encontrado para salvar nesta turma.");
+            }
 
-        if (sucessoSophia && sucessoFirebase) {
-            alert("✅ SUCESSO TOTAL: SophiA e CASA+ atualizados!");
-        } else if (sucessoSophia) {
-            alert("⚠️ Salvo no SophiA, mas o CASA+ (Firebase) falhou.");
-        } else if (sucessoFirebase) {
-            alert("⚠️ Salvo no CASA+, mas o SophiA recusou os dados.");
-        }
+            loading(true);
 
-    } catch (e) {
-        console.error("❌ Erro crítico no salvamento:", e);
-    } finally {
-        loading(false);
-    }
-};
-// 👉 ADICIONE ESTAS DUAS LINHAS AQUI:
-        const salvouSophia = await window.enviarParaSophiaSilencioso();
-        if (salvouSophia) { alert("Sincronizado também com o SophiA!"); }
-        // 👈 ATÉ AQUI
+            try {
+                console.log("🔥 Salvando no Firebase (CASA+)...");
+                listaAlunosCache.forEach(aluno => {
+                    detalhes.push({
+                        nome: aluno.nome,
+                        presente: aluno.presenca
+                    });
+                });
 
-        alert("Frequência salva com sucesso!"); // Esta linha já é a sua original
-        registrarLog("Salvou Chamada");
-        
-window.abrirRelatorioMensal = () => {
-    const hoje = new Date();
-    const mesStr = hoje.toISOString().slice(0, 7); 
-    // Corrigido para os novos IDs
-    setTimeout(() => {
-        if(document.getElementById('mes-relatorio-inicio')) document.getElementById('mes-relatorio-inicio').value = mesStr;
-        if(document.getElementById('mes-relatorio-fim')) document.getElementById('mes-relatorio-fim').value = mesStr;
-    }, 100);
-    document.getElementById('resultado-relatorio').innerHTML = "";
-    document.getElementById('modal-relatorio').style.display = 'flex';
-};
+                const idDoc = `${usuarioAtual.turma.replace(/\s/g,'')}_${data}`;
+                
+                await setDoc(doc(db, "frequencia", idDoc), {
+                    turma: usuarioAtual.turma,
+                    data: data,
+                    detalhes: detalhes,
+                    professor: usuarioAtual.nome,
+                    atualizadoEm: new Date().toISOString()
+                });
 
-window.imprimirRelatorio = () => {
-    const conteudo = document.getElementById('resultado-relatorio').innerHTML;
-    if(!conteudo || conteudo === "Processando...") {
-        return alert("Gere o relatório primeiro!");
-    }
-    
-    document.body.classList.add('printing-report');
-    window.print();
-    
-    // Remove a classe após imprimir para não afetar as outras telas
-    setTimeout(() => {
-        document.body.classList.remove('printing-report');
-    }, 1000);
-};
+                console.log("📡 Sincronizando com SophiA...");
+                const sucessoSophia = await window.salvarNoSophiA_Interno();
 
-        
+                await registrarLog("Salvou Chamada");
 
-window.gerarRelatorioFaltas = async () => {
-    const inicio = document.getElementById('mes-relatorio-inicio').value;
-    const fim = document.getElementById('mes-relatorio-fim').value;
-    
-    if(!inicio || !fim) return alert("Selecione o período inicial e final.");
-    
-    const divRes = document.getElementById('resultado-relatorio');
-    divRes.innerHTML = "Processando período...";
-    loading(true);
+                if (sucessoSophia) {
+                    alert("✅ Chamada salva com sucesso no CASA+ e no SophiA!");
+                } else {
+                    alert("⚠️ Chamada salva no CASA+, mas o SophiA recusou a integração. O sistema continuará a tentar mais tarde.");
+                }
 
-    try {
-        const dataStart = inicio + "-01";
-        const dataEnd = fim + "-31";
-        
-        const q = query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma));
-        const snap = await getDocs(q);
-        
-        let mapaFaltas = {};
-        listaAlunosCache.forEach(a => mapaFaltas[a.nome] = 0);
-        let diasNoPeriodo = 0;
+            } catch (e) {
+                console.error("Erro crítico no processo de salvamento:", e);
+                alert("Erro técnico ao salvar: " + e.message);
+            } finally {
+                loading(false);
+            }
+        };
 
-        snap.forEach(docSnap => {
-            const dados = docSnap.data();
-            if (dados.data >= dataStart && dados.data <= dataEnd) {
-                diasNoPeriodo++;
-                if(dados.detalhes) {
+        window.salvarNoSophiA_Interno = async () => {
+            try {
+                const token = await autenticarSophia();
+                const idProf = window.idProfessorSophiAtual;
+                const idLista = window.idListaAtualSophia;
+
+                if (!idProf || !idLista) {
+                    console.warn("⚠️ IDs do SophiA ausentes (Prof ou Lista).");
+                    return false;
+                }
+
+                const payload = {
+                    codigoProfessor: parseInt(idProf),
+                    quantidadeAula: 1, 
+                    codigoListaChamada: parseInt(idLista),
+                    status: 1, 
+                    alunos: listaAlunosCache.map(aluno => ({
+                        codigoListaChamadaAula: parseInt(aluno.codigoListaChamadaAula) || 0,
+                        codigoMatricula: parseInt(aluno.id),
+                        falta: aluno.presenca ? 0 : 1, 
+                        ocorrencias: []
+                    }))
+                };
+
+                const response = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Token': token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const erroTxt = await response.text();
+                    console.error("❌ Resposta negativa do SophiA:", erroTxt);
+                    return false;
+                }
+                return true;
+            } catch (e) {
+                console.error("❌ Falha na comunicação com SophiA:", e);
+                return false;
+            }
+        };
+
+        // --- RELATÓRIOS ---
+        window.abrirRelatorioMensal = () => {
+            const hoje = new Date();
+            const mesStr = hoje.toISOString().slice(0, 7); 
+            setTimeout(() => {
+                if(document.getElementById('mes-relatorio-inicio')) document.getElementById('mes-relatorio-inicio').value = mesStr;
+                if(document.getElementById('mes-relatorio-fim')) document.getElementById('mes-relatorio-fim').value = mesStr;
+            }, 100);
+            document.getElementById('resultado-relatorio').innerHTML = "";
+            document.getElementById('modal-relatorio').style.display = 'flex';
+        };
+
+        window.imprimirRelatorio = () => {
+            const conteudo = document.getElementById('resultado-relatorio').innerHTML;
+            if(!conteudo || conteudo === "Processando...") return alert("Gere o relatório primeiro!");
+            document.body.classList.add('printing-report');
+            window.print();
+            setTimeout(() => { document.body.classList.remove('printing-report'); }, 1000);
+        };
+
+        window.gerarRelatorioFaltas = async () => {
+            const inicio = document.getElementById('mes-relatorio-inicio').value;
+            const fim = document.getElementById('mes-relatorio-fim').value;
+            if(!inicio || !fim) return alert("Selecione o período inicial e final.");
+            
+            const divRes = document.getElementById('resultado-relatorio');
+            divRes.innerHTML = "Processando período...";
+            loading(true);
+            try {
+                const dataStart = inicio + "-01";
+                const dataEnd = fim + "-31";
+                const q = query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma));
+                const snap = await getDocs(q);
+                let mapaFaltas = {};
+                listaAlunosCache.forEach(a => mapaFaltas[a.nome] = 0);
+                let diasNoPeriodo = 0;
+                
+                snap.forEach(docSnap => {
+                    const dados = docSnap.data();
+                    if (dados.data >= dataStart && dados.data <= dataEnd) {
+                        diasNoPeriodo++;
+                        if(dados.detalhes) {
+                            dados.detalhes.forEach(d => {
+                                if(mapaFaltas[d.nome] === undefined) mapaFaltas[d.nome] = 0;
+                                if(!d.presente) mapaFaltas[d.nome]++;
+                            });
+                        }
+                    }
+                });
+
+                let html = `<div style="padding:10px;"><p><strong>Dias com chamada no período:</strong> ${diasNoPeriodo}</p>`;
+                html += `<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                         <thead style="background:#eee;"><tr><th style="text-align:left; padding:8px;">Aluno</th><th style="text-align:center;">Faltas</th></tr></thead>
+                         <tbody>`;
+                Object.entries(mapaFaltas).sort((a,b) => a[0].localeCompare(b[0])).forEach(([n, f]) => {
+                    html += `<tr><td style="padding:8px; border-bottom:1px solid #ddd;">${n}</td><td style="text-align:center; border-bottom:1px solid #ddd; ${f > 0 ? 'color:red;font-weight:bold;' : ''}">${f}</td></tr>`;
+                });
+                html += `</tbody></table></div>`;
+                divRes.innerHTML = html;
+            } catch(e) { console.error(e); divRes.innerHTML = "Erro ao processar."; } finally { loading(false); }
+        };
+
+        window.exportarExcel = async () => {
+            const inicio = document.getElementById('mes-relatorio-inicio').value;
+            const fim = document.getElementById('mes-relatorio-fim').value;
+            if(!inicio || !fim) return alert("Selecione os meses primeiro.");
+            
+            const dataStart = inicio + "-01";
+            const dataEnd = fim + "-31";
+            const q = query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma));
+            const snap = await getDocs(q);
+            let mapaFaltas = {};
+            listaAlunosCache.forEach(a => mapaFaltas[a.nome] = 0);
+            
+            snap.forEach(docSnap => {
+                const dados = docSnap.data();
+                if (dados.data >= dataStart && dados.data <= dataEnd && dados.detalhes) {
                     dados.detalhes.forEach(d => {
                         if(mapaFaltas[d.nome] === undefined) mapaFaltas[d.nome] = 0;
                         if(!d.presente) mapaFaltas[d.nome]++;
                     });
                 }
-            }
-        });
+            });
 
-        let html = `<div style="padding:10px;"><p><strong>Dias com chamada no período:</strong> ${diasNoPeriodo}</p>`;
-        html += `<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
-                <thead style="background:#eee;"><tr><th style="text-align:left; padding:8px;">Aluno</th><th style="text-align:center;">Faltas</th></tr></thead>
-                <tbody>`;
+            let csv = ["Aluno,Total de Faltas"];
+            Object.entries(mapaFaltas).sort((a,b) => a[0].localeCompare(b[0])).forEach(([n, f]) => { csv.push(`"${n}",${f}`); });
+            const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + csv.join("\n");
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.setAttribute("href", URL.createObjectURL(blob));
+            link.setAttribute("download", `Faltas_${usuarioAtual.turma}_${new Date().getTime()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
 
-        Object.entries(mapaFaltas).sort((a,b) => a[0].localeCompare(b[0])).forEach(([nome, faltas]) => {
-            html += `<tr><td style="padding:8px; border-bottom:1px solid #eee;">${nome}</td><td style="text-align:center; border-bottom:1px solid #eee;">${faltas}</td></tr>`;
-        });
-        html += `</tbody></table></div>`;
-        divRes.innerHTML = html;
-        
-    } catch(e) {
-        console.error(e);
-        alert("Erro ao gerar: " + e.message);
-    } finally {
-        loading(false);
-    }
-};
-
-     window.exportarExcel = () => {
-    const tabela = document.querySelector("#resultado-relatorio table");
-    if (!tabela) return alert("Gere o relatório primeiro!");
-
-    let csv = [];
-    const linhas = tabela.querySelectorAll("tr");
-    
-    // Cabeçalho personalizado para o CSV
-    csv.push(`Relatorio de Faltas - Turma: ${usuarioAtual.turma}`);
-    csv.push(`Periodo: ${document.getElementById('mes-relatorio-inicio').value} ate ${document.getElementById('mes-relatorio-fim').value}`);
-    csv.push(""); // Linha vazia
-
-    for (let i = 0; i < linhas.length; i++) {
-        const linha = [], colunas = linhas[i].querySelectorAll("td, th");
-        for (let j = 0; j < colunas.length; j++) {
-            linha.push('"' + colunas[j].innerText.trim() + '"');
-        }
-        csv.push(linha.join(";"));
-    }
-
-    const csvContent = "\uFEFF" + csv.join("\n");
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.setAttribute("href", URL.createObjectURL(blob));
-    link.setAttribute("download", `Faltas_${usuarioAtual.turma}_${new Date().getTime()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-};
-        
-
+        // --- PLANEJAMENTO ---
         window.carregarPlanejamento = async () => {
             const dt = document.getElementById('data-plan').value;
             document.querySelectorAll('.input-plan').forEach(i => { i.value=""; i.disabled=true; });
@@ -942,13 +898,10 @@ window.gerarRelatorioFaltas = async () => {
                     metodologia: document.getElementById('plan-metodologia').value
                 });
                 alert("Diário Salvo!");
-                registrarLog("Salvou Diário/Planeamento");
+                await registrarLog("Salvou Diário/Planejamento");
                 window.carregarPlanejamento();
-            } catch(e){ alert("Erro."); } finally { loading(false); }
-       await registrarLog("Salvou Diário/Planejamento");
-    
-    alert("Planejamento salvo!");
-};
+            } catch(e){ alert("Erro ao salvar."); } finally { loading(false); }
+        };
 
         window.excluirPlanejamento = async () => {
             if(!confirm("Excluir o registro deste dia?")) return;
@@ -967,82 +920,89 @@ window.gerarRelatorioFaltas = async () => {
             } else alert("Senha errada.");
         };
 
-        window.validarAcessoCadastro = () => { if(prompt("Senha Admin:") === SENHAS.CADASTRO) window.showView('cadastro'); };
-        window.abrirAreaAdmin = () => { if(prompt("Senha Secretaria:") === SENHAS.SECRETARIA) document.getElementById('modal-admin').style.display='flex'; };
-        
-        window.alternarTipoCadastro = () => {
-            const t = document.getElementById('cad-tipo').value;
-            document.getElementById('area-select-unica').classList.toggle('hidden', t !== 'professor');
-            document.getElementById('area-select-coord').classList.toggle('hidden', t !== 'coordenador');
-        };
-        
-        window.verificarPerfilCustomizado = () => {
-            const val = document.getElementById('cad-perfil-coord').value;
-            document.getElementById('container-checkboxes').classList.toggle('hidden', val !== 'CUSTOM');
+        // --- ADMIN ---
+        window.validarAcessoCadastro = () => {
+            if(prompt("Digite a senha de secretaria para criar acessos:") === SENHAS.CADASTRO) {
+                window.showView('cadastro');
+            } else alert("Acesso negado.");
         };
 
-        function carregarOpcoesTurma() {
-            const sel = document.getElementById('cad-turma-unica');
-            const box = document.getElementById('container-checkboxes');
-            for(const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) {
-                const og = document.createElement('optgroup'); og.label = g;
-                ls.forEach(se => se.letras.forEach(l => {
-                    const n = `${se.nome} ${l}`;
-                    og.innerHTML += `<option value="${n}">${n}</option>`;
-                    box.innerHTML += `<div><label><input type="checkbox" value="${n}" class="turma-check"> ${n}</label></div>`;
-                }));
-                sel.appendChild(og);
-            }
-        }
+        window.alternarTipoCadastro = () => {
+            const v = document.getElementById('cad-tipo').value;
+            document.getElementById('area-select-unica').classList.toggle('hidden', v === 'coordenador');
+            document.getElementById('area-select-coord').classList.toggle('hidden', v === 'professor');
+        };
+
+        window.verificarPerfilCustomizado = () => {
+            const v = document.getElementById('cad-perfil-coord').value;
+            document.getElementById('container-checkboxes').classList.toggle('hidden', v !== 'CUSTOM');
+        };
 
         window.fazerCadastro = async () => {
-            const nome = document.getElementById('cad-nome').value;
-            const email = document.getElementById('cad-email').value;
+            const nome = document.getElementById('cad-nome').value.trim();
+            const email = document.getElementById('cad-email').value.trim();
             const senha = document.getElementById('cad-senha').value;
             const tipo = document.getElementById('cad-tipo').value;
-            let turma = "", acessos = [];
+            if(!nome || !email || !senha) return alert("Preencha tudo.");
+            
+            let turma = "", acessos = null;
             if(tipo === 'professor') {
                 turma = document.getElementById('cad-turma-unica').value;
-                if(!turma) return alert("Escolha a turma.");
+                if(!turma) return alert("Selecione a turma.");
             } else {
-                turma = "COORD";
                 const perf = document.getElementById('cad-perfil-coord').value;
-                if(!perf) return alert("Escolha o perfil.");
-                if(perf === 'GERAL') acessos = ["TODAS"];
-                else if(perf === 'CUSTOM') {
-                    document.querySelectorAll('.turma-check:checked').forEach(c => acessos.push(c.value));
-                    if(!acessos.length) return alert("Selecione turmas.");
-                } else acessos = REGRAS_COORDENACAO[perf];
+                if(!perf) return alert("Selecione o perfil.");
+                turma = perf;
+                if(perf === 'CUSTOM') {
+                    const sel = Array.from(document.querySelectorAll('#container-checkboxes input:checked')).map(cb => cb.value);
+                    if(sel.length === 0) return alert("Selecione as turmas.");
+                    acessos = sel;
+                } else {
+                    acessos = PERFIS_COORDENACAO[perf];
+                }
             }
+            
             loading(true);
             try {
                 await addDoc(collection(db, "professores"), { nome, email, senha, turma, acessos });
                 alert("Criado!"); window.showView('login');
-            } catch(e) { alert("Erro."); } finally { loading(false); }
+            } catch(e) { alert("Erro ao criar."); } finally { loading(false); }
+        };
+
+        window.abrirAreaAdmin = () => {
+            if(prompt("Senha Mestra da Secretaria:") === SENHAS.SECRETARIA) document.getElementById('modal-admin').style.display = 'flex';
+            else alert("Senha incorreta.");
         };
 
         window.importarAlunosMassa = async () => {
             const raw = document.getElementById('lista-alunos-massa').value;
             if(!raw.trim()) return alert("Cole a lista (Nome, Turma).");
             loading(true);
-            const linhas = raw.split('\n');
-            let count = 0;
-            const promises = [];
+            const linhas = raw.split('\n'); let count = 0; const promises = [];
             for(const l of linhas) {
                 const parts = l.split(',');
                 if(parts.length >= 2) {
-                    const nome = parts[0].trim();
-                    const turma = parts[1].trim(); 
-                    if(nome && turma) {
-                        promises.push(addDoc(collection(db, "alunos"), { nome, turma }));
-                        count++;
-                    }
+                    const nome = parts[0].trim(); const turma = parts[1].trim();
+                    if(nome && turma) { promises.push(addDoc(collection(db, "alunos"), { nome, turma })); count++; }
                 }
             }
             await Promise.all(promises);
-            loading(false);
-            alert(`${count} alunos importados com sucesso!`);
-            document.getElementById('lista-alunos-massa').value = "";
+            loading(false); alert(`${count} alunos importados com sucesso!`); document.getElementById('lista-alunos-massa').value = "";
+        };
+
+        window.processarImportacaoProfs = async () => {
+            const raw = document.getElementById('lista-profs-import').value;
+            if(!raw.trim()) return alert("Sem dados.");
+            loading(true);
+            const linhas = raw.split('\n'); let count = 0;
+            for(const l of linhas) {
+                const p = l.split(',');
+                if(p.length >= 4) {
+                    await addDoc(collection(db, "professores"), { nome: p[0].trim(), turma: p[1].trim(), email: p[2].trim(), senha: p[3].trim(), acessos: null });
+                    count++;
+                }
+            }
+            loading(false); alert(`${count} professores criados.`); document.getElementById('lista-profs-import').value = "";
         };
 
         window.removerDuplicados = async () => {
@@ -1051,159 +1011,92 @@ window.gerarRelatorioFaltas = async () => {
             try {
                 const q = query(collection(db, "alunos"));
                 const snap = await getDocs(q);
-                const seen = new Set();
-                const duplicates = [];
+                const seen = new Set(); const duplicates = [];
                 snap.forEach(doc => {
                     const data = doc.data();
                     const key = `${data.nome.trim().toLowerCase()}|${data.turma}`;
-                    if (seen.has(key)) duplicates.push(doc.id);
-                    else seen.add(key);
+                    if (seen.has(key)) duplicates.push(doc.id); else seen.add(key);
                 });
-                if (duplicates.length === 0) {
-                    alert("Nenhuma duplicata encontrada.");
-                } else {
+                if (duplicates.length === 0) { alert("Nenhuma duplicata encontrada."); } 
+                else {
                     const promises = duplicates.map(id => deleteDoc(doc(db, "alunos", id)));
                     await Promise.all(promises);
                     alert(`${duplicates.length} registros duplicados foram removidos!`);
                 }
-            } catch (e) {
-                console.error(e);
-                alert("Erro ao remover duplicados.");
-            } finally { loading(false); }
+            } catch (e) { console.error(e); alert("Erro ao remover duplicados."); } finally { loading(false); }
         };
 
         window.limparBancoAlunos = async () => {
-            if(!confirm("TEM CERTEZA? Isso apagará TODOS os alunos de TODAS as turmas.")) return;
-            if(prompt("Digite a senha de Secretaria:") !== SENHAS.SECRETARIA) return alert("Senha errada.");
+            if(prompt("DIGITE 'APAGAR TUDO' PARA CONFIRMAR EXCLUSÃO DE TODOS OS ALUNOS:") !== "APAGAR TUDO") return;
             loading(true);
             try {
-                const q = query(collection(db, "alunos"));
-                const snap = await getDocs(q);
-                const promises = snap.docs.map(d => deleteDoc(doc(db, "alunos", d.id)));
-                await Promise.all(promises);
-                alert("Banco limpo!");
+                const snap = await getDocs(collection(db, "alunos"));
+                const p = []; snap.forEach(d => p.push(deleteDoc(doc(db, "alunos", d.id))));
+                await Promise.all(p); alert("Todos os alunos deletados.");
             } catch(e) { alert("Erro."); } finally { loading(false); }
         };
 
-        window.processarImportacaoProfs = async () => {
-            const raw = document.getElementById('lista-profs-import').value;
+        window.apagarAluno = async (id) => {
+            if(!confirm("Apagar este aluno definitivamente?")) return;
             loading(true);
-            const linhas = raw.split('\n');
-            for(const l of linhas) {
-                const [n, t, e, s] = l.split(',').map(x=>x?.trim());
-                if(n && t && e && s) await addDoc(collection(db, "professores"), { nome:n, turma:t, email:e, senha:s });
-            }
-            loading(false); alert("Professores criados."); document.getElementById('modal-admin').style.display='none';
+            try {
+                await deleteDoc(doc(db, "alunos", id));
+                await carregarAlunosBase();
+                renderizarTabelaAlunos(listaAlunosCache);
+            } catch(e) { alert("Erro."); } finally { loading(false); }
         };
 
+        // --- HISTÓRICO ---
         window.abrirHistorico = async (tipo) => {
-            document.getElementById('modal-historico').style.display = 'flex';
-            const div = document.getElementById('modal-lista-conteudo');
-            div.innerHTML = "Carregando...";
-            const col = tipo === 'freq' ? "frequencia" : "planejamentos";
-            const q = query(collection(db, col), where("turma", "==", usuarioAtual.turma));
-            const snap = await getDocs(q);
-            let html = "";
-            snap.forEach(d => {
-                const dd = d.data();
-                html += `<div style="border-bottom:1px solid #eee; padding:10px; display:flex; justify-content:space-between;">
-                            <span>${formatData(dd.data)}</span>
-                            <button onclick="window.carregarDoHist('${dd.data}', '${tipo}')" style="background:var(--primary); color:white; border:none; border-radius:4px; padding:5px 10px;">Ver</button>
-                         </div>`;
-            });
-            div.innerHTML = html || "Nenhum registro encontrado.";
+            loading(true);
+            try {
+                const div = document.getElementById('modal-lista-conteudo');
+                div.innerHTML = "Carregando...";
+                document.getElementById('modal-historico').style.display = 'flex';
+                
+                const coll = tipo === 'freq' ? "frequencia" : "planejamentos";
+                const q = query(collection(db, coll), where("turma", "==", usuarioAtual.turma), orderBy("data", "desc"), limit(10));
+                const snap = await getDocs(q);
+                let html = "";
+                snap.forEach(d => {
+                    const dd = d.data();
+                    html += `<div style="border-bottom:1px solid #eee; padding:10px; display:flex; justify-content:space-between;">
+                                <span>${formatData(dd.data)}</span>
+                                <button onclick="window.carregarDoHist('${dd.data}', '${tipo}')" style="background:var(--primary); color:white; border:none; border-radius:4px; padding:5px 10px;">Ver</button>
+                             </div>`;
+                });
+                div.innerHTML = html || "Nenhum registro encontrado.";
+            } catch(e) { console.error(e); document.getElementById('modal-lista-conteudo').innerHTML = "Erro ao carregar histórico."; } finally { loading(false); }
         };
 
         window.carregarDoHist = (data, tipo) => {
             document.getElementById('modal-historico').style.display = 'none';
             document.getElementById(tipo === 'freq' ? 'data-freq' : 'data-plan').value = data;
-            if(tipo === 'freq') window.carregarFrequencia();
-            else window.carregarPlanejamento();
+            if(tipo === 'freq') window.carregarFrequencia(); else window.carregarPlanejamento();
         };
+
         window.fecharHistorico = () => document.getElementById('modal-historico').style.display = 'none';
 
-window.imprimirTela = (tipo) => {
-    document.body.classList.remove('printing-report');
-    
-    // Preenche o cabeçalho do container de impressão
-    document.getElementById('p-turma').innerText = usuarioAtual.turma;
-    const dataValor = document.getElementById(tipo === 'freq' ? 'data-freq' : 'data-plan').value;
-    document.getElementById('p-data').innerText = formatData(dataValor);
-
-    // Se for frequência, clonamos a tabela atual para o container de impressão
-    if(tipo === 'freq') {
-        const tabelaOriginal = document.querySelector('#lista-chamada table');
-        const containerDestino = document.getElementById('print-container');
-        // Mantemos o cabeçalho e adicionamos a tabela
-        containerDestino.innerHTML = `
-            <div style="text-align:center; margin-bottom:20px;">
-                <h2>Lista de Presença</h2>
-                <p>Turma: ${usuarioAtual.turma} | Data: ${formatData(dataValor)}</p>
-            </div>
-            ${tabelaOriginal ? tabelaOriginal.outerHTML : 'Sem dados para imprimir'}
-        `;
-    }
-
-    window.print();
-};
-
-        window.removerAluno = async (id) => {
-            if(confirm("Remover aluno permanentemente?")) {
-                await deleteDoc(doc(db, "alunos", id));
-                window.carregarAlunosBase().then(() => window.carregarFrequencia());
-            }
-        };
-   // --- MÓDULO ISOLADO: ENVIO PARA O SOPHIA ---
-window.enviarParaSophiaSilencioso = async () => {
-    try {
-        console.log("📡 Iniciando envio para o SophiA em segundo plano...");
-        const token = await autenticarSophia();
-        const idProf = window.idProfessorSophiAtual;
-        const idLista = window.idListaAtualSophia;
-
-        if (!idProf || !idLista) {
-            console.warn("⚠️ Não foi possível enviar ao SophiA: IDs ausentes.");
-            return false;
-        }
-
-        const payload = {
-            codigoProfessor: parseInt(idProf),
-            quantidadeAula: 1, 
-            codigoListaChamada: parseInt(idLista),
-            status: 1, 
-            alunos: listaAlunosCache.map(aluno => ({
-                codigoListaChamadaAula: parseInt(aluno.codigoListaChamadaAula) || 0,
-                codigoMatricula: parseInt(aluno.id),
-                falta: aluno.presenca ? 0 : 1, 
-                ocorrencias: []
-            }))
+        window.imprimirTela = (tipo) => {
+            document.getElementById('print-header').classList.remove('hidden');
+            document.getElementById('p-turma').innerText = usuarioAtual.turma;
+            document.getElementById('p-data').innerText = formatData(document.getElementById(tipo === 'freq' ? 'data-freq' : 'data-plan').value);
+            
+            const contentId = tipo === 'freq' ? 'tab-freq' : 'tab-plan';
+            const clone = document.getElementById(contentId).cloneNode(true);
+            
+            const printContainer = document.createElement('div');
+            printContainer.id = 'print-container';
+            printContainer.appendChild(document.getElementById('print-header').cloneNode(true));
+            printContainer.appendChild(clone);
+            
+            document.body.appendChild(printContainer);
+            window.print();
+            
+            document.body.removeChild(printContainer);
+            document.getElementById('print-header').classList.add('hidden');
         };
 
-        const response = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Token': token,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) throw new Error(await response.text());
-        
-        console.log("✅ SophiA atualizado com sucesso!");
-        return true;
-    } catch (e) {
-        console.error("❌ Erro ao enviar para o SophiA:", e);
-        return false;
-    }
-};
-    
     </script>
 </body>
 </html>
-
-
-
-
-
