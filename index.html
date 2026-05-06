@@ -6,1111 +6,2179 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#004aad">
-    
     <title>CASA+</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        /* --- CSS BASE --- */
-        :root { --primary: #004aad; --sec: #0097b2; --bg: #f4f6f8; --text: #333; --success: #27ae60; --danger: #c0392b; --warning: #f39c12; --gray: #7f8c8d; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        :root {
+            --primary: #004aad;
+            --primary-light: #1a5fbd;
+            --primary-dark: #003585;
+            --sec: #0097b2;
+            --sec-light: #00aecb;
+            --bg: #f0f4f8;
+            --surface: #ffffff;
+            --surface-2: #f8fafc;
+            --text: #1a2332;
+            --text-2: #4a5568;
+            --text-3: #718096;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --gray: #94a3b8;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+            --shadow-md: 0 10px 25px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.04);
+            --shadow-lg: 0 25px 50px rgba(0,0,0,0.12), 0 10px 20px rgba(0,0,0,0.06);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
         .hidden { display: none !important; }
+
+        button { cursor: pointer; transition: all 0.2s ease; font-family: inherit; }
+        button:active { transform: scale(0.97); }
+        input, select, textarea { font-family: inherit; font-size: 15px; outline: none; }
+
+        /* ============================
+           LOADER
+        ============================ */
+        #loader {
+            display: none;
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .loader-spinner {
+            width: 40px; height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .loader-text { color: var(--primary); font-weight: 600; font-size: 0.9rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ============================
+           AUTH
+        ============================ */
+        .auth-container {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            z-index: 99;
+            background: linear-gradient(135deg, #003585 0%, #004aad 40%, #0097b2 100%);
+            display: flex; justify-content: center; align-items: center;
+            padding: 20px;
+        }
+        .auth-container::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .card-auth {
+            background: rgba(255,255,255,0.97);
+            padding: 2.5rem;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.2);
+            width: 100%; max-width: 400px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 0.5s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card-auth img { width: 100px; margin-bottom: 24px; }
+        .card-auth h3 { color: var(--primary); margin-bottom: 8px; font-size: 1.4rem; font-weight: 800; }
+        .card-auth p { color: var(--text-3); font-size: 0.875rem; margin-bottom: 24px; }
+
+        .input-field {
+            width: 100%;
+            padding: 13px 16px;
+            margin-bottom: 12px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface-2);
+            color: var(--text);
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0,74,173,0.08);
+            background: white;
+        }
+        .input-field::placeholder { color: var(--text-3); }
+
+        .btn-primary {
+            width: 100%; padding: 14px;
+            margin-top: 4px;
+            border: none; border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white; font-weight: 700; font-size: 0.95rem;
+            letter-spacing: 0.3px;
+            box-shadow: 0 4px 12px rgba(0,74,173,0.3);
+        }
+        .btn-primary:hover { box-shadow: 0 6px 20px rgba(0,74,173,0.4); transform: translateY(-1px); }
         
-        /* GERAL */
-        button { cursor: pointer; transition: 0.2s; font-family: inherit; }
-        button:active { transform: scale(0.98); }
-        input, select, textarea { font-family: inherit; font-size: 16px; }
+        .link-text {
+            color: var(--primary); margin-top: 16px;
+            display: block; font-size: 0.875rem;
+            font-weight: 600; cursor: pointer; text-decoration: none;
+        }
+        .link-text:hover { text-decoration: underline; }
+        .link-text.muted { color: var(--text-3); font-weight: 400; font-size: 0.8rem; margin-top: 24px; }
 
-        /* AUTH COM FUNDO */
-        .auth-container { position: absolute; top:0; left:0; width:100%; height:100%; z-index:99; background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fundo_escola.jpg'); background-size: cover; background-position: center; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .card-auth { background: rgba(255, 255, 255, 0.95); padding: 2rem; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); width: 100%; max-width: 380px; text-align: center; backdrop-filter: blur(5px); }
-        .card-auth img { width: 120px; margin-bottom: 20px; }
-        .card-auth input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
-        .card-auth button { width: 100%; padding: 14px; margin-top: 15px; border: none; border-radius: 8px; background: var(--primary); color: white; font-weight: bold; font-size: 1rem; }
-        .link-text { color: var(--primary); margin-top: 15px; display: block; font-size: 0.9rem; text-decoration: underline; cursor: pointer; }
-
-        /* APP LAYOUT */
+        /* ============================
+           APP LAYOUT
+        ============================ */
         #app-painel { display: flex; flex-direction: column; height: 100%; }
-        .app-header { background: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 10; height: 60px; }
-        .header-title { font-weight: bold; color: var(--primary); font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
-        .turma-badge { background: var(--sec); color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; }
-        .btn-logout { background: none; border: none; color: var(--danger); font-size: 0.9rem; font-weight: bold; }
-        .main-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 80px; }
+        
+        .app-header {
+            background: white;
+            padding: 0 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: var(--shadow-sm);
+            border-bottom: 1px solid var(--border);
+            z-index: 10; height: 64px; flex-shrink: 0;
+        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-title {
+            font-weight: 800; color: var(--primary);
+            font-size: 1.1rem; display: flex; align-items: center; gap: 10px;
+        }
+        .turma-badge {
+            background: linear-gradient(135deg, var(--primary), var(--sec));
+            color: white; padding: 4px 12px;
+            border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .btn-logout {
+            background: var(--danger-light); border: none;
+            color: var(--danger); font-size: 0.85rem; font-weight: 700;
+            padding: 7px 14px; border-radius: var(--radius-sm);
+        }
+        .btn-logout:hover { background: var(--danger); color: white; }
+        .main-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px; }
 
-        /* TABS */
-        .nav-tabs { display: flex; justify-content: center; background: white; border-bottom: 1px solid #eee; }
-        .nav-item { padding: 15px 30px; cursor: pointer; color: var(--gray); border-bottom: 3px solid transparent; font-weight: 500; }
-        .nav-item.active { color: var(--primary); border-bottom-color: var(--primary); }
+        /* ============================
+           TABS / NAV
+        ============================ */
+        .nav-tabs {
+            display: flex; justify-content: center;
+            background: white;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .nav-item {
+            padding: 14px 28px; cursor: pointer;
+            color: var(--text-3); border-bottom: 3px solid transparent;
+            font-weight: 600; font-size: 0.875rem; transition: all 0.2s;
+        }
+        .nav-item:hover { color: var(--primary); }
+        .nav-item.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(0,74,173,0.03); }
 
-        /* CONTROLS */
-        .action-bar { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
-        .date-control { display: flex; align-items: center; gap: 10px; font-weight: bold; color: #555; }
-        .date-control input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
-        .btn-group { display: flex; gap: 8px; }
-        .btn-action { padding: 8px 16px; border-radius: 6px; border: none; color: white; font-weight: bold; font-size: 0.9rem; }
-        .btn-save { background: var(--success); }
+        /* ============================
+           ACTION BAR
+        ============================ */
+        .action-bar {
+            background: white; padding: 16px 20px;
+            border-radius: var(--radius); margin-bottom: 16px;
+            display: flex; flex-wrap: wrap; gap: 12px;
+            align-items: center; justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+        }
+        .date-control { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--text-2); font-size: 0.9rem; }
+        .date-control input {
+            padding: 8px 12px; border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm); background: var(--surface-2);
+            font-size: 0.875rem; color: var(--text); font-family: inherit;
+        }
+        .date-control input:focus { border-color: var(--primary); }
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        
+        .btn-action {
+            padding: 8px 16px; border-radius: var(--radius-sm);
+            border: none; color: white; font-weight: 600;
+            font-size: 0.85rem; display: flex; align-items: center; gap: 5px;
+        }
+        .btn-save { background: linear-gradient(135deg, var(--success), #059669); box-shadow: 0 2px 8px rgba(16,185,129,0.3); }
+        .btn-save:hover { box-shadow: 0 4px 14px rgba(16,185,129,0.4); transform: translateY(-1px); }
         .btn-hist { background: var(--gray); }
         .btn-print { background: #2c3e50; }
-        .btn-del { background: var(--danger); }
-        .btn-report { background: #8e44ad; }
+        .btn-del { background: linear-gradient(135deg, var(--danger), #dc2626); }
+        .btn-report { background: linear-gradient(135deg, #8b5cf6, #7c3aed); box-shadow: 0 2px 8px rgba(139,92,246,0.3); }
         .btn-fix { background: var(--warning); color: #fff; }
+        .btn-atend { background: linear-gradient(135deg, #0097b2, #0077a0); box-shadow: 0 2px 8px rgba(0,151,178,0.3); }
+        .btn-atend:hover { box-shadow: 0 4px 14px rgba(0,151,178,0.4); transform: translateY(-1px); }
 
-        /* TABLES & CARDS */
-        .desktop-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .desktop-table th { background: var(--primary); color: white; padding: 12px; text-align: left; }
-        .desktop-table td { padding: 12px; border-bottom: 1px solid #eee; }
-        
-        .mobile-card-list { display: none; }
-        .student-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-left: 5px solid transparent; }
-        .student-card.status-presente { border-left-color: var(--success); }
-        .student-card.status-ausente { border-left-color: var(--danger); opacity: 0.9; }
-        .student-card.status-exaluno { border-left-color: #7f8c8d; background: #fdfdfd; }
-        .student-info strong { display: block; font-size: 1rem; color: #333; }
-        .student-info span { font-size: 0.8rem; color: #888; }
-        .texto-removido { color: #c0392b; font-size: 0.85em; font-style: italic; }
-        
-        .toggle-btn { padding: 8px 20px; border-radius: 20px; border: none; font-weight: bold; color: white; width: 110px; }
-        .toggle-btn.presente { background: var(--success); }
-        .toggle-btn.ausente { background: var(--danger); }
-        .toggle-btn.ex-btn { opacity: 0.7; cursor: default; }
-
-        .plan-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .plan-box textarea { width: 100%; border: 1px solid #ddd; background: #fafafa; border-radius: 8px; padding: 10px; resize: vertical; min-height: 100px; }
-
-        /* MODAIS */
-        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: center; align-items: flex-end; }
-        .modal-content { background: white; width: 100%; max-width: 600px; padding: 20px; border-radius: 20px 20px 0 0; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
-        .grid-coord { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
-        .card-turma { background: white; border: 2px solid var(--primary); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; }
-        .card-turma:hover { background: var(--primary); color: white; }
-
-        /* MOBILE QUERY */
-        @media (max-width: 768px) {
-            .nav-tabs { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #ddd; z-index: 100; justify-content: space-around; padding-bottom: env(safe-area-inset-bottom); }
-            .nav-item { border: none; padding: 10px; font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
-            .nav-item span { font-size: 1.2rem; margin-bottom: 2px; }
-            .nav-item.active { color: var(--primary); background: transparent; border: none; }
-            .desktop-table { display: none; }
-            .mobile-card-list { display: block; }
-            .action-bar { flex-direction: column; align-items: stretch; }
-            .date-control { justify-content: space-between; margin-bottom: 10px; }
-            .date-control input { width: 60%; }
-            .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-            .btn-group button { width: 100%; }
-            .modal-overlay { align-items: flex-end; }
-            .modal-content { border-radius: 15px 15px 0 0; margin: 0; width: 100%; }
+        /* ============================
+           DESKTOP TABLE
+        ============================ */
+        .desktop-table {
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            background: white; border-radius: var(--radius);
+            overflow: hidden; box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
         }
-  
+        .desktop-table th {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white; padding: 13px 16px;
+            text-align: left; font-size: 0.825rem;
+            font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
+        }
+        .desktop-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 0.9rem; }
+        .desktop-table tr:last-child td { border-bottom: none; }
+        .desktop-table tbody tr:hover { background: var(--surface-2); }
+
+        /* ============================
+           MOBILE CARDS
+        ============================ */
+        .mobile-card-list { display: none; }
+        .student-card {
+            background: white; padding: 14px 16px;
+            border-radius: var(--radius); margin-bottom: 8px;
+            box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            border-left: 4px solid transparent; transition: all 0.2s;
+        }
+        .student-card.status-presente { border-left-color: var(--success); }
+        .student-card.status-ausente { border-left-color: var(--danger); }
+        .student-card.status-exaluno { border-left-color: var(--gray); background: var(--surface-2); }
+        .student-info strong { display: block; font-size: 0.925rem; color: var(--text); font-weight: 600; }
+        .student-info span { font-size: 0.78rem; color: var(--text-3); }
+        .texto-removido { color: var(--danger); font-size: 0.8em; font-style: italic; }
+        .student-card-actions { display: flex; gap: 8px; align-items: center; }
+
+        .toggle-btn {
+            padding: 7px 18px; border-radius: 20px;
+            border: none; font-weight: 700; color: white;
+            width: 100px; font-size: 0.8rem; letter-spacing: 0.2px;
+            box-shadow: var(--shadow-sm);
+        }
+        .toggle-btn.presente { background: linear-gradient(135deg, var(--success), #059669); }
+        .toggle-btn.ausente { background: linear-gradient(135deg, var(--danger), #dc2626); }
+        .toggle-btn.ex-btn { opacity: 0.5; cursor: default; background: var(--gray); }
+
+        /* ============================
+           PLANEJAMENTO
+        ============================ */
+        .plan-box {
+            background: white; padding: 24px;
+            border-radius: var(--radius); box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+        }
+        .plan-box h3 { color: var(--primary); margin-bottom: 20px; font-size: 1.1rem; font-weight: 800; }
+        .plan-label {
+            display: block; font-size: 0.8rem; font-weight: 700;
+            color: var(--text-2); text-transform: uppercase;
+            letter-spacing: 0.5px; margin-bottom: 6px; margin-top: 14px;
+        }
+        .plan-input {
+            width: 100%; padding: 11px 14px;
+            border: 1.5px solid var(--border); background: var(--surface-2);
+            border-radius: var(--radius-sm); color: var(--text);
+            transition: all 0.2s;
+        }
+        .plan-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(0,74,173,0.06); }
+        .plan-input:disabled { opacity: 0.6; cursor: not-allowed; }
+        textarea.plan-input { resize: vertical; min-height: 120px; }
+
+        /* ============================
+           COORD PANEL
+        ============================ */
+        #view-coord { height:100%; display:flex; flex-direction:column; }
+        .grid-coord {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+        }
+        .card-turma {
+            background: white; border: 2px solid var(--border);
+            border-radius: var(--radius); padding: 20px;
+            text-align: center; cursor: pointer;
+            transition: all 0.2s; box-shadow: var(--shadow-sm);
+        }
+        .card-turma:hover {
+            background: var(--primary); color: white;
+            border-color: var(--primary); transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .card-turma strong { display: block; font-size: 0.95rem; margin-bottom: 4px; }
+        .card-turma small { font-size: 0.78rem; opacity: 0.7; }
+
+        /* ============================
+           MODAIS
+        ============================ */
+        .modal-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(15,23,42,0.6);
+            backdrop-filter: blur(3px);
+            z-index: 2000; display: none;
+            justify-content: center; align-items: flex-end;
+        }
+        .modal-content {
+            background: white; width: 100%; max-width: 680px;
+            padding: 24px; border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            max-height: 92vh; overflow-y: auto;
+            animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: var(--shadow-lg);
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .modal-header h3 { color: var(--primary); font-size: 1.1rem; font-weight: 800; }
+        .btn-close {
+            background: var(--surface-2); border: 1px solid var(--border);
+            width: 32px; height: 32px; border-radius: 50%;
+            font-weight: 700; color: var(--text-2); font-size: 1rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-close:hover { background: var(--danger-light); color: var(--danger); border-color: var(--danger); }
+
+        /* ============================
+           ATENDIMENTO MODAL
+        ============================ */
+        .atend-form { }
+        .form-section {
+            background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 16px; margin-bottom: 14px;
+        }
+        .form-section-title {
+            font-size: 0.78rem; font-weight: 800; color: var(--primary);
+            text-transform: uppercase; letter-spacing: 0.6px;
+            margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+        }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.3px; }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 9px 12px; border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm); background: white;
+            color: var(--text); font-size: 0.875rem; font-family: inherit;
+            transition: all 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,74,173,0.06);
+        }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+
+        /* ASSINATURA */
+        .signature-area {
+            border: 2px dashed var(--border); border-radius: var(--radius);
+            padding: 8px; background: white; position: relative;
+        }
+        .signature-area canvas {
+            width: 100%; height: 120px; cursor: crosshair;
+            border-radius: var(--radius-sm);
+            touch-action: none;
+        }
+        .signature-label {
+            text-align: center; font-size: 0.75rem; color: var(--text-3);
+            margin-top: 4px; font-weight: 500;
+        }
+        .btn-clear-sig {
+            position: absolute; top: 8px; right: 8px;
+            background: var(--surface-2); border: 1px solid var(--border);
+            font-size: 0.7rem; padding: 3px 8px; border-radius: 4px;
+            color: var(--text-3); font-weight: 600;
+        }
+
+        /* QR CODE */
+        .qr-section {
+            text-align: center; padding: 20px;
+            background: var(--surface-2); border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+        .qr-section h4 { color: var(--primary); margin-bottom: 8px; font-size: 0.95rem; }
+        .qr-section p { font-size: 0.8rem; color: var(--text-3); margin-bottom: 16px; }
+        #qrcode-container { display: flex; justify-content: center; margin: 12px 0; }
+        .qr-link {
+            font-size: 0.75rem; color: var(--primary); word-break: break-all;
+            background: white; padding: 8px 12px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border); display: block; margin-top: 8px;
+        }
+
+        /* STATUS BADGE */
+        .status-chip {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; border-radius: 12px;
+            font-size: 0.75rem; font-weight: 700;
+        }
+        .chip-sophia { background: #dbeafe; color: #1d4ed8; }
+        .chip-firebase { background: #fef3c7; color: #92400e; }
+
+        /* ADMIN */
+        .admin-section {
+            border: 1px solid var(--border); padding: 16px;
+            border-radius: var(--radius); margin-bottom: 14px;
+            background: var(--surface-2);
+        }
+        .admin-section h4 { margin-bottom: 10px; font-size: 0.9rem; font-weight: 700; color: var(--text); }
+        .admin-section p { font-size: 0.78rem; color: var(--text-3); margin-bottom: 8px; }
+        .admin-section textarea {
+            width: 100%; height: 90px;
+            padding: 10px; border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm); font-family: inherit; font-size: 0.85rem;
+            background: white; resize: vertical; margin-bottom: 8px;
+        }
+        .danger-zone {
+            border-color: #fecaca; background: #fff5f5;
+        }
+        .danger-zone h4 { color: var(--danger); }
+
+        /* RELATORIO */
+        .relatorio-form {
+            background: var(--surface-2); padding: 16px;
+            border-radius: var(--radius); border: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+        .relatorio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        .relatorio-grid label { font-size: 0.78rem; font-weight: 700; color: var(--text-2); display: block; margin-bottom: 4px; }
+        .relatorio-grid input {
+            width: 100%; padding: 9px 12px;
+            border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+            font-family: inherit; font-size: 0.875rem;
+        }
+
+        /* HISTORICO */
+        .hist-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 0; border-bottom: 1px solid var(--border);
+        }
+        .hist-item:last-child { border-bottom: none; }
+        .hist-date { font-weight: 600; color: var(--text); font-size: 0.9rem; }
+        .btn-ver {
+            background: var(--primary); color: white;
+            border: none; border-radius: var(--radius-sm);
+            padding: 6px 14px; font-size: 0.8rem; font-weight: 700;
+        }
+
+        /* PRINT */
+        #print-header { display: none; }
+        
         @media print {
             body * { visibility: hidden !important; }
-            .no-print, button, .modal-overlay:not(#modal-relatorio) { display: none !important; }
+            .no-print, button, .modal-overlay:not(#modal-relatorio):not(#modal-atendimento) { display: none !important; }
             #print-container, #print-container * { visibility: visible !important; }
             #print-container { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; display: block !important; }
             body.printing-report #modal-relatorio, body.printing-report #modal-relatorio * { visibility: visible !important; }
             body.printing-report #modal-relatorio { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; display: block !important; background: white !important; }
+            body.printing-atend #modal-atendimento, body.printing-atend #modal-atendimento * { visibility: visible !important; }
+            body.printing-atend #modal-atendimento { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; display: block !important; background: white !important; }
             table { width: 100% !important; border-collapse: collapse !important; }
             th, td { border: 1px solid #000 !important; padding: 8px !important; }
         }
-        
+
+        /* ============================
+           MOBILE
+        ============================ */
+        @media (max-width: 768px) {
+            .main-content { padding: 12px; padding-bottom: 90px; }
+            .nav-tabs {
+                position: fixed; bottom: 0; left: 0; width: 100%;
+                background: white; border-top: 1px solid var(--border);
+                z-index: 100; justify-content: space-around;
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+            .nav-item {
+                border: none; padding: 10px 8px;
+                font-size: 0.7rem; display: flex;
+                flex-direction: column; align-items: center; justify-content: center;
+                width: 100%; gap: 3px;
+            }
+            .nav-item .nav-icon { font-size: 1.3rem; }
+            .nav-item.active { color: var(--primary); }
+            .desktop-table { display: none; }
+            .mobile-card-list { display: block; }
+            .action-bar { flex-direction: column; align-items: stretch; padding: 14px; gap: 10px; }
+            .date-control { justify-content: space-between; }
+            .date-control input { flex: 1; }
+            .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+            .btn-group button { width: 100%; justify-content: center; }
+            .modal-content { border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-grid-3 { grid-template-columns: 1fr 1fr; }
+            .relatorio-grid { grid-template-columns: 1fr; }
+            .grid-coord { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="loader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:3000; justify-content:center; align-items:center; color:var(--primary); font-weight:bold; font-size:1.2rem;">Carregando...</div>
+<div id="loader">
+    <div class="loader-spinner"></div>
+    <span class="loader-text">Carregando...</span>
+</div>
 
-    <div id="print-header" class="hidden">
-        <h2 style="text-align:center;">Relatório Escolar</h2>
-        <p><strong>Turma:</strong> <span id="p-turma"></span> | <strong>Data:</strong> <span id="p-data"></span></p>
-        <hr>
+<div id="print-header">
+    <h2 style="text-align:center; font-family: 'Plus Jakarta Sans', sans-serif;">Relatório Escolar</h2>
+    <p><strong>Turma:</strong> <span id="p-turma"></span> | <strong>Data:</strong> <span id="p-data"></span></p>
+    <hr>
+</div>
+
+<!-- ============================
+     LOGIN
+============================ -->
+<div id="view-login" class="auth-container">
+    <div class="card-auth">
+        <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
+        <h3>CASA+</h3>
+        <p>Sistema Escolar Integrado</p>
+        <input type="email" id="login-email" class="input-field" placeholder="E-mail">
+        <input type="password" id="login-senha" class="input-field" placeholder="Senha">
+        <button onclick="window.fazerLogin()" class="btn-primary">ENTRAR</button>
+        <span class="link-text" onclick="window.validarAcessoCadastro()">Criar nova conta</span>
+        <span class="link-text muted" onclick="window.abrirAreaAdmin()">Admin / Secretaria</span>
     </div>
+</div>
 
-    <div id="view-login" class="auth-container">
-        <div class="card-auth">
-            <img src="logo.png" alt="Logo">
-            <h3 style="color:var(--primary); margin:0 0 20px 0;">Acesso Professor</h3>
-            <input type="email" id="login-email" placeholder="E-mail">
-            <input type="password" id="login-senha" placeholder="Senha">
-            <button onclick="window.fazerLogin()">ENTRAR</button>
-            <span class="link-text" onclick="window.validarAcessoCadastro()">Criar nova conta</span>
-            <span class="link-text" style="color:#999; font-size:0.8rem; margin-top:30px;" onclick="window.abrirAreaAdmin()">Admin/Secretaria</span>
+<!-- ============================
+     CADASTRO
+============================ -->
+<div id="view-cadastro" class="auth-container hidden">
+    <div class="card-auth" style="max-width: 440px;">
+        <h3>Novo Usuário</h3>
+        <p>Preencha os dados para criar o acesso</p>
+        <input type="text" id="cad-nome" class="input-field" placeholder="Nome Completo">
+        <input type="email" id="cad-email" class="input-field" placeholder="E-mail">
+        <input type="password" id="cad-senha" class="input-field" placeholder="Senha">
+        <div style="text-align:left; margin-bottom:10px;">
+            <label style="font-size:0.78rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.3px; display:block; margin-bottom:6px;">Tipo de Conta</label>
+            <select id="cad-tipo" onchange="window.alternarTipoCadastro()" class="input-field" style="margin-bottom:0;">
+                <option value="professor">Professor (1 Turma)</option>
+                <option value="coordenador">Coordenação</option>
+            </select>
         </div>
+        <div id="area-select-unica">
+            <select id="cad-turma-unica" class="input-field"><option value="" disabled selected>Selecione a Turma</option></select>
+        </div>
+        <div id="area-select-coord" class="hidden" style="text-align:left;">
+            <select id="cad-perfil-coord" onchange="window.verificarPerfilCustomizado()" class="input-field">
+                <option value="" disabled selected>Selecione o Perfil...</option>
+                <option value="GERAL">Direção Geral</option>
+                <option value="CRISTIANE">Coord. Cristiane</option>
+                <option value="ADNA">Coord. Adna</option>
+                <option value="NAYARA">Coord. Nayara</option>
+                <option value="LUDMILLA">Coord. Ludmilla</option>
+                <option value="ELIONEIDE">Coord. Elioneide</option>
+                <option value="SAVIA">Coord. Savia</option>
+                <option value="COORD_ESPORTES">Coord. de Esportes/Extras</option>
+                <option value="CUSTOM">Outro</option>
+            </select>
+            <div id="container-checkboxes" class="hidden" style="max-height:120px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px; font-size:0.85rem; background:white; margin-top:4px;"></div>
+        </div>
+        <button onclick="window.fazerCadastro()" class="btn-primary" style="margin-top:12px;">Cadastrar</button>
+        <button onclick="window.showView('login')" style="width:100%; padding:12px; background:transparent; border:1.5px solid var(--border); border-radius:var(--radius-sm); color:var(--text-2); font-weight:600; margin-top:8px;">Cancelar</button>
     </div>
+</div>
 
-    <div id="view-cadastro" class="auth-container hidden">
-        <div class="card-auth">
-            <h3 style="color:var(--primary);">Novo Usuário</h3>
-            <input type="text" id="cad-nome" placeholder="Nome Completo">
-            <input type="email" id="cad-email" placeholder="E-mail">
-            <input type="password" id="cad-senha" placeholder="Senha">
-            <div style="text-align:left; margin:10px 0;">
-                <label style="font-size:0.85rem; font-weight:bold;">Tipo de Conta:</label>
-                <select id="cad-tipo" onchange="window.alternarTipoCadastro()" style="width:100%; padding:10px; margin-top:5px; border-radius:8px; border:1px solid #ddd;">
-                    <option value="professor">Professor (1 Turma)</option>
-                    <option value="coordenador">Coordenação</option>
-                </select>
-            </div>
-            <div id="area-select-unica">
-                <select id="cad-turma-unica" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;"><option value="" disabled selected>Selecione a Turma</option></select>
-            </div>
-            <div id="area-select-coord" class="hidden" style="text-align:left;">
-                <select id="cad-perfil-coord" onchange="window.verificarPerfilCustomizado()" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px;">
-                    <option value="" disabled selected>Selecione o Perfil...</option>
-                    <option value="GERAL">Direção Geral</option>
-                    <option value="CRISTIANE">Coord. Cristiane</option>
-                    <option value="ADNA">Coord. Adna</option>
-                    <option value="NAYARA">Coord. Nayara</option>
-                    <option value="LUDMILLA">Coord. Ludmilla</option>
-                    <option value="ELIONEIDE">Coord. Elioneide</option>
-                    <option value="SAVIA">Coord. Savia</option>
-                    <option value="COORD_ESPORTES">Coord. de Esportes/Extras</option>
-                    <option value="CUSTOM">Outro</option>
-                </select>
-                <div id="container-checkboxes" class="hidden" style="max-height:100px; overflow-y:auto; border:1px solid #ccc; padding:5px; font-size:0.85rem;"></div>
-            </div>
-            <button onclick="window.fazerCadastro()" class="btn-save">Cadastrar</button>
-            <button onclick="window.showView('login')" style="background:transparent; color:#666; margin-top:0;">Cancelar</button>
-        </div>
+<!-- ============================
+     COORD VIEW
+============================ -->
+<div id="view-coord" class="hidden">
+    <div class="app-header">
+        <div class="header-title">👑 Painel de Gestão</div>
+        <button onclick="window.fazerLogout()" class="btn-logout">Sair</button>
     </div>
-
-    <div id="view-coord" class="hidden" style="height:100%; display:flex; flex-direction:column;">
-        <div class="app-header">
-            <div class="header-title">👑 Painel Gestão</div>
-            <button onclick="window.fazerLogout()" class="btn-logout">Sair</button>
-        </div>
-        <div class="main-content">
-            <h4 style="color:#666; margin-bottom:15px;">Selecione uma turma para acessar:</h4>
-            <div id="container-turmas" class="grid-coord"></div>
-        </div>
+    <div class="main-content" style="padding-bottom: 20px;">
+        <p style="color:var(--text-3); margin-bottom:16px; font-size:0.875rem; font-weight:500;">Selecione uma turma para acessar:</p>
+        <div id="container-turmas" class="grid-coord"></div>
     </div>
+</div>
 
-    <div id="app-painel" class="hidden">
-        <div class="app-header">
+<!-- ============================
+     APP PRINCIPAL
+============================ -->
+<div id="app-painel" class="hidden">
+    <div class="app-header">
+        <div class="header-left">
+            <span id="btn-voltar-coord" class="hidden" onclick="window.voltarParaCoord()" style="font-size:1.3rem; cursor:pointer; color:var(--primary); padding:4px;">⬅</span>
             <div class="header-title">
-                <span id="btn-voltar-coord" class="hidden" onclick="window.voltarParaCoord()" style="font-size:1.2rem; margin-right:5px;">⬅</span>
                 <span id="display-turma-nome">Turma</span>
                 <span id="display-turma-badge" class="turma-badge">...</span>
             </div>
-            <button onclick="window.fazerLogout()" class="btn-logout">Sair</button>
         </div>
-        
-        <div class="main-content">
-            <div id="tab-freq" class="view-section">
-                <div class="action-bar">
-                    <div class="date-control">
-                        <span>Data:</span>
-                        <input type="date" id="data-freq" onchange="window.carregarFrequencia()">
-                    </div>
-                    <div class="btn-group">
-                        <button onclick="window.salvarChamadaGeral()" class="btn-action btn-save">Salvar</button>
-                        <button onclick="window.abrirRelatorioMensal()" class="btn-action btn-report">📊 Relatório</button>
-                        <button onclick="window.abrirHistorico('freq')" class="btn-action btn-hist">Histórico</button>
-                        <button onclick="window.imprimirTela('freq')" class="btn-action btn-print">Imprimir</button>
-                    </div>
+        <button onclick="window.fazerLogout()" class="btn-logout">Sair</button>
+    </div>
+    
+    <div class="main-content">
+        <!-- FREQUENCIA -->
+        <div id="tab-freq" class="view-section">
+            <div class="action-bar">
+                <div class="date-control">
+                    <span>📅</span>
+                    <input type="date" id="data-freq" onchange="window.carregarFrequencia()">
                 </div>
-
-                <table class="desktop-table">
-                    <thead><tr><th>Nº</th><th>Aluno</th><th style="text-align:center">Status</th><th class="no-print">Apagar</th></tr></thead>
-                    <tbody id="tbody-alunos"></tbody>
-                </table>
-                <div id="mobile-lista" class="mobile-card-list"></div>
-                <div id="empty-msg" style="text-align:center; padding:20px; color:#999; display:none;">Nenhum aluno cadastrado.</div>
+                <div class="btn-group">
+                    <button onclick="window.salvarChamadaGeral()" class="btn-action btn-save">💾 Salvar</button>
+                    <button onclick="window.abrirRelatorioMensal()" class="btn-action btn-report">📊 Relatório</button>
+                    <button onclick="window.abrirHistorico('freq')" class="btn-action btn-hist">📋 Histórico</button>
+                    <button onclick="window.imprimirTela('freq')" class="btn-action btn-print">🖨️ Imprimir</button>
+                </div>
             </div>
 
-            <div id="tab-plan" class="view-section hidden">
-                <div class="action-bar">
-                    <div class="date-control">
-                        <span>Data:</span>
-                        <input type="date" id="data-plan" onchange="window.carregarPlanejamento()">
-                    </div>
-                    <div class="btn-group">
-                        <button onclick="window.salvarPlanejamento()" class="btn-action btn-save">Salvar</button>
-                        <button onclick="window.excluirPlanejamento()" class="btn-action btn-del">Excluir</button>
-                        <button onclick="window.abrirHistorico('plan')" class="btn-action btn-hist">Ver Salvos</button>
-                        <button onclick="window.imprimirTela('plan')" class="btn-action btn-print">Imprimir</button>
-                    </div>
+            <!-- Indicador de sync -->
+            <div id="sync-status" style="display:none; margin-bottom:12px;">
+                <div style="background:white; border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 14px; display:flex; align-items:center; gap:10px; font-size:0.82rem;">
+                    <span id="sync-icon">⏳</span>
+                    <span id="sync-text" style="color:var(--text-2);">Aguardando sincronização com SophiA...</span>
                 </div>
-                <div class="plan-box">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <h3 style="color:var(--primary); margin:0;">Registro Diário</h3>
-                        <button id="btn-unlock" onclick="window.desbloquearEdicao()" style="background:var(--warning); color:white; border:none; padding:5px 10px; border-radius:5px; font-size:0.8rem; display:none;">🔓 Editar</button>
-                    </div>
-                    <label>Titulo:</label>
-                    <input type="text" id="plan-disciplina" class="input-plan" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ddd; border-radius:8px;">
-                    <label>Conteúdo / Resultados esperados:</label>
-                    <textarea id="plan-metodologia" class="input-plan"></textarea>
-                </div>
+            </div>
+
+            <table class="desktop-table">
+                <thead>
+                    <tr>
+                        <th style="width:50px">Nº</th>
+                        <th>Aluno</th>
+                        <th style="text-align:center; width:130px">Presença</th>
+                        <th id="th-atend" style="text-align:center; width:100px" class="hidden no-print">Atend.</th>
+                        <th class="no-print" style="width:60px">Del.</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-alunos"></tbody>
+            </table>
+            <div id="mobile-lista" class="mobile-card-list"></div>
+            <div id="empty-msg" style="text-align:center; padding:30px; color:var(--text-3); display:none; background:white; border-radius:var(--radius); border:1px solid var(--border);">
+                <div style="font-size:2rem; margin-bottom:8px;">📭</div>
+                <p style="font-weight:600;">Nenhum aluno encontrado</p>
             </div>
         </div>
 
-        <div class="nav-tabs">
-            <div class="nav-item active" id="nav-freq" onclick="window.mudarAba('freq')"><span>📅</span> Chamada</div>
-            <div class="nav-item" id="nav-plan" onclick="window.mudarAba('plan')"><span>📖</span> Diário</div>
-            <div class="nav-item" onclick="window.open('reunioes.html', '_blank')"><span>📝</span> Reuniões</div>
+        <!-- PLANEJAMENTO -->
+        <div id="tab-plan" class="view-section hidden">
+            <div class="action-bar">
+                <div class="date-control">
+                    <span>📅</span>
+                    <input type="date" id="data-plan" onchange="window.carregarPlanejamento()">
+                </div>
+                <div class="btn-group">
+                    <button onclick="window.salvarPlanejamento()" class="btn-action btn-save">💾 Salvar</button>
+                    <button onclick="window.excluirPlanejamento()" class="btn-action btn-del">🗑️ Excluir</button>
+                    <button onclick="window.abrirHistorico('plan')" class="btn-action btn-hist">📋 Ver Salvos</button>
+                    <button onclick="window.imprimirTela('plan')" class="btn-action btn-print">🖨️ Imprimir</button>
+                </div>
+            </div>
+            <div class="plan-box">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h3 style="margin:0;">📖 Registro Diário</h3>
+                    <button id="btn-unlock" onclick="window.desbloquearEdicao()" style="background:var(--warning-light); color:#92400e; border:1.5px solid var(--warning); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem; font-weight:700; display:none;">🔓 Editar</button>
+                </div>
+                <label class="plan-label">Título / Disciplina</label>
+                <input type="text" id="plan-disciplina" class="plan-input input-plan">
+                <label class="plan-label">Conteúdo / Resultados Esperados</label>
+                <textarea id="plan-metodologia" class="plan-input input-plan"></textarea>
+            </div>
         </div>
     </div>
 
+    <div class="nav-tabs">
+        <div class="nav-item active" id="nav-freq" onclick="window.mudarAba('freq')">
+            <span class="nav-icon">📅</span> Chamada
+        </div>
+        <div class="nav-item" id="nav-plan" onclick="window.mudarAba('plan')">
+            <span class="nav-icon">📖</span> Diário
+        </div>
+        <div class="nav-item" onclick="window.open('reunioes.html', '_blank')">
+            <span class="nav-icon">📝</span> Reuniões
+        </div>
+    </div>
+</div>
+
+<!-- ============================
+     MODAL RELATÓRIO
+============================ -->
 <div id="modal-relatorio" class="modal-overlay">
     <div class="modal-content">
-        <h3 style="color:var(--primary); margin-top:0;">📊 Relatório Periódico</h3>
-        <div class="no-print" style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #eee;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+        <div class="modal-header">
+            <h3>📊 Relatório Periódico</h3>
+            <button class="btn-close" onclick="document.getElementById('modal-relatorio').style.display='none'">✕</button>
+        </div>
+        <div class="relatorio-form no-print">
+            <div class="relatorio-grid">
                 <div>
-                    <label style="font-size: 0.8rem; font-weight: bold;">Mês Inicial:</label>
-                    <input type="month" id="mes-relatorio-inicio" style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc;">
+                    <label>Mês Inicial</label>
+                    <input type="month" id="mes-relatorio-inicio">
                 </div>
                 <div>
-                    <label style="font-size: 0.8rem; font-weight: bold;">Mês Final:</label>
-                    <input type="month" id="mes-relatorio-fim" style="width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc;">
+                    <label>Mês Final</label>
+                    <input type="month" id="mes-relatorio-fim">
                 </div>
             </div>
             <button onclick="window.gerarRelatorioFaltas()" class="btn-action btn-save" style="width:100%;">Gerar Relatório</button>
         </div>
-        <div id="resultado-relatorio" style="max-height:350px; overflow-y:auto; margin-bottom:10px;"></div>
-        
-        <button onclick="window.imprimirRelatorio()" class="btn-action btn-print no-print" style="width:100%; margin-bottom:10px;">🖨️ Imprimir</button>
-        <button onclick="document.getElementById('modal-relatorio').style.display='none'" class="btn-action btn-hist no-print" style="width:100%;">Fechar</button>
-        <button onclick="window.exportarExcel()" class="btn-action no-print" style="width:100%; background:#27ae60; color:white; margin-bottom:10px; border:none; border-radius:8px; padding:12px; font-weight:bold; cursor:pointer;">Excel (.csv)</button>    
+        <div id="resultado-relatorio" style="max-height:350px; overflow-y:auto; margin-bottom:12px;"></div>
+        <div style="display:flex; gap:8px; flex-direction:column;" class="no-print">
+            <button onclick="window.imprimirRelatorio()" class="btn-action btn-print" style="width:100%;">🖨️ Imprimir</button>
+            <button onclick="window.exportarExcel()" class="btn-action btn-save" style="width:100%;">📥 Exportar Excel (.csv)</button>
+        </div>
     </div>
 </div>
-    
-    <div id="modal-historico" class="modal-overlay" onclick="if(event.target === this) window.fecharHistorico()">
-        <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h3 style="margin:0;">Histórico</h3>
-                <button onclick="window.fecharHistorico()" style="background:#eee; border:none; width:30px; height:30px; border-radius:50%; font-weight:bold;">✕</button>
-            </div>
-            <div id="modal-lista-conteudo"></div>
+
+<!-- ============================
+     MODAL HISTÓRICO
+============================ -->
+<div id="modal-historico" class="modal-overlay" onclick="if(event.target===this)window.fecharHistorico()">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📋 Histórico</h3>
+            <button class="btn-close" onclick="window.fecharHistorico()">✕</button>
+        </div>
+        <div id="modal-lista-conteudo"></div>
+    </div>
+</div>
+
+<!-- ============================
+     MODAL ADMIN
+============================ -->
+<div id="modal-admin" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>🏫 Secretaria — Gestão</h3>
+            <button class="btn-close" onclick="document.getElementById('modal-admin').style.display='none'">✕</button>
+        </div>
+        <div class="admin-section">
+            <h4>📥 Importar Alunos (Massa)</h4>
+            <p>Formato: <strong>Nome, Turma</strong> — uma por linha</p>
+            <textarea id="lista-alunos-massa" placeholder="João Silva, Infantil 3 A&#10;Maria Santos, Infantil 3 A"></textarea>
+            <button onclick="window.importarAlunosMassa()" class="btn-action btn-save" style="width:100%;">Importar Alunos</button>
+        </div>
+        <div class="admin-section">
+            <h4>👤 Criar Contas de Professores</h4>
+            <p>Formato: <strong>Nome, Turma, Email, Senha</strong></p>
+            <textarea id="lista-profs-import" placeholder="Ana Lima, 2º Ano A, ana@escola.com, senha123"></textarea>
+            <button onclick="window.processarImportacaoProfs()" class="btn-action btn-save" style="width:100%;">Criar Professores</button>
+        </div>
+        <div class="admin-section danger-zone">
+            <h4>🛠️ Manutenção</h4>
+            <button onclick="window.removerDuplicados()" class="btn-action btn-fix" style="width:100%; margin-bottom:8px;">Remover Alunos Duplicados</button>
+            <button onclick="window.limparBancoAlunos()" class="btn-action btn-del" style="width:100%;">⚠️ Excluir TODOS os Alunos</button>
         </div>
     </div>
+</div>
 
-    <div id="modal-admin" class="modal-overlay">
-        <div class="modal-content">
-            <h2 style="color:var(--primary); margin-top:0;">Secretaria (Gestão)</h2>
-            <div style="border:1px solid #ddd; padding:15px; border-radius:8px; margin-bottom:20px; background:#f9f9f9;">
-                <h4 style="margin:0 0 10px 0;">Importar Alunos (Massa)</h4>
-                <p style="font-size:0.8rem; color:#666; margin-bottom:5px;">Formato: <strong>Nome, Turma</strong></p>
-                <textarea id="lista-alunos-massa" style="width:100%; height:100px; margin-bottom:10px;"></textarea>
-                <button onclick="window.importarAlunosMassa()" class="btn-action btn-save" style="width:100%;">Importar Alunos</button>
+<!-- ============================
+     MODAL ATENDIMENTO
+============================ -->
+<div id="modal-atendimento" class="modal-overlay" onclick="if(event.target===this)window.fecharAtendimento()">
+    <div class="modal-content" style="max-width:760px;">
+        <div class="modal-header">
+            <h3>📋 Registro de Atendimento</h3>
+            <button class="btn-close" onclick="window.fecharAtendimento()">✕</button>
+        </div>
+
+        <!-- Cabeçalho do formulário -->
+        <div style="text-align:center; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--border);">
+            <div style="font-size:0.7rem; font-weight:800; letter-spacing:1px; color:var(--text-3); text-transform:uppercase; margin-bottom:4px;">Casa de Criança</div>
+            <h4 style="color:var(--primary); font-size:1rem; margin-bottom:2px;">Registro de Atendimento</h4>
+            <div style="font-size:0.8rem; color:var(--text-3);" id="atend-data-header">Data: --/--/----</div>
+        </div>
+
+        <div class="atend-form" id="atend-form-content">
+            <!-- 1. IDENTIFICAÇÃO -->
+            <div class="form-section">
+                <div class="form-section-title">🔖 1. Identificação</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Aluno(a)</label>
+                        <input type="text" id="atend-aluno" readonly style="background:var(--surface-2);">
+                    </div>
+                    <div class="form-group">
+                        <label>Data de Nascimento</label>
+                        <input type="date" id="atend-nascimento">
+                    </div>
+                    <div class="form-group">
+                        <label>Turma</label>
+                        <input type="text" id="atend-turma" readonly style="background:var(--surface-2);">
+                    </div>
+                    <div class="form-group">
+                        <label>Turno</label>
+                        <select id="atend-turno">
+                            <option value="">Selecione</option>
+                            <option value="Manhã">Manhã</option>
+                            <option value="Tarde">Tarde</option>
+                            <option value="Integral">Integral</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Professora</label>
+                        <input type="text" id="atend-professora">
+                    </div>
+                    <div class="form-group">
+                        <label>Filiação</label>
+                        <input type="text" id="atend-filiacao" placeholder="Nome dos pais/responsáveis">
+                    </div>
+                </div>
             </div>
-            <div style="border:1px solid #ddd; padding:15px; border-radius:8px; margin-bottom:20px; background:#f9f9f9;">
-                <h4 style="margin:0 0 10px 0;">Criar Contas (Professores)</h4>
-                <p style="font-size:0.8rem; color:#666; margin-bottom:5px;">Formato: <strong>Nome, Turma, Email, Senha</strong></p>
-                <textarea id="lista-profs-import" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
-                <button onclick="window.processarImportacaoProfs()" class="btn-action btn-save" style="width:100%;">Criar Professores</button>
+
+            <!-- 2. OBJETIVOS -->
+            <div class="form-section">
+                <div class="form-section-title">🎯 2. Objetivos do Atendimento</div>
+                <div class="form-group">
+                    <label>Descreva os objetivos desta reunião</label>
+                    <textarea id="atend-objetivos" placeholder="Ex: Acompanhamento do desenvolvimento, questão comportamental, integração..."></textarea>
+                </div>
             </div>
-            <div style="border:1px solid #e67e22; padding:15px; border-radius:8px; background:#fffaf0; margin-bottom:20px;">
-                <h4 style="color:#e67e22; margin:0 0 10px 0;">🛠️ Manutenção</h4>
-                <button onclick="window.removerDuplicados()" class="btn-action btn-fix" style="width:100%; margin-bottom:10px;">Remover Alunos Duplicados</button>
-                <button onclick="window.limparBancoAlunos()" class="btn-action btn-del" style="width:100%;">Excluir TODOS os Alunos</button>
+
+            <!-- 3. DADOS PELA FAMÍLIA -->
+            <div class="form-section">
+                <div class="form-section-title">👨‍👩‍👧 3. Dados Pontuados pela Família / Profissional Clínico</div>
+                <div class="form-group">
+                    <label>Informações trazidas pela família</label>
+                    <textarea id="atend-dados-familia" placeholder="Relatos, observações da família ou profissional clínico..."></textarea>
+                </div>
             </div>
-            <button onclick="document.getElementById('modal-admin').style.display='none'" class="btn-action btn-hist" style="width:100%;">Fechar Painel</button>
+
+            <!-- 4. DADOS PELA ESCOLA -->
+            <div class="form-section">
+                <div class="form-section-title">🏫 4. Dados Pontuados pela Escola</div>
+                <div class="form-group">
+                    <label>Observações da escola</label>
+                    <textarea id="atend-dados-escola" placeholder="Comportamento, rendimento, socialização, observações da equipe..."></textarea>
+                </div>
+            </div>
+
+            <!-- 5. CONSIDERAÇÕES FINAIS -->
+            <div class="form-section">
+                <div class="form-section-title">📝 5. Considerações Finais</div>
+                <div class="form-group">
+                    <label>Conclusões e encaminhamentos</label>
+                    <textarea id="atend-consideracoes" placeholder="Acordos, encaminhamentos, próximos passos..."></textarea>
+                </div>
+            </div>
+
+            <!-- 6. PARTICIPANTES -->
+            <div class="form-section">
+                <div class="form-section-title">👥 6. Participantes desta Reunião</div>
+                <div class="form-group">
+                    <label>Nome e função de cada participante</label>
+                    <textarea id="atend-participantes" placeholder="Ex: Ana Lima (Coordenadora), Maria Santos (Mãe), João Santos (Pai)..."></textarea>
+                </div>
+            </div>
+
+            <!-- ASSINATURAS -->
+            <div class="form-section">
+                <div class="form-section-title">✍️ Assinatura da Coordenação</div>
+                <div class="form-group">
+                    <label>Nome da Coordenadora</label>
+                    <input type="text" id="atend-coord-nome" placeholder="Nome completo">
+                </div>
+                <div style="margin-top:10px;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.3px; display:block; margin-bottom:6px;">Assinar digitalmente (desenhe abaixo)</label>
+                    <div class="signature-area">
+                        <canvas id="sig-coord" width="600" height="120"></canvas>
+                        <button class="btn-clear-sig" onclick="window.limparAssinatura('sig-coord')">Limpar</button>
+                        <div class="signature-label">Assinatura da Coordenação</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTÕES DE AÇÃO -->
+            <div id="atend-acoes" style="display:flex; flex-direction:column; gap:8px; margin-top:4px;">
+                <button onclick="window.finalizarAtendimento()" class="btn-action btn-save" style="width:100%; padding:14px; font-size:0.95rem;">
+                    ✅ Finalizar e Gerar Link para Família
+                </button>
+                <button onclick="window.imprimirAtendimento()" class="btn-action btn-print" style="width:100%;">
+                    🖨️ Imprimir Documento
+                </button>
+                <button onclick="window.fecharAtendimento()" class="btn-action btn-hist" style="width:100%;">
+                    Cancelar
+                </button>
+            </div>
+
+            <!-- QR CODE / LINK (aparece após finalizar) -->
+            <div id="atend-qr-section" style="display:none; margin-top:16px;">
+                <div class="qr-section">
+                    <h4>📲 Link para assinatura da família</h4>
+                    <p>Compartilhe o QR Code abaixo com a família para que assine digitalmente e receba uma cópia do documento.</p>
+                    <div id="qrcode-container"></div>
+                    <a id="atend-link-url" class="qr-link" target="_blank" href="#">Toque para abrir o link</a>
+                    <div style="display:flex; gap:8px; margin-top:12px;">
+                        <button onclick="window.copiarLinkAtendimento()" class="btn-action btn-save" style="flex:1;">📋 Copiar Link</button>
+                        <button onclick="window.compartilharAtendimento()" class="btn-action btn-atend" style="flex:1;">📤 Compartilhar</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+</div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, setDoc, deleteDoc, query, where, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = { apiKey: "AIzaSyBjtXXfchJQO4vxeI_Vqw1QhV_1CLwB6jc", authDomain: "escoladigital-79997.firebaseapp.com", projectId: "escoladigital-79997", storageBucket: "escoladigital-79997.appspot.com", messagingSenderId: "system", appId: "system" };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        async function registrarLog(acao) {
-            console.log("Tentando registrar log:", acao);
-            if (!usuarioAtual) {
-                console.warn("Log não registrado: Nenhum usuário logado.");
-                return;
-            }
-            try {
-                const docRef = await addDoc(collection(db, "logs_auditoria"), {
-                    usuario: usuarioAtual.nome,
-                    email: usuarioAtual.email || "Acesso Manual",
-                    turma: usuarioAtual.turma,
-                    acao: acao,
-                    data: serverTimestamp()
-                });
-                console.log("Log gravado com sucesso! ID:", docRef.id);
-            } catch (e) {
-                console.error("ERRO AO GRAVAR NO FIREBASE:", e);
-            }
-        }
+<!-- ============================
+     MODAL ASSINATURA FAMÍLIA
+     (página pública acessada via link)
+============================ -->
+<div id="modal-assinar-familia" class="modal-overlay" onclick="if(event.target===this)document.getElementById('modal-assinar-familia').style.display='none'">
+    <div class="modal-content" style="max-width:680px;">
+        <div class="modal-header">
+            <h3>✍️ Assinar Documento</h3>
+            <button class="btn-close" onclick="document.getElementById('modal-assinar-familia').style.display='none'">✕</button>
+        </div>
+        <div id="familia-doc-preview" style="background:var(--surface-2); padding:16px; border-radius:var(--radius); border:1px solid var(--border); margin-bottom:16px; font-size:0.875rem; max-height:300px; overflow-y:auto;"></div>
         
-        // ==========================================
-        // --- INTEGRAÇÃO API SOPHIA (CASA+) ---
-        // ==========================================
-        const SOPHIA_URL = "https://portal.sophia.com.br/SophiAWebApi/9118/api/v1";
-        let sophiaToken = null;
+        <div class="form-section">
+            <div class="form-section-title">✍️ Assinatura da Família / Responsável</div>
+            <div class="form-group" style="margin-bottom:10px;">
+                <label>Seu Nome Completo</label>
+                <input type="text" id="familia-nome" placeholder="Como consta no documento">
+            </div>
+            <div style="margin-top:8px;">
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.3px; display:block; margin-bottom:6px;">Assine digitalmente</label>
+                <div class="signature-area">
+                    <canvas id="sig-familia" width="600" height="120"></canvas>
+                    <button class="btn-clear-sig" onclick="window.limparAssinatura('sig-familia')">Limpar</button>
+                    <div class="signature-label">Assinatura do Responsável</div>
+                </div>
+            </div>
+        </div>
+        <button onclick="window.confirmarAssinaturaFamilia()" class="btn-action btn-save" style="width:100%; padding:14px; font-size:0.95rem;">
+            ✅ Confirmar Assinatura e Receber Cópia
+        </button>
+    </div>
+</div>
 
-        async function autenticarSophia() {
-            if (sophiaToken) return sophiaToken;
-            console.log("🔑 Solicitando token de acesso ao Sophia...");
-            try {
-                const response = await fetch(`${SOPHIA_URL}/Autenticacao`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'text/plain' },
-                    body: JSON.stringify({ usuario: "Escola", senha: "1992" })
-                });
-                if (!response.ok) throw new Error(`Erro ${response.status}`);
-                sophiaToken = await response.text(); 
-                return sophiaToken;
-            } catch (e) {
-                console.error("❌ Erro Auth Sophia:", e);
-                return null;
-            }
-        }
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc, deleteDoc, query, where, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-      window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
-            try {
-                const token = await autenticarSophia();
-                if (!token) return false;
+    const firebaseConfig = {
+        apiKey: "AIzaSyBjtXXfchJQO4vxeI_Vqw1QhV_1CLwB6jc",
+        authDomain: "escoladigital-79997.firebaseapp.com",
+        projectId: "escoladigital-79997",
+        storageBucket: "escoladigital-79997.appspot.com",
+        messagingSenderId: "system",
+        appId: "system"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-                console.log(`🔍 1. Buscando ID do professor "${nomeProf}" no SophiA...`);
-                const respColab = await fetch(`${SOPHIA_URL}/Colaboradores`, {
-                    headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
-                });
-                if (!respColab.ok) throw new Error("Erro ao buscar professores.");
-                const colaboradores = await respColab.json();
-                
-                const normalizar = (str) => (str || "").toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-                const nomeProfLimpo = normalizar(nomeProf);
-                
-                const professorSophia = colaboradores.find(c => normalizar(c.nome) === nomeProfLimpo || normalizar(c.nome).includes(nomeProfLimpo));
-                if (!professorSophia) {
-                    console.warn(`❌ Professor "${nomeProf}" não encontrado no SophiA.`);
-                    return false;
-                }
+    // ==========================================
+    // VARIÁVEIS GLOBAIS
+    // ==========================================
+    const SOPHIA_URL = "https://portal.sophia.com.br/SophiAWebApi/9118/api/v1";
+    let sophiaToken = null;
+    let usuarioAtual = null;
+    let perfilCoord = null;
+    let listaAlunosCache = [];
+    let ehCoordenacao = false;
 
-                const idProfessorDinamico = professorSophia.codigo || professorSophia.id;
-                console.log(`✅ Professor encontrado! O ID dele no SophiA é: ${idProfessorDinamico}`);
-                window.idProfessorSophiAtual = idProfessorDinamico; 
+    const SENHAS = { CADASTRO: "$2026", SECRETARIA: "$2026", EDICAO: "1992" };
 
-                // 2. BUSCA AS LISTAS DO PROFESSOR (COM O CAMINHO CORRETO)
-                console.log(`🔍 2. Buscando listas para o professor ID: ${idProfessorDinamico}...`);
-                const respListas = await fetch(`${SOPHIA_URL}/ListaChamada/professor/${idProfessorDinamico}`, {
-                    headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
-                });
-                
-                if (!respListas.ok) {
-                    console.warn(`⚠️ Nenhuma lista encontrada no SophiA (Erro ${respListas.status}). Usando base do CASA+ (Firebase).`);
-                    return false; 
-                }
+    const loading = (s) => { document.getElementById('loader').style.display = s ? 'flex' : 'none'; };
+    const formatData = (d) => d.split('-').reverse().join('/');
+    const getHoje = () => new Date().toISOString().split('T')[0];
 
-                const listas = await respListas.json();
-                const turmaSophiA = normalizar(turmaNome);
-                const listaCerta = listas.find(l => normalizar(l.nomeListaChamada).includes(turmaSophiA) || normalizar(l.nomeTurma).includes(turmaSophiA));
-                
-                if (!listaCerta) {
-                    console.warn(`⚠️ Turma "${turmaNome}" não encontrada na lista do SophiA. Usando Firebase.`);
-                    return false;
-                }
-                
-                window.idListaAtualSophia = listaCerta.codigoListaChamada;
-
-                // 3. BUSCA OS ALUNOS
-                console.log(`🔍 3. Buscando alunos da lista ID: ${window.idListaAtualSophia}...`);
-                const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${window.idListaAtualSophia}`, {
-                    headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
-                });
-                
-                if (!respAlunos.ok) return false;
-
-                const alunosBrutos = await respAlunos.json();
-                console.log("📡 Alunos brutos recebidos:", alunosBrutos.length);
-
-                listaAlunosCache = [];
-                const idsAdicionados = new Set();
-
-                alunosBrutos.forEach(aluno => {
-                    const idAluno = aluno.codigoMatricula || aluno.codigo || aluno.id;
-                    if (idAluno && !idsAdicionados.has(idAluno)) {
-                        idsAdicionados.add(idAluno);
-                        listaAlunosCache.push({
-                            id: idAluno,
-                            nome: aluno.nomeAluno || aluno.nome || aluno.Nome || "ALUNO DESCONHECIDO",
-                            codigoListaChamadaAula: aluno.codigoListaChamadaAula, 
-                            turma: turmaNome,
-                            presenca: true,
-                            exAluno: false 
-                        });
-                    }
-                });
-
-                console.log("✅ Alunos processados (sem duplicados):", listaAlunosCache.length);
-                listaAlunosCache.sort((a,b) => (a.nome || "").localeCompare(b.nome || ""));
-                renderizarTabelaAlunos(listaAlunosCache, []);
-                return true;
-            } catch (e) {
-                console.error("❌ Erro ao buscar dados do SophiA:", e);
-                return false; 
-            }
-        };
-
-        const ESTRUTURA_TURMAS = {
-            "Berçário": [ { nome: "Berçário", letras: ["A", "B"] } ],
-            "Infantil 1": [ { nome: "Infantil 1", letras: ["A", "B", "C", "D", "E", "F", "G", "I"] } ],
-            "Infantil 2": [ { nome: "Infantil 2", letras: ["A", "B", "C", "D", "E", "F", "G", "I", "J"] } ],
-            "Infantil 3": [ { nome: "Infantil 3", letras: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"] } ],
-            "Infantil 4": [ { nome: "Infantil 4", letras: ["A", "B", "C", "D", "E", "F", "G", "I", "J"] } ],
-            "Infantil 5": [ { nome: "Infantil 5", letras: ["A", "B", "C", "D", "E", "F", "G", "I"] } ],
-            "Fundamental 1": [
-                { nome: "1º Ano", letras: ["A", "B", "C", "D", "I"] },
-                { nome: "2º Ano", letras: ["A", "B", "C", "D", "I"] },
-                { nome: "3º Ano", letras: ["A", "B", "C", "D", "I"] },
-                { nome: "4º Ano", letras: ["A", "B", "C", "I"] },
-                { nome: "5º Ano", letras: ["A", "B", "C", "I"] }
-            ],
-            "Integral": [ { nome: "Integral", letras: ["1", "2"] } ],
-            "Atividades Extras": [
-                { nome: "Futsal", letras: ["A", "B", "C"] },
-                { nome: "Dança", letras: ["A", "B", "C"] },
-                { nome: "Ginástica Rítmica", letras: ["A", "B"] },
-                { nome: "Judô", letras: ["A", "B"] }
-            ]
-        };
-
-        const PERFIS_COORDENACAO = {
-            "GERAL": "ALL",
-            "CRISTIANE": ["Berçário A", "Berçário B", "Infantil 1 A", "Infantil 1 B", "Infantil 1 C", "Infantil 1 D", "Infantil 1 E", "Infantil 1 F", "Infantil 1 G", "Infantil 1 I", "Infantil 2 A", "Infantil 2 B", "Infantil 2 C", "Infantil 2 D", "Infantil 2 E", "Infantil 2 F", "Infantil 2 G", "Infantil 2 I", "Infantil 2 J"],
-            "ADNA": ["2º Ano A", "2º Ano B", "2º Ano C", "2º Ano D", "2º Ano I", "3º Ano A", "3º Ano B", "3º Ano C", "3º Ano D", "3º Ano I", "4º Ano A", "4º Ano B", "4º Ano C", "4º Ano I", "5º Ano A", "5º Ano B", "5º Ano C", "5º Ano I"],
-            "NAYARA": ["Infantil 3 A", "Infantil 3 B", "Infantil 3 C", "Infantil 3 D", "Infantil 3 E", "Infantil 3 F", "Infantil 3 G", "Infantil 3 H"],
-            "LUDMILLA": ["Infantil 3 I", "Infantil 3 J", "Infantil 4 I", "Infantil 4 J", "Infantil 5 A", "Infantil 5 B", "Infantil 5 C", "Infantil 5 D", "Infantil 5 E", "Infantil 5 F", "Infantil 5 G", "Infantil 5 I", "1º Ano I"],
-            "ELIONEIDE": ["Infantil 4 A", "Infantil 4 B", "Infantil 4 C", "Infantil 4 D", "Infantil 4 E", "Infantil 4 F", "Infantil 4 G"],
-            "SAVIA": ["1º Ano A", "1º Ano B", "1º Ano C", "1º Ano D"],
-            "COORD_ESPORTES": ["Futsal A", "Dança A", "Ginástica Rítmica A", "Judô A"],
-            "SISTEMA INTEGRAL":["Integral 1", "integral 2"]
-        };
-
-        const SENHAS = { CADASTRO: "$2026", SECRETARIA: "$2026", EDICAO: "1992" };
-        let usuarioAtual = null;
-        let perfilCoord = null;
-        let listaAlunosCache = [];
-
-        const loading = (s) => document.getElementById('loader').style.display = s ? 'flex' : 'none';
-        const formatData = (d) => d.split('-').reverse().join('/');
-        const getHoje = () => new Date().toISOString().split('T')[0];
-
-        window.onload = () => {
-            carregarOpcoesTurma();
-            document.getElementById('data-freq').value = getHoje();
-            document.getElementById('data-plan').value = getHoje();
-            ['login-email', 'login-senha'].forEach(id => {
-                document.getElementById(id).addEventListener('keypress', (e) => {
-                    if(e.key === 'Enter') window.fazerLogin();
-                });
+    // ==========================================
+    // LOG AUDITORIA
+    // ==========================================
+    async function registrarLog(acao) {
+        if (!usuarioAtual) return;
+        try {
+            await addDoc(collection(db, "logs_auditoria"), {
+                usuario: usuarioAtual.nome,
+                email: usuarioAtual.email || "Acesso Manual",
+                turma: usuarioAtual.turma,
+                acao: acao,
+                data: serverTimestamp()
             });
-        };
+        } catch (e) { console.error("Erro ao gravar log:", e); }
+    }
 
-        window.showView = (viewName) => {
-            ['view-login', 'view-cadastro', 'view-coord', 'app-painel'].forEach(id => document.getElementById(id).classList.add('hidden'));
-            const el = document.getElementById(viewName === 'login' ? 'view-login' : viewName === 'cadastro' ? 'view-cadastro' : viewName === 'coord' ? 'view-coord' : 'app-painel');
-            el.classList.remove('hidden');
-            if(viewName === 'app') el.style.display = 'flex';
-        };
-
-        window.mudarAba = (aba) => {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-            document.getElementById('tab-' + aba).classList.remove('hidden');
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById('nav-' + aba).classList.add('active');
-        };
-
-        window.fazerLogin = async () => {
-            const em = document.getElementById('login-email').value.trim();
-            const se = document.getElementById('login-senha').value;
-            if(!em || !se) return alert("Preencha tudo.");
-            loading(true);
-            try {
-                const s = await getDocs(query(collection(db, "professores"), where("email", "==", em), where("senha", "==", se)));
-                if(s.empty) return alert("Credenciais inválidas.");
-                const data = s.docs[0].data();
-                if(data.acessos) {
-                    perfilCoord = { nome: data.nome, acessos: data.acessos, perfil: data.turma };
-                    montarPainelCoord();
-                    window.showView('coord');
-                } else {
-                    usuarioAtual = { nome: data.nome, turma: data.turma, email: em };
-                    await entrarTurma(data.turma, data.nome);
-                }
-                registrarLog("Fez Login");
-            } catch(e) { alert("Erro de rede."); } finally { loading(false); }
-        };
-
-        window.fazerLogout = () => {
-            registrarLog("Fez Logout");
-            usuarioAtual = null; perfilCoord = null;
-            document.getElementById('login-senha').value = '';
-            window.showView('login');
-        };
-
-        function carregarOpcoesTurma() {
-            const s1 = document.getElementById('cad-turma-unica');
-            const contC = document.getElementById('container-checkboxes');
-            s1.innerHTML = '<option value="" disabled selected>Selecione a Turma</option>';
-            contC.innerHTML = '';
-            for(const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) {
-                const og = document.createElement('optgroup'); og.label = g;
-                ls.forEach(se => {
-                    se.letras.forEach(l => {
-                        const nt = `${se.nome} ${l}`;
-                        og.innerHTML += `<option value="${nt}">${nt}</option>`;
-                        contC.innerHTML += `<label style="display:block;margin-bottom:5px;"><input type="checkbox" value="${nt}"> ${nt}</label>`;
-                    });
-                });
-                s1.appendChild(og);
-            }
-        }
-
-        function montarPainelCoord() {
-            const container = document.getElementById('container-turmas');
-            container.innerHTML = "";
-            const acessos = perfilCoord.acessos;
-            const isGeral = acessos === "ALL";
-            for(const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) {
-                ls.forEach(se => se.letras.forEach(l => {
-                    const nomeTurma = `${se.nome} ${l}`;
-                    if(isGeral || acessos.includes(nomeTurma)) {
-                        const div = document.createElement('div');
-                        div.className = 'card-turma';
-                        div.innerHTML = `<strong>${se.nome}</strong><br><small>Turma ${l}</small>`;
-                        div.onclick = () => {
-                            usuarioAtual = { nome: perfilCoord.nome + " (Coord)", turma: nomeTurma };
-                            document.getElementById('btn-voltar-coord').classList.remove('hidden');
-                            entrarTurma(nomeTurma, usuarioAtual.nome);
-                        };
-                        container.appendChild(div);
-                    }
-                }));
-            }
-        }
-
-        window.voltarParaCoord = () => { usuarioAtual = perfilCoord; window.showView('coord'); };
-
-        async function entrarTurma(turma, nomeProf) {
-            document.getElementById('display-turma-nome').innerText = nomeProf.split(' ')[0];
-            window.showView('app');
-            window.mudarAba('freq');
-            loading(true);
-            
-            const sucessoSophia = await window.buscarAlunosSophia(turma, nomeProf);
-            if (sucessoSophia) {
-                document.getElementById('display-turma-badge').innerText = turma + " (SOPHIA)";
-            } else {
-                document.getElementById('display-turma-badge').innerText = turma + " (FIREBASE)";
-                await carregarAlunosBase();
-            }
-            loading(false);
-            
-            // CORREÇÃO: As funções de carregar precisam do window. para serem reconhecidas aqui!
-            await window.carregarFrequencia();
-            await window.carregarPlanejamento();
-        }
-
-        async function carregarAlunosBase() {
-            loading(true);
-            try {
-                const q = query(collection(db, "alunos"), where("turma", "==", usuarioAtual.turma));
-                const snap = await getDocs(q);
-                listaAlunosCache = [];
-                snap.forEach(d => listaAlunosCache.push({id: d.id, ...d.data()}));
-                listaAlunosCache.sort((a,b) => a.nome.localeCompare(b.nome));
-            } catch(e) { console.log(e); } finally { loading(false); }
-        }
-
-        function renderizarTabelaAlunos(listaExibicao, faltosos = []) {
-            const tbody = document.getElementById('tbody-alunos');
-            const listaMob = document.getElementById('mobile-lista');
-            tbody.innerHTML = ""; listaMob.innerHTML = "";
-            if(listaExibicao.length === 0) document.getElementById('empty-msg').style.display = 'block';
-            else document.getElementById('empty-msg').style.display = 'none';
-
-            listaExibicao.forEach((a, i) => {
-                const presente = !faltosos.includes(a.nome);
-                a.presenca = presente; // Garante que a lista cache reflita o visual
-                
-                const btnClass = a.exAluno ? 'ex-btn' : (presente ? 'presente' : 'ausente');
-                const btnText = a.exAluno ? (a.statusHistorico ? 'Presente' : 'Ausente') : (presente ? 'Presente' : 'Ausente');
-                const onClick = a.exAluno ? '' : `onclick="window.alternarPresenca(this, ${i})"`;
-                const tagRemovido = a.exAluno ? '<span class="texto-removido"> (Removido do Sistema)</span>' : '';
-
-                tbody.innerHTML += `<tr id="row-${i}"><td>${i+1}</td><td>${a.nome}${tagRemovido}</td><td style="text-align:center"><button class="toggle-btn ${btnClass}" ${onClick}>${btnText}</button></td><td class="no-print"><button onclick="window.apagarAluno('${a.id}')" class="btn-action btn-del" style="padding:4px 8px; font-size:0.8rem;" ${a.exAluno ? 'disabled' : ''}>🗑️</button></td></tr>`;
-
-                listaMob.innerHTML += `<div class="student-card status-${btnClass}" id="card-${i}">
-                    <div class="student-info"><strong>${i+1}. ${a.nome}${tagRemovido}</strong></div>
-                    <button class="toggle-btn ${btnClass}" ${onClick}>${btnText}</button>
-                </div>`;
+    // ==========================================
+    // AUTENTICAÇÃO SOPHIA
+    // ==========================================
+    async function autenticarSophia() {
+        if (sophiaToken) return sophiaToken;
+        try {
+            const response = await fetch(`${SOPHIA_URL}/Autenticacao`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'text/plain' },
+                body: JSON.stringify({ usuario: "Escola", senha: "1992" })
             });
+            if (!response.ok) throw new Error(`Erro ${response.status}`);
+            sophiaToken = await response.text();
+            return sophiaToken;
+        } catch (e) {
+            console.error("❌ Erro Auth Sophia:", e);
+            return null;
         }
+    }
 
-        window.alternarPresenca = (btn, i) => {
-            const isPres = btn.innerText === "Presente";
-            const novoStatus = isPres ? "Ausente" : "Presente";
-            const novaClasse = isPres ? "ausente" : "presente";
-            
-            btn.className = `toggle-btn ${novaClasse}`;
-            btn.innerText = novoStatus;
-            
-            if(window.innerWidth <= 768) {
-                const card = document.getElementById(`card-${i}`);
-                if(card) card.className = `student-card status-${novaClasse}`;
-            }
+    // ==========================================
+    // BUSCA ALUNOS NO SOPHIA (COM PUT DE FREQUÊNCIA)
+    // ==========================================
+    window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
+        try {
+            const token = await autenticarSophia();
+            if (!token) return false;
 
-            if(listaAlunosCache[i]) {
-                listaAlunosCache[i].presenca = !isPres; 
-            }
-        };
+            console.log(`🔍 Buscando professor "${nomeProf}" no SophiA...`);
+            const respColab = await fetch(`${SOPHIA_URL}/Colaboradores`, {
+                headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
+            });
+            if (!respColab.ok) throw new Error("Erro ao buscar colaboradores.");
+            const colaboradores = await respColab.json();
 
-        window.carregarFrequencia = async () => {
-            const dt = document.getElementById('data-freq').value;
-            if(dt > getHoje()) {
-                alert("Data futura não permitida.");
-                document.getElementById('data-freq').value = getHoje();
-                return;
-            }
-            loading(true);
-            try {
-                const q = query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma), where("data", "==", dt));
-                const snap = await getDocs(q);
-                let listaFinal = [...listaAlunosCache];
-                let faltosos = [];
-                if(!snap.empty) {
-                    const dados = snap.docs[0].data();
-                    if(dados.detalhes) {
-                        faltosos = dados.detalhes.filter(d => !d.presente).map(d => d.nome);
-                        dados.detalhes.forEach(hist => {
-                            const existe = listaFinal.find(a => a.nome === hist.nome);
-                            if(!existe) {
-                                listaFinal.push({ nome: hist.nome, id: null, exAluno: true, statusHistorico: hist.presente });
-                            }
-                        });
-                    }
-                }
-                listaFinal.sort((a,b) => a.nome.localeCompare(b.nome));
-                renderizarTabelaAlunos(listaFinal, faltosos);
-            } catch(e){ console.error(e); } finally { loading(false); }
-        };
+            const normalizar = (str) => (str||"").toString().toUpperCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
+            const nomeProfLimpo = normalizar(nomeProf.replace(/\(Coord\)/i,"").trim());
 
-        // --- ORQUESTRADOR MASTER DE SALVAMENTO ---
-        window.salvarChamadaGeral = async () => {
-            const data = document.getElementById('data-freq').value;
-            if (!data) return alert("Selecione uma data antes de salvar.");
+            const professorSophia = colaboradores.find(c =>
+                normalizar(c.nome) === nomeProfLimpo ||
+                normalizar(c.nome).includes(nomeProfLimpo) ||
+                nomeProfLimpo.includes(normalizar(c.nome).split(' ')[0])
+            );
 
-            const detalhes = [];
-            
-            if (!listaAlunosCache || listaAlunosCache.length === 0) {
-                return alert("Nenhum dado encontrado para salvar nesta turma.");
-            }
-
-            loading(true);
-
-            try {
-                console.log("🔥 Salvando no Firebase (CASA+)...");
-                listaAlunosCache.forEach(aluno => {
-                    detalhes.push({
-                        nome: aluno.nome,
-                        presente: aluno.presenca
-                    });
-                });
-
-                const idDoc = `${usuarioAtual.turma.replace(/\s/g,'')}_${data}`;
-                
-                await setDoc(doc(db, "frequencia", idDoc), {
-                    turma: usuarioAtual.turma,
-                    data: data,
-                    detalhes: detalhes,
-                    professor: usuarioAtual.nome,
-                    atualizadoEm: new Date().toISOString()
-                });
-
-                console.log("📡 Sincronizando com SophiA...");
-                const sucessoSophia = await window.salvarNoSophiA_Interno();
-
-                await registrarLog("Salvou Chamada");
-
-                if (sucessoSophia) {
-                    alert("✅ Chamada salva com sucesso no CASA+ e no SophiA!");
-                } else {
-                    alert("⚠️ Chamada salva no CASA+, mas o SophiA recusou a integração. O sistema continuará a tentar mais tarde.");
-                }
-
-            } catch (e) {
-                console.error("Erro crítico no processo de salvamento:", e);
-                alert("Erro técnico ao salvar: " + e.message);
-            } finally {
-                loading(false);
-            }
-        };
-
-        window.salvarNoSophiA_Interno = async () => {
-            try {
-                const token = await autenticarSophia();
-                const idProf = window.idProfessorSophiAtual;
-                const idLista = window.idListaAtualSophia;
-
-                if (!idProf || !idLista) {
-                    console.warn("⚠️ IDs do SophiA ausentes (Prof ou Lista).");
-                    return false;
-                }
-
-                const payload = {
-                    codigoProfessor: parseInt(idProf),
-                    quantidadeAula: 1, 
-                    codigoListaChamada: parseInt(idLista),
-                    status: 1, 
-                    alunos: listaAlunosCache.map(aluno => ({
-                        codigoListaChamadaAula: parseInt(aluno.codigoListaChamadaAula) || 0,
-                        codigoMatricula: parseInt(aluno.id),
-                        falta: aluno.presenca ? 0 : 1, 
-                        ocorrencias: []
-                    }))
-                };
-
-                const response = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Token': token,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    const erroTxt = await response.text();
-                    console.error("❌ Resposta negativa do SophiA:", erroTxt);
-                    return false;
-                }
-                return true;
-            } catch (e) {
-                console.error("❌ Falha na comunicação com SophiA:", e);
+            if (!professorSophia) {
+                console.warn(`❌ Professor "${nomeProf}" não encontrado no SophiA.`);
                 return false;
             }
-        };
 
-        // --- RELATÓRIOS ---
-        window.abrirRelatorioMensal = () => {
-            const hoje = new Date();
-            const mesStr = hoje.toISOString().slice(0, 7); 
-            setTimeout(() => {
-                if(document.getElementById('mes-relatorio-inicio')) document.getElementById('mes-relatorio-inicio').value = mesStr;
-                if(document.getElementById('mes-relatorio-fim')) document.getElementById('mes-relatorio-fim').value = mesStr;
-            }, 100);
-            document.getElementById('resultado-relatorio').innerHTML = "";
-            document.getElementById('modal-relatorio').style.display = 'flex';
-        };
+            const idProfessor = professorSophia.codigo || professorSophia.id;
+            window.idProfessorSophiAtual = idProfessor;
+            console.log(`✅ Professor encontrado, ID: ${idProfessor}`);
 
-        window.imprimirRelatorio = () => {
-            const conteudo = document.getElementById('resultado-relatorio').innerHTML;
-            if(!conteudo || conteudo === "Processando...") return alert("Gere o relatório primeiro!");
-            document.body.classList.add('printing-report');
-            window.print();
-            setTimeout(() => { document.body.classList.remove('printing-report'); }, 1000);
-        };
+            const respListas = await fetch(`${SOPHIA_URL}/ListaChamada/professor/${idProfessor}`, {
+                headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
+            });
+            if (!respListas.ok) {
+                console.warn(`⚠️ Nenhuma lista (Erro ${respListas.status}). Usando Firebase.`);
+                return false;
+            }
 
-        window.gerarRelatorioFaltas = async () => {
-            const inicio = document.getElementById('mes-relatorio-inicio').value;
-            const fim = document.getElementById('mes-relatorio-fim').value;
-            if(!inicio || !fim) return alert("Selecione o período inicial e final.");
-            
-            const divRes = document.getElementById('resultado-relatorio');
-            divRes.innerHTML = "Processando período...";
-            loading(true);
-            try {
-                const dataStart = inicio + "-01";
-                const dataEnd = fim + "-31";
-                const q = query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma));
-                const snap = await getDocs(q);
-                let mapaFaltas = {};
-                listaAlunosCache.forEach(a => mapaFaltas[a.nome] = 0);
-                let diasNoPeriodo = 0;
-                
-                snap.forEach(docSnap => {
-                    const dados = docSnap.data();
-                    if (dados.data >= dataStart && dados.data <= dataEnd) {
-                        diasNoPeriodo++;
-                        if(dados.detalhes) {
-                            dados.detalhes.forEach(d => {
-                                if(mapaFaltas[d.nome] === undefined) mapaFaltas[d.nome] = 0;
-                                if(!d.presente) mapaFaltas[d.nome]++;
-                            });
-                        }
-                    }
-                });
+            const listas = await respListas.json();
+            const turmaNorm = normalizar(turmaNome);
+            const listaCerta = listas.find(l =>
+                normalizar(l.nomeListaChamada).includes(turmaNorm) ||
+                normalizar(l.nomeTurma).includes(turmaNorm)
+            );
 
-                let html = `<div style="padding:10px;"><p><strong>Dias com chamada no período:</strong> ${diasNoPeriodo}</p>`;
-                html += `<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
-                         <thead style="background:#eee;"><tr><th style="text-align:left; padding:8px;">Aluno</th><th style="text-align:center;">Faltas</th></tr></thead>
-                         <tbody>`;
-                Object.entries(mapaFaltas).sort((a,b) => a[0].localeCompare(b[0])).forEach(([n, f]) => {
-                    html += `<tr><td style="padding:8px; border-bottom:1px solid #ddd;">${n}</td><td style="text-align:center; border-bottom:1px solid #ddd; ${f > 0 ? 'color:red;font-weight:bold;' : ''}">${f}</td></tr>`;
-                });
-                html += `</tbody></table></div>`;
-                divRes.innerHTML = html;
-            } catch(e) { console.error(e); divRes.innerHTML = "Erro ao processar."; } finally { loading(false); }
-        };
+            if (!listaCerta) {
+                console.warn(`⚠️ Turma "${turmaNome}" não encontrada nas listas do SophiA.`);
+                return false;
+            }
 
-        window.exportarExcel = async () => {
-            const inicio = document.getElementById('mes-relatorio-inicio').value;
-            const fim = document.getElementById('mes-relatorio-fim').value;
-            if(!inicio || !fim) return alert("Selecione os meses primeiro.");
-            
-            const dataStart = inicio + "-01";
-            const dataEnd = fim + "-31";
-            const q = query(collection(db, "frequencia"), where("turma", "==", usuarioAtual.turma));
-            const snap = await getDocs(q);
-            let mapaFaltas = {};
-            listaAlunosCache.forEach(a => mapaFaltas[a.nome] = 0);
-            
-            snap.forEach(docSnap => {
-                const dados = docSnap.data();
-                if (dados.data >= dataStart && dados.data <= dataEnd && dados.detalhes) {
-                    dados.detalhes.forEach(d => {
-                        if(mapaFaltas[d.nome] === undefined) mapaFaltas[d.nome] = 0;
-                        if(!d.presente) mapaFaltas[d.nome]++;
+            window.idListaAtualSophia = listaCerta.codigoListaChamada;
+            console.log(`✅ Lista encontrada, ID: ${window.idListaAtualSophia}`);
+
+            const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${window.idListaAtualSophia}`, {
+                headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
+            });
+            if (!respAlunos.ok) return false;
+
+            const alunosBrutos = await respAlunos.json();
+            console.log(`📡 ${alunosBrutos.length} alunos recebidos do SophiA`);
+
+            listaAlunosCache = [];
+            const idsAdicionados = new Set();
+
+            alunosBrutos.forEach(aluno => {
+                const idAluno = aluno.codigoMatricula || aluno.codigo || aluno.id;
+                if (idAluno && !idsAdicionados.has(idAluno)) {
+                    idsAdicionados.add(idAluno);
+                    listaAlunosCache.push({
+                        id: idAluno,
+                        nome: aluno.nomeAluno || aluno.nome || aluno.Nome || "ALUNO DESCONHECIDO",
+                        codigoListaChamadaAula: aluno.codigoListaChamadaAula,
+                        turma: turmaNome,
+                        presenca: true,
+                        exAluno: false
                     });
                 }
             });
 
-            let csv = ["Aluno,Total de Faltas"];
-            Object.entries(mapaFaltas).sort((a,b) => a[0].localeCompare(b[0])).forEach(([n, f]) => { csv.push(`"${n}",${f}`); });
-            const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + csv.join("\n");
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.setAttribute("href", URL.createObjectURL(blob));
-            link.setAttribute("download", `Faltas_${usuarioAtual.turma}_${new Date().getTime()}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        };
+            listaAlunosCache.sort((a,b) => (a.nome||"").localeCompare(b.nome||""));
+            renderizarTabelaAlunos(listaAlunosCache, []);
+            return true;
+        } catch (e) {
+            console.error("❌ Erro ao buscar SophiA:", e);
+            return false;
+        }
+    };
 
-        // --- PLANEJAMENTO ---
-        window.carregarPlanejamento = async () => {
-            const dt = document.getElementById('data-plan').value;
-            document.querySelectorAll('.input-plan').forEach(i => { i.value=""; i.disabled=true; });
-            document.getElementById('btn-unlock').style.display='none';
-            try {
-                const s = await getDocs(query(collection(db,"planejamentos"), where("turma","==",usuarioAtual.turma), where("data","==",dt)));
-                if(!s.empty) {
-                    const d = s.docs[0].data();
-                    document.getElementById('plan-disciplina').value = d.disciplina;
-                    document.getElementById('plan-metodologia').value = d.metodologia;
-                    document.getElementById('btn-unlock').style.display='inline-block';
-                } else {
-                    document.querySelectorAll('.input-plan').forEach(i => i.disabled=false);
-                }
-            } catch(e){}
-        };
+    // ==========================================
+    // SALVAR FREQUÊNCIA NO SOPHIA (PUT)
+    // ==========================================
+    window.salvarNoSophiA_Interno = async () => {
+        try {
+            const token = await autenticarSophia();
+            const idProf = window.idProfessorSophiAtual;
+            const idLista = window.idListaAtualSophia;
 
-        window.salvarPlanejamento = async () => {
-            loading(true);
-            const dt = document.getElementById('data-plan').value;
-            try {
-                await setDoc(doc(db, "planejamentos", usuarioAtual.turma.replace(/\s/g,'')+"_"+dt), {
-                    data: dt, turma: usuarioAtual.turma,
-                    disciplina: document.getElementById('plan-disciplina').value,
-                    metodologia: document.getElementById('plan-metodologia').value
-                });
-                alert("Diário Salvo!");
-                await registrarLog("Salvou Diário/Planejamento");
-                window.carregarPlanejamento();
-            } catch(e){ alert("Erro ao salvar."); } finally { loading(false); }
-        };
+            if (!idProf || !idLista) {
+                console.warn("⚠️ IDs SophiA ausentes. Não é possível sincronizar.");
+                return false;
+            }
 
-        window.excluirPlanejamento = async () => {
-            if(!confirm("Excluir o registro deste dia?")) return;
-            if(prompt("Senha Mestra:") !== SENHAS.EDICAO) return alert("Senha incorreta.");
-            loading(true);
-            try {
-                await deleteDoc(doc(db, "planejamentos", usuarioAtual.turma.replace(/\s/g,'')+"_"+document.getElementById('data-plan').value));
-                alert("Excluído."); window.carregarPlanejamento();
-            } catch(e){ alert("Erro (talvez não exista registro)."); } finally { loading(false); }
-        };
+            // Monta o payload com a marcação REAL de presença
+            const payload = {
+                codigoProfessor: parseInt(idProf),
+                quantidadeAula: 1,
+                codigoListaChamada: parseInt(idLista),
+                status: 1,
+                alunos: listaAlunosCache
+                    .filter(a => !a.exAluno)
+                    .map(aluno => ({
+                        codigoListaChamadaAula: parseInt(aluno.codigoListaChamadaAula) || 0,
+                        codigoMatricula: parseInt(aluno.id),
+                        falta: aluno.presenca ? 0 : 1, // 0 = presente, 1 = falta
+                        ocorrencias: []
+                    }))
+            };
 
-        window.desbloquearEdicao = () => {
-            if(prompt("Senha Mestra:") === SENHAS.EDICAO) {
-                document.querySelectorAll('.input-plan').forEach(i => i.disabled=false);
-                document.getElementById('btn-unlock').style.display='none';
-            } else alert("Senha errada.");
-        };
+            console.log("📡 Payload SophiA:", JSON.stringify(payload, null, 2));
 
-        // --- ADMIN ---
-        window.validarAcessoCadastro = () => {
-            if(prompt("Digite a senha de secretaria para criar acessos:") === SENHAS.CADASTRO) {
-                window.showView('cadastro');
-            } else alert("Acesso negado.");
-        };
+            const response = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Token': token,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
 
-        window.alternarTipoCadastro = () => {
-            const v = document.getElementById('cad-tipo').value;
-            document.getElementById('area-select-unica').classList.toggle('hidden', v === 'coordenador');
-            document.getElementById('area-select-coord').classList.toggle('hidden', v === 'professor');
-        };
+            if (!response.ok) {
+                const erroTxt = await response.text();
+                console.error("❌ SophiA recusou:", erroTxt);
+                return false;
+            }
 
-        window.verificarPerfilCustomizado = () => {
-            const v = document.getElementById('cad-perfil-coord').value;
-            document.getElementById('container-checkboxes').classList.toggle('hidden', v !== 'CUSTOM');
-        };
+            console.log("✅ Frequência enviada ao SophiA com sucesso!");
+            return true;
+        } catch (e) {
+            console.error("❌ Falha na comunicação com SophiA:", e);
+            return false;
+        }
+    };
 
-        window.fazerCadastro = async () => {
-            const nome = document.getElementById('cad-nome').value.trim();
-            const email = document.getElementById('cad-email').value.trim();
-            const senha = document.getElementById('cad-senha').value;
-            const tipo = document.getElementById('cad-tipo').value;
-            if(!nome || !email || !senha) return alert("Preencha tudo.");
-            
-            let turma = "", acessos = null;
-            if(tipo === 'professor') {
-                turma = document.getElementById('cad-turma-unica').value;
-                if(!turma) return alert("Selecione a turma.");
+    // ==========================================
+    // ESTRUTURA DE TURMAS E PERFIS
+    // ==========================================
+    const ESTRUTURA_TURMAS = {
+        "Berçário": [{ nome: "Berçário", letras: ["A","B"] }],
+        "Infantil 1": [{ nome: "Infantil 1", letras: ["A","B","C","D","E","F","G","I"] }],
+        "Infantil 2": [{ nome: "Infantil 2", letras: ["A","B","C","D","E","F","G","I","J"] }],
+        "Infantil 3": [{ nome: "Infantil 3", letras: ["A","B","C","D","E","F","G","H","I","J"] }],
+        "Infantil 4": [{ nome: "Infantil 4", letras: ["A","B","C","D","E","F","G","I","J"] }],
+        "Infantil 5": [{ nome: "Infantil 5", letras: ["A","B","C","D","E","F","G","I"] }],
+        "Fundamental 1": [
+            { nome: "1º Ano", letras: ["A","B","C","D","I"] },
+            { nome: "2º Ano", letras: ["A","B","C","D","I"] },
+            { nome: "3º Ano", letras: ["A","B","C","D","I"] },
+            { nome: "4º Ano", letras: ["A","B","C","I"] },
+            { nome: "5º Ano", letras: ["A","B","C","I"] }
+        ],
+        "Integral": [{ nome: "Integral", letras: ["1","2"] }],
+        "Atividades Extras": [
+            { nome: "Futsal", letras: ["A","B","C"] },
+            { nome: "Dança", letras: ["A","B","C"] },
+            { nome: "Ginástica Rítmica", letras: ["A","B"] },
+            { nome: "Judô", letras: ["A","B"] }
+        ]
+    };
+
+    const PERFIS_COORDENACAO = {
+        "GERAL": "ALL",
+        "CRISTIANE": ["Berçário A","Berçário B","Infantil 1 A","Infantil 1 B","Infantil 1 C","Infantil 1 D","Infantil 1 E","Infantil 1 F","Infantil 1 G","Infantil 1 I","Infantil 2 A","Infantil 2 B","Infantil 2 C","Infantil 2 D","Infantil 2 E","Infantil 2 F","Infantil 2 G","Infantil 2 I","Infantil 2 J"],
+        "ADNA": ["2º Ano A","2º Ano B","2º Ano C","2º Ano D","2º Ano I","3º Ano A","3º Ano B","3º Ano C","3º Ano D","3º Ano I","4º Ano A","4º Ano B","4º Ano C","4º Ano I","5º Ano A","5º Ano B","5º Ano C","5º Ano I"],
+        "NAYARA": ["Infantil 3 A","Infantil 3 B","Infantil 3 C","Infantil 3 D","Infantil 3 E","Infantil 3 F","Infantil 3 G","Infantil 3 H"],
+        "LUDMILLA": ["Infantil 3 I","Infantil 3 J","Infantil 4 I","Infantil 4 J","Infantil 5 A","Infantil 5 B","Infantil 5 C","Infantil 5 D","Infantil 5 E","Infantil 5 F","Infantil 5 G","Infantil 5 I","1º Ano I"],
+        "ELIONEIDE": ["Infantil 4 A","Infantil 4 B","Infantil 4 C","Infantil 4 D","Infantil 4 E","Infantil 4 F","Infantil 4 G"],
+        "SAVIA": ["1º Ano A","1º Ano B","1º Ano C","1º Ano D"],
+        "COORD_ESPORTES": ["Futsal A","Dança A","Ginástica Rítmica A","Judô A"],
+        "SISTEMA INTEGRAL": ["Integral 1","Integral 2"]
+    };
+
+    // ==========================================
+    // INIT
+    // ==========================================
+    window.onload = () => {
+        carregarOpcoesTurma();
+        document.getElementById('data-freq').value = getHoje();
+        document.getElementById('data-plan').value = getHoje();
+        ['login-email','login-senha'].forEach(id => {
+            document.getElementById(id).addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') window.fazerLogin();
+            });
+        });
+
+        // Verifica se é página de assinatura (via hash)
+        verificarPaginaAssinatura();
+
+        // Inicializa canvas de assinatura
+        inicializarAssinaturas();
+    };
+
+    function verificarPaginaAssinatura() {
+        const hash = window.location.hash;
+        if (hash.startsWith('#assinar/')) {
+            const idAtend = hash.replace('#assinar/', '');
+            carregarDocParaFamiliaAssinar(idAtend);
+        }
+    }
+
+    // ==========================================
+    // VIEWS
+    // ==========================================
+    window.showView = (viewName) => {
+        const views = { login: 'view-login', cadastro: 'view-cadastro', coord: 'view-coord', app: 'app-painel' };
+        Object.values(views).forEach(id => {
+            const el = document.getElementById(id);
+            el.classList.add('hidden');
+            el.style.display = '';
+        });
+        const el = document.getElementById(views[viewName] || views.login);
+        el.classList.remove('hidden');
+        if (viewName === 'app') el.style.display = 'flex';
+        else if (viewName === 'coord') el.style.display = 'flex';
+    };
+
+    window.mudarAba = (aba) => {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+        document.getElementById('tab-' + aba).classList.remove('hidden');
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        document.getElementById('nav-' + aba).classList.add('active');
+    };
+
+    // ==========================================
+    // LOGIN / LOGOUT
+    // ==========================================
+    window.fazerLogin = async () => {
+        const em = document.getElementById('login-email').value.trim();
+        const se = document.getElementById('login-senha').value;
+        if (!em || !se) return alert("Preencha e-mail e senha.");
+        loading(true);
+        try {
+            const s = await getDocs(query(collection(db, "professores"), where("email","==",em), where("senha","==",se)));
+            if (s.empty) return alert("Credenciais inválidas.");
+            const data = s.docs[0].data();
+            if (data.acessos) {
+                perfilCoord = { nome: data.nome, acessos: data.acessos, perfil: data.turma };
+                ehCoordenacao = true;
+                montarPainelCoord();
+                window.showView('coord');
             } else {
-                const perf = document.getElementById('cad-perfil-coord').value;
-                if(!perf) return alert("Selecione o perfil.");
-                turma = perf;
-                if(perf === 'CUSTOM') {
-                    const sel = Array.from(document.querySelectorAll('#container-checkboxes input:checked')).map(cb => cb.value);
-                    if(sel.length === 0) return alert("Selecione as turmas.");
-                    acessos = sel;
-                } else {
-                    acessos = PERFIS_COORDENACAO[perf];
+                ehCoordenacao = false;
+                usuarioAtual = { nome: data.nome, turma: data.turma, email: em };
+                await entrarTurma(data.turma, data.nome);
+            }
+            await registrarLog("Fez Login");
+        } catch(e) { alert("Erro de conexão."); console.error(e); }
+        finally { loading(false); }
+    };
+
+    window.fazerLogout = () => {
+        registrarLog("Fez Logout");
+        usuarioAtual = null; perfilCoord = null; ehCoordenacao = false;
+        sophiaToken = null;
+        document.getElementById('login-senha').value = '';
+        window.showView('login');
+    };
+
+    // ==========================================
+    // COORD
+    // ==========================================
+    function montarPainelCoord() {
+        const container = document.getElementById('container-turmas');
+        container.innerHTML = "";
+        const acessos = perfilCoord.acessos;
+        const isGeral = acessos === "ALL";
+        for (const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) {
+            ls.forEach(se => se.letras.forEach(l => {
+                const nomeTurma = `${se.nome} ${l}`;
+                if (isGeral || acessos.includes(nomeTurma)) {
+                    const div = document.createElement('div');
+                    div.className = 'card-turma';
+                    div.innerHTML = `<strong>${se.nome}</strong><small>Turma ${l}</small>`;
+                    div.onclick = () => {
+                        usuarioAtual = { nome: perfilCoord.nome + " (Coord)", turma: nomeTurma };
+                        document.getElementById('btn-voltar-coord').classList.remove('hidden');
+                        entrarTurma(nomeTurma, usuarioAtual.nome);
+                    };
+                    container.appendChild(div);
+                }
+            }));
+        }
+    }
+
+    window.voltarParaCoord = () => { usuarioAtual = perfilCoord; window.showView('coord'); };
+
+    // ==========================================
+    // ENTRAR NA TURMA
+    // ==========================================
+    async function entrarTurma(turma, nomeProf) {
+        document.getElementById('display-turma-nome').innerText = nomeProf.split(' ')[0];
+        window.showView('app');
+        window.mudarAba('freq');
+        loading(true);
+
+        // Mostra/oculta coluna de atendimento
+        const thAtend = document.getElementById('th-atend');
+        if (ehCoordenacao) {
+            thAtend.classList.remove('hidden');
+        } else {
+            thAtend.classList.add('hidden');
+        }
+
+        const sucessoSophia = await window.buscarAlunosSophia(turma, nomeProf);
+        if (sucessoSophia) {
+            document.getElementById('display-turma-badge').innerText = turma + " ✦ SOPHIA";
+        } else {
+            document.getElementById('display-turma-badge').innerText = turma + " ✦ LOCAL";
+            await carregarAlunosBase();
+        }
+        loading(false);
+
+        await window.carregarFrequencia();
+        await window.carregarPlanejamento();
+    }
+
+    async function carregarAlunosBase() {
+        try {
+            const q = query(collection(db, "alunos"), where("turma","==",usuarioAtual.turma));
+            const snap = await getDocs(q);
+            listaAlunosCache = [];
+            snap.forEach(d => listaAlunosCache.push({id: d.id, ...d.data()}));
+            listaAlunosCache.sort((a,b) => a.nome.localeCompare(b.nome));
+        } catch(e) { console.error(e); }
+    }
+
+    // ==========================================
+    // RENDERIZAR TABELA
+    // ==========================================
+    function renderizarTabelaAlunos(listaExibicao, faltosos = []) {
+        const tbody = document.getElementById('tbody-alunos');
+        const listaMob = document.getElementById('mobile-lista');
+        tbody.innerHTML = ""; listaMob.innerHTML = "";
+
+        document.getElementById('empty-msg').style.display = listaExibicao.length === 0 ? 'block' : 'none';
+
+        listaExibicao.forEach((a, i) => {
+            const presente = !faltosos.includes(a.nome);
+            a.presenca = presente;
+
+            const btnClass = a.exAluno ? 'ex-btn' : (presente ? 'presente' : 'ausente');
+            const btnText = a.exAluno ? (a.statusHistorico ? 'Presente' : 'Ausente') : (presente ? 'Presente' : 'Ausente');
+            const onClick = a.exAluno ? '' : `onclick="window.alternarPresenca(this, ${i})"`;
+            const tagRemovido = a.exAluno ? '<span class="texto-removido"> (Ex-Aluno)</span>' : '';
+
+            const btnAtend = ehCoordenacao ? `<button onclick="window.abrirAtendimento('${a.nome}', ${i})" style="background:var(--sec); color:white; border:none; border-radius:6px; padding:5px 10px; font-size:0.75rem; font-weight:700; cursor:pointer;" title="Registrar Atendimento">📋</button>` : '';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="color:var(--text-3); font-weight:600;">${i+1}</td>
+                    <td style="font-weight:500;">${a.nome}${tagRemovido}</td>
+                    <td style="text-align:center">
+                        <button class="toggle-btn ${btnClass}" ${onClick}>${btnText}</button>
+                    </td>
+                    ${ehCoordenacao ? `<td style="text-align:center" class="no-print">${btnAtend}</td>` : ''}
+                    <td class="no-print">
+                        <button onclick="window.apagarAluno('${a.id}')" style="background:var(--danger-light); color:var(--danger); border:none; border-radius:6px; padding:5px 8px; font-size:0.75rem; font-weight:700; cursor:pointer;" ${a.exAluno ? 'disabled style="opacity:0.4"' : ''}>🗑️</button>
+                    </td>
+                </tr>`;
+
+            listaMob.innerHTML += `
+                <div class="student-card status-${btnClass}" id="card-${i}">
+                    <div class="student-info">
+                        <strong>${i+1}. ${a.nome}${tagRemovido}</strong>
+                    </div>
+                    <div class="student-card-actions">
+                        ${ehCoordenacao ? `<button onclick="window.abrirAtendimento('${a.nome}', ${i})" style="background:var(--sec); color:white; border:none; border-radius:6px; padding:7px 10px; font-size:0.75rem; font-weight:700;">📋</button>` : ''}
+                        <button class="toggle-btn ${btnClass}" ${onClick}>${btnText}</button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    window.alternarPresenca = (btn, i) => {
+        const isPres = btn.innerText === "Presente";
+        btn.className = `toggle-btn ${isPres ? 'ausente' : 'presente'}`;
+        btn.innerText = isPres ? "Ausente" : "Presente";
+        const card = document.getElementById(`card-${i}`);
+        if (card) card.className = `student-card status-${isPres ? 'ausente' : 'presente'}`;
+        if (listaAlunosCache[i]) listaAlunosCache[i].presenca = !isPres;
+    };
+
+    // ==========================================
+    // CARREGAR FREQUÊNCIA
+    // ==========================================
+    window.carregarFrequencia = async () => {
+        const dt = document.getElementById('data-freq').value;
+        if (dt > getHoje()) {
+            alert("Data futura não permitida.");
+            document.getElementById('data-freq').value = getHoje();
+            return;
+        }
+        loading(true);
+        try {
+            const q = query(collection(db,"frequencia"), where("turma","==",usuarioAtual.turma), where("data","==",dt));
+            const snap = await getDocs(q);
+            let listaFinal = [...listaAlunosCache];
+            let faltosos = [];
+            if (!snap.empty) {
+                const dados = snap.docs[0].data();
+                if (dados.detalhes) {
+                    faltosos = dados.detalhes.filter(d => !d.presente).map(d => d.nome);
+                    dados.detalhes.forEach(hist => {
+                        const existe = listaFinal.find(a => a.nome === hist.nome);
+                        if (!existe) {
+                            listaFinal.push({ nome: hist.nome, id: null, exAluno: true, statusHistorico: hist.presente });
+                        }
+                    });
                 }
             }
-            
-            loading(true);
-            try {
-                await addDoc(collection(db, "professores"), { nome, email, senha, turma, acessos });
-                alert("Criado!"); window.showView('login');
-            } catch(e) { alert("Erro ao criar."); } finally { loading(false); }
-        };
+            listaFinal.sort((a,b) => a.nome.localeCompare(b.nome));
+            renderizarTabelaAlunos(listaFinal, faltosos);
+        } catch(e) { console.error(e); }
+        finally { loading(false); }
+    };
 
-        window.abrirAreaAdmin = () => {
-            if(prompt("Senha Mestra da Secretaria:") === SENHAS.SECRETARIA) document.getElementById('modal-admin').style.display = 'flex';
-            else alert("Senha incorreta.");
-        };
+    // ==========================================
+    // SALVAR CHAMADA GERAL
+    // ==========================================
+    window.salvarChamadaGeral = async () => {
+        const data = document.getElementById('data-freq').value;
+        if (!data) return alert("Selecione uma data antes de salvar.");
+        if (!listaAlunosCache || listaAlunosCache.length === 0) return alert("Nenhum aluno encontrado para salvar.");
 
-        window.importarAlunosMassa = async () => {
-            const raw = document.getElementById('lista-alunos-massa').value;
-            if(!raw.trim()) return alert("Cole a lista (Nome, Turma).");
-            loading(true);
-            const linhas = raw.split('\n'); let count = 0; const promises = [];
-            for(const l of linhas) {
-                const parts = l.split(',');
-                if(parts.length >= 2) {
-                    const nome = parts[0].trim(); const turma = parts[1].trim();
-                    if(nome && turma) { promises.push(addDoc(collection(db, "alunos"), { nome, turma })); count++; }
-                }
+        // Mostra status
+        const syncDiv = document.getElementById('sync-status');
+        const syncIcon = document.getElementById('sync-icon');
+        const syncText = document.getElementById('sync-text');
+        syncDiv.style.display = 'block';
+        syncIcon.innerText = '⏳';
+        syncText.innerText = 'Salvando no CASA+...';
+
+        loading(true);
+        try {
+            // 1. Salva no Firebase
+            const detalhes = listaAlunosCache.map(a => ({ nome: a.nome, presente: a.presenca }));
+            const idDoc = `${usuarioAtual.turma.replace(/\s/g,'')} _${data}`;
+            await setDoc(doc(db, "frequencia", idDoc), {
+                turma: usuarioAtual.turma,
+                data: data,
+                detalhes: detalhes,
+                professor: usuarioAtual.nome,
+                atualizadoEm: new Date().toISOString()
+            });
+
+            syncIcon.innerText = '🔄';
+            syncText.innerText = 'Sincronizando com SophiA...';
+
+            // 2. Sincroniza com SophiA
+            const sucessoSophia = await window.salvarNoSophiA_Interno();
+
+            await registrarLog("Salvou Chamada");
+
+            if (sucessoSophia) {
+                syncIcon.innerText = '✅';
+                syncText.innerText = 'Chamada salva no CASA+ e sincronizada com o SophiA!';
+                syncText.style.color = 'var(--success)';
+                setTimeout(() => { syncDiv.style.display = 'none'; syncText.style.color = ''; }, 4000);
+            } else {
+                syncIcon.innerText = '⚠️';
+                syncText.innerText = 'Salvo no CASA+. SophiA não disponível no momento.';
+                syncText.style.color = 'var(--warning)';
+                setTimeout(() => { syncDiv.style.display = 'none'; syncText.style.color = ''; }, 5000);
             }
-            await Promise.all(promises);
-            loading(false); alert(`${count} alunos importados com sucesso!`); document.getElementById('lista-alunos-massa').value = "";
-        };
+        } catch(e) {
+            console.error(e);
+            syncIcon.innerText = '❌';
+            syncText.innerText = 'Erro ao salvar: ' + e.message;
+            syncText.style.color = 'var(--danger)';
+        } finally { loading(false); }
+    };
 
-        window.processarImportacaoProfs = async () => {
-            const raw = document.getElementById('lista-profs-import').value;
-            if(!raw.trim()) return alert("Sem dados.");
-            loading(true);
-            const linhas = raw.split('\n'); let count = 0;
-            for(const l of linhas) {
-                const p = l.split(',');
-                if(p.length >= 4) {
-                    await addDoc(collection(db, "professores"), { nome: p[0].trim(), turma: p[1].trim(), email: p[2].trim(), senha: p[3].trim(), acessos: null });
-                    count++;
+    // ==========================================
+    // RELATÓRIOS
+    // ==========================================
+    window.abrirRelatorioMensal = () => {
+        const hoje = new Date().toISOString().slice(0,7);
+        setTimeout(() => {
+            document.getElementById('mes-relatorio-inicio').value = hoje;
+            document.getElementById('mes-relatorio-fim').value = hoje;
+        }, 50);
+        document.getElementById('resultado-relatorio').innerHTML = "";
+        document.getElementById('modal-relatorio').style.display = 'flex';
+    };
+
+    window.imprimirRelatorio = () => {
+        const c = document.getElementById('resultado-relatorio').innerHTML;
+        if (!c || c === "Processando...") return alert("Gere o relatório primeiro!");
+        document.body.classList.add('printing-report');
+        window.print();
+        setTimeout(() => document.body.classList.remove('printing-report'), 1000);
+    };
+
+    window.gerarRelatorioFaltas = async () => {
+        const inicio = document.getElementById('mes-relatorio-inicio').value;
+        const fim = document.getElementById('mes-relatorio-fim').value;
+        if (!inicio || !fim) return alert("Selecione o período.");
+        const divRes = document.getElementById('resultado-relatorio');
+        divRes.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-3);">⏳ Processando...</div>';
+        loading(true);
+        try {
+            const dataStart = inicio + "-01", dataEnd = fim + "-31";
+            const snap = await getDocs(query(collection(db,"frequencia"), where("turma","==",usuarioAtual.turma)));
+            let mapaFaltas = {};
+            listaAlunosCache.forEach(a => mapaFaltas[a.nome] = 0);
+            let dias = 0;
+            snap.forEach(d => {
+                const dd = d.data();
+                if (dd.data >= dataStart && dd.data <= dataEnd) {
+                    dias++;
+                    if (dd.detalhes) dd.detalhes.forEach(det => {
+                        if (mapaFaltas[det.nome] === undefined) mapaFaltas[det.nome] = 0;
+                        if (!det.presente) mapaFaltas[det.nome]++;
+                    });
                 }
-            }
-            loading(false); alert(`${count} professores criados.`); document.getElementById('lista-profs-import').value = "";
-        };
+            });
+            const presentes = Object.entries(mapaFaltas).filter(([,f]) => f === 0).length;
+            let html = `
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
+                    <div style="background:var(--primary);color:white;padding:12px;border-radius:var(--radius);text-align:center;">
+                        <div style="font-size:1.5rem;font-weight:800;">${dias}</div>
+                        <div style="font-size:0.75rem;opacity:0.9;">Dias com Chamada</div>
+                    </div>
+                    <div style="background:var(--success);color:white;padding:12px;border-radius:var(--radius);text-align:center;">
+                        <div style="font-size:1.5rem;font-weight:800;">${presentes}</div>
+                        <div style="font-size:0.75rem;opacity:0.9;">Sem Faltas</div>
+                    </div>
+                    <div style="background:var(--danger);color:white;padding:12px;border-radius:var(--radius);text-align:center;">
+                        <div style="font-size:1.5rem;font-weight:800;">${Object.values(mapaFaltas).filter(f=>f>0).length}</div>
+                        <div style="font-size:0.75rem;opacity:0.9;">Com Faltas</div>
+                    </div>
+                </div>
+                <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
+                    <thead><tr style="background:var(--surface-2);">
+                        <th style="text-align:left;padding:10px 12px;font-weight:700;color:var(--text-2);border-bottom:2px solid var(--border);">Aluno</th>
+                        <th style="text-align:center;padding:10px 12px;font-weight:700;color:var(--text-2);border-bottom:2px solid var(--border);">Faltas</th>
+                    </tr></thead><tbody>`;
+            Object.entries(mapaFaltas).sort((a,b) => a[0].localeCompare(b[0])).forEach(([n,f]) => {
+                html += `<tr>
+                    <td style="padding:9px 12px;border-bottom:1px solid var(--border);font-weight:500;">${n}</td>
+                    <td style="text-align:center;padding:9px 12px;border-bottom:1px solid var(--border);">
+                        ${f > 0 ? `<span style="background:var(--danger-light);color:var(--danger);padding:2px 10px;border-radius:12px;font-weight:700;">${f}</span>` : `<span style="background:var(--success-light);color:var(--success);padding:2px 10px;border-radius:12px;font-weight:700;">0</span>`}
+                    </td>
+                </tr>`;
+            });
+            html += `</tbody></table>`;
+            divRes.innerHTML = html;
+        } catch(e) { divRes.innerHTML = "Erro ao processar."; console.error(e); }
+        finally { loading(false); }
+    };
 
-        window.removerDuplicados = async () => {
-            if(!confirm("Isso irá verificar TODOS os alunos e apagar as duplicatas (mesmo nome e mesma turma). Deseja continuar?")) return;
-            loading(true);
-            try {
-                const q = query(collection(db, "alunos"));
-                const snap = await getDocs(q);
-                const seen = new Set(); const duplicates = [];
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    const key = `${data.nome.trim().toLowerCase()}|${data.turma}`;
-                    if (seen.has(key)) duplicates.push(doc.id); else seen.add(key);
+    window.exportarExcel = async () => {
+        const inicio = document.getElementById('mes-relatorio-inicio').value;
+        const fim = document.getElementById('mes-relatorio-fim').value;
+        if (!inicio || !fim) return alert("Selecione os meses primeiro.");
+        const snap = await getDocs(query(collection(db,"frequencia"), where("turma","==",usuarioAtual.turma)));
+        let mapaFaltas = {};
+        listaAlunosCache.forEach(a => mapaFaltas[a.nome] = 0);
+        snap.forEach(d => {
+            const dd = d.data();
+            if (dd.data >= inicio+"-01" && dd.data <= fim+"-31" && dd.detalhes)
+                dd.detalhes.forEach(det => {
+                    if (mapaFaltas[det.nome] === undefined) mapaFaltas[det.nome] = 0;
+                    if (!det.presente) mapaFaltas[det.nome]++;
                 });
-                if (duplicates.length === 0) { alert("Nenhuma duplicata encontrada."); } 
-                else {
-                    const promises = duplicates.map(id => deleteDoc(doc(db, "alunos", id)));
-                    await Promise.all(promises);
-                    alert(`${duplicates.length} registros duplicados foram removidos!`);
+        });
+        let csv = ["Aluno,Total de Faltas"];
+        Object.entries(mapaFaltas).sort((a,b) => a[0].localeCompare(b[0])).forEach(([n,f]) => csv.push(`"${n}",${f}`));
+        const blob = new Blob(["\uFEFF" + csv.join("\n")], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `Faltas_${usuarioAtual.turma}_${Date.now()}.csv`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    };
+
+    // ==========================================
+    // PLANEJAMENTO
+    // ==========================================
+    window.carregarPlanejamento = async () => {
+        const dt = document.getElementById('data-plan').value;
+        document.querySelectorAll('.input-plan').forEach(i => { i.value=""; i.disabled=true; });
+        document.getElementById('btn-unlock').style.display='none';
+        try {
+            const s = await getDocs(query(collection(db,"planejamentos"), where("turma","==",usuarioAtual.turma), where("data","==",dt)));
+            if (!s.empty) {
+                const d = s.docs[0].data();
+                document.getElementById('plan-disciplina').value = d.disciplina;
+                document.getElementById('plan-metodologia').value = d.metodologia;
+                document.getElementById('btn-unlock').style.display='inline-block';
+            } else {
+                document.querySelectorAll('.input-plan').forEach(i => i.disabled=false);
+            }
+        } catch(e) { console.error(e); }
+    };
+
+    window.salvarPlanejamento = async () => {
+        loading(true);
+        const dt = document.getElementById('data-plan').value;
+        try {
+            await setDoc(doc(db,"planejamentos",usuarioAtual.turma.replace(/\s/g,'')+"_"+dt), {
+                data: dt, turma: usuarioAtual.turma,
+                disciplina: document.getElementById('plan-disciplina').value,
+                metodologia: document.getElementById('plan-metodologia').value
+            });
+            alert("✅ Diário Salvo!");
+            await registrarLog("Salvou Diário");
+            window.carregarPlanejamento();
+        } catch(e) { alert("Erro ao salvar."); }
+        finally { loading(false); }
+    };
+
+    window.excluirPlanejamento = async () => {
+        if (!confirm("Excluir o registro deste dia?")) return;
+        if (prompt("Senha Mestra:") !== SENHAS.EDICAO) return alert("Senha incorreta.");
+        loading(true);
+        try {
+            await deleteDoc(doc(db,"planejamentos",usuarioAtual.turma.replace(/\s/g,'')+"_"+document.getElementById('data-plan').value));
+            alert("Excluído."); window.carregarPlanejamento();
+        } catch(e) { alert("Registro não encontrado."); }
+        finally { loading(false); }
+    };
+
+    window.desbloquearEdicao = () => {
+        if (prompt("Senha Mestra:") === SENHAS.EDICAO) {
+            document.querySelectorAll('.input-plan').forEach(i => i.disabled=false);
+            document.getElementById('btn-unlock').style.display='none';
+        } else alert("Senha errada.");
+    };
+
+    // ==========================================
+    // CADASTRO
+    // ==========================================
+    function carregarOpcoesTurma() {
+        const s1 = document.getElementById('cad-turma-unica');
+        const contC = document.getElementById('container-checkboxes');
+        s1.innerHTML = '<option value="" disabled selected>Selecione a Turma</option>';
+        contC.innerHTML = '';
+        for (const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) {
+            const og = document.createElement('optgroup'); og.label = g;
+            ls.forEach(se => se.letras.forEach(l => {
+                const nt = `${se.nome} ${l}`;
+                og.innerHTML += `<option value="${nt}">${nt}</option>`;
+                contC.innerHTML += `<label style="display:block;margin-bottom:4px;font-size:0.82rem;"><input type="checkbox" value="${nt}" style="margin-right:6px;"> ${nt}</label>`;
+            }));
+            s1.appendChild(og);
+        }
+    }
+
+    window.validarAcessoCadastro = () => {
+        if (prompt("Senha de secretaria:") === SENHAS.CADASTRO) window.showView('cadastro');
+        else alert("Acesso negado.");
+    };
+
+    window.alternarTipoCadastro = () => {
+        const v = document.getElementById('cad-tipo').value;
+        document.getElementById('area-select-unica').classList.toggle('hidden', v === 'coordenador');
+        document.getElementById('area-select-coord').classList.toggle('hidden', v === 'professor');
+    };
+
+    window.verificarPerfilCustomizado = () => {
+        const v = document.getElementById('cad-perfil-coord').value;
+        document.getElementById('container-checkboxes').classList.toggle('hidden', v !== 'CUSTOM');
+    };
+
+    window.fazerCadastro = async () => {
+        const nome = document.getElementById('cad-nome').value.trim();
+        const email = document.getElementById('cad-email').value.trim();
+        const senha = document.getElementById('cad-senha').value;
+        const tipo = document.getElementById('cad-tipo').value;
+        if (!nome || !email || !senha) return alert("Preencha todos os campos.");
+        let turma = "", acessos = null;
+        if (tipo === 'professor') {
+            turma = document.getElementById('cad-turma-unica').value;
+            if (!turma) return alert("Selecione a turma.");
+        } else {
+            const perf = document.getElementById('cad-perfil-coord').value;
+            if (!perf) return alert("Selecione o perfil.");
+            turma = perf;
+            if (perf === 'CUSTOM') {
+                const sel = Array.from(document.querySelectorAll('#container-checkboxes input:checked')).map(cb => cb.value);
+                if (sel.length === 0) return alert("Selecione as turmas.");
+                acessos = sel;
+            } else {
+                acessos = PERFIS_COORDENACAO[perf];
+            }
+        }
+        loading(true);
+        try {
+            await addDoc(collection(db,"professores"), { nome, email, senha, turma, acessos });
+            alert("✅ Conta criada com sucesso!"); window.showView('login');
+        } catch(e) { alert("Erro ao criar conta."); }
+        finally { loading(false); }
+    };
+
+    // ==========================================
+    // ADMIN
+    // ==========================================
+    window.abrirAreaAdmin = () => {
+        if (prompt("Senha Mestra da Secretaria:") === SENHAS.SECRETARIA)
+            document.getElementById('modal-admin').style.display = 'flex';
+        else alert("Senha incorreta.");
+    };
+
+    window.importarAlunosMassa = async () => {
+        const raw = document.getElementById('lista-alunos-massa').value;
+        if (!raw.trim()) return alert("Cole a lista primeiro.");
+        loading(true);
+        const linhas = raw.split('\n'); let count = 0; const promises = [];
+        for (const l of linhas) {
+            const parts = l.split(',');
+            if (parts.length >= 2) {
+                const nome = parts[0].trim(), turma = parts[1].trim();
+                if (nome && turma) { promises.push(addDoc(collection(db,"alunos"), { nome, turma })); count++; }
+            }
+        }
+        await Promise.all(promises);
+        loading(false);
+        alert(`✅ ${count} alunos importados!`);
+        document.getElementById('lista-alunos-massa').value = "";
+    };
+
+    window.processarImportacaoProfs = async () => {
+        const raw = document.getElementById('lista-profs-import').value;
+        if (!raw.trim()) return alert("Sem dados.");
+        loading(true); let count = 0;
+        for (const l of raw.split('\n')) {
+            const p = l.split(',');
+            if (p.length >= 4) {
+                await addDoc(collection(db,"professores"), { nome: p[0].trim(), turma: p[1].trim(), email: p[2].trim(), senha: p[3].trim(), acessos: null });
+                count++;
+            }
+        }
+        loading(false); alert(`✅ ${count} professores criados.`);
+        document.getElementById('lista-profs-import').value = "";
+    };
+
+    window.removerDuplicados = async () => {
+        if (!confirm("Verificar e apagar duplicatas?")) return;
+        loading(true);
+        try {
+            const snap = await getDocs(query(collection(db,"alunos")));
+            const seen = new Set(), dups = [];
+            snap.forEach(d => {
+                const dd = d.data();
+                const key = `${dd.nome.trim().toLowerCase()}|${dd.turma}`;
+                if (seen.has(key)) dups.push(d.id); else seen.add(key);
+            });
+            if (dups.length === 0) alert("Nenhuma duplicata encontrada.");
+            else {
+                await Promise.all(dups.map(id => deleteDoc(doc(db,"alunos",id))));
+                alert(`✅ ${dups.length} duplicatas removidas!`);
+            }
+        } catch(e) { alert("Erro."); }
+        finally { loading(false); }
+    };
+
+    window.limparBancoAlunos = async () => {
+        if (prompt("Digite 'APAGAR TUDO' para confirmar:") !== "APAGAR TUDO") return;
+        loading(true);
+        try {
+            const snap = await getDocs(collection(db,"alunos"));
+            await Promise.all(snap.docs.map(d => deleteDoc(doc(db,"alunos",d.id))));
+            alert("Todos os alunos deletados.");
+        } catch(e) { alert("Erro."); }
+        finally { loading(false); }
+    };
+
+    window.apagarAluno = async (id) => {
+        if (!confirm("Apagar este aluno definitivamente?")) return;
+        loading(true);
+        try {
+            await deleteDoc(doc(db,"alunos",id));
+            await carregarAlunosBase();
+            renderizarTabelaAlunos(listaAlunosCache);
+        } catch(e) { alert("Erro."); }
+        finally { loading(false); }
+    };
+
+    // ==========================================
+    // HISTÓRICO
+    // ==========================================
+    window.abrirHistorico = async (tipo) => {
+        loading(true);
+        try {
+            const div = document.getElementById('modal-lista-conteudo');
+            div.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-3);">⏳ Carregando...</div>';
+            document.getElementById('modal-historico').style.display = 'flex';
+            const coll = tipo === 'freq' ? "frequencia" : "planejamentos";
+            const q = query(collection(db,coll), where("turma","==",usuarioAtual.turma), orderBy("data","desc"), limit(10));
+            const snap = await getDocs(q);
+            let html = "";
+            snap.forEach(d => {
+                const dd = d.data();
+                html += `<div class="hist-item">
+                    <div><span class="hist-date">📅 ${formatData(dd.data)}</span></div>
+                    <button class="btn-ver" onclick="window.carregarDoHist('${dd.data}','${tipo}')">Ver</button>
+                </div>`;
+            });
+            div.innerHTML = html || '<p style="text-align:center;color:var(--text-3);padding:20px;">Nenhum registro encontrado.</p>';
+        } catch(e) { document.getElementById('modal-lista-conteudo').innerHTML = "Erro ao carregar."; }
+        finally { loading(false); }
+    };
+
+    window.carregarDoHist = (data, tipo) => {
+        document.getElementById('modal-historico').style.display = 'none';
+        document.getElementById(tipo === 'freq' ? 'data-freq' : 'data-plan').value = data;
+        if (tipo === 'freq') window.carregarFrequencia(); else window.carregarPlanejamento();
+    };
+
+    window.fecharHistorico = () => document.getElementById('modal-historico').style.display = 'none';
+
+    window.imprimirTela = (tipo) => {
+        document.getElementById('print-header').style.display = 'block';
+        document.getElementById('p-turma').innerText = usuarioAtual.turma;
+        document.getElementById('p-data').innerText = formatData(document.getElementById(tipo==='freq'?'data-freq':'data-plan').value);
+        const clone = document.getElementById('tab-' + tipo).cloneNode(true);
+        const pc = document.createElement('div'); pc.id = 'print-container';
+        pc.appendChild(document.getElementById('print-header').cloneNode(true));
+        pc.appendChild(clone);
+        document.body.appendChild(pc);
+        window.print();
+        document.body.removeChild(pc);
+        document.getElementById('print-header').style.display = 'none';
+    };
+
+    // ==========================================
+    // ASSINATURA CANVAS
+    // ==========================================
+    function inicializarAssinaturas() {
+        ['sig-coord', 'sig-familia'].forEach(id => {
+            const canvas = document.getElementById(id);
+            if (!canvas) return;
+            let drawing = false;
+            let lastX, lastY;
+
+            const getPos = (e, canvas) => {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                if (e.touches) {
+                    return {
+                        x: (e.touches[0].clientX - rect.left) * scaleX,
+                        y: (e.touches[0].clientY - rect.top) * scaleY
+                    };
                 }
-            } catch (e) { console.error(e); alert("Erro ao remover duplicados."); } finally { loading(false); }
-        };
+                return {
+                    x: (e.clientX - rect.left) * scaleX,
+                    y: (e.clientY - rect.top) * scaleY
+                };
+            };
 
-        window.limparBancoAlunos = async () => {
-            if(prompt("DIGITE 'APAGAR TUDO' PARA CONFIRMAR EXCLUSÃO DE TODOS OS ALUNOS:") !== "APAGAR TUDO") return;
-            loading(true);
-            try {
-                const snap = await getDocs(collection(db, "alunos"));
-                const p = []; snap.forEach(d => p.push(deleteDoc(doc(db, "alunos", d.id))));
-                await Promise.all(p); alert("Todos os alunos deletados.");
-            } catch(e) { alert("Erro."); } finally { loading(false); }
-        };
+            const ctx = canvas.getContext('2d');
+            ctx.strokeStyle = '#1a2332';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
 
-        window.apagarAluno = async (id) => {
-            if(!confirm("Apagar este aluno definitivamente?")) return;
-            loading(true);
-            try {
-                await deleteDoc(doc(db, "alunos", id));
-                await carregarAlunosBase();
-                renderizarTabelaAlunos(listaAlunosCache);
-            } catch(e) { alert("Erro."); } finally { loading(false); }
-        };
+            const start = (e) => {
+                e.preventDefault();
+                drawing = true;
+                const pos = getPos(e, canvas);
+                lastX = pos.x; lastY = pos.y;
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+            };
 
-        // --- HISTÓRICO ---
-        window.abrirHistorico = async (tipo) => {
-            loading(true);
-            try {
-                const div = document.getElementById('modal-lista-conteudo');
-                div.innerHTML = "Carregando...";
-                document.getElementById('modal-historico').style.display = 'flex';
-                
-                const coll = tipo === 'freq' ? "frequencia" : "planejamentos";
-                const q = query(collection(db, coll), where("turma", "==", usuarioAtual.turma), orderBy("data", "desc"), limit(10));
-                const snap = await getDocs(q);
-                let html = "";
-                snap.forEach(d => {
-                    const dd = d.data();
-                    html += `<div style="border-bottom:1px solid #eee; padding:10px; display:flex; justify-content:space-between;">
-                                <span>${formatData(dd.data)}</span>
-                                <button onclick="window.carregarDoHist('${dd.data}', '${tipo}')" style="background:var(--primary); color:white; border:none; border-radius:4px; padding:5px 10px;">Ver</button>
-                             </div>`;
-                });
-                div.innerHTML = html || "Nenhum registro encontrado.";
-            } catch(e) { console.error(e); document.getElementById('modal-lista-conteudo').innerHTML = "Erro ao carregar histórico."; } finally { loading(false); }
-        };
+            const draw = (e) => {
+                e.preventDefault();
+                if (!drawing) return;
+                const pos = getPos(e, canvas);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+                lastX = pos.x; lastY = pos.y;
+            };
 
-        window.carregarDoHist = (data, tipo) => {
-            document.getElementById('modal-historico').style.display = 'none';
-            document.getElementById(tipo === 'freq' ? 'data-freq' : 'data-plan').value = data;
-            if(tipo === 'freq') window.carregarFrequencia(); else window.carregarPlanejamento();
-        };
+            const stop = (e) => { e.preventDefault(); drawing = false; ctx.beginPath(); };
 
-        window.fecharHistorico = () => document.getElementById('modal-historico').style.display = 'none';
+            canvas.addEventListener('mousedown', start);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stop);
+            canvas.addEventListener('mouseleave', stop);
+            canvas.addEventListener('touchstart', start, { passive: false });
+            canvas.addEventListener('touchmove', draw, { passive: false });
+            canvas.addEventListener('touchend', stop, { passive: false });
+        });
+    }
 
-        window.imprimirTela = (tipo) => {
-            document.getElementById('print-header').classList.remove('hidden');
-            document.getElementById('p-turma').innerText = usuarioAtual.turma;
-            document.getElementById('p-data').innerText = formatData(document.getElementById(tipo === 'freq' ? 'data-freq' : 'data-plan').value);
-            
-            const contentId = tipo === 'freq' ? 'tab-freq' : 'tab-plan';
-            const clone = document.getElementById(contentId).cloneNode(true);
-            
-            const printContainer = document.createElement('div');
-            printContainer.id = 'print-container';
-            printContainer.appendChild(document.getElementById('print-header').cloneNode(true));
-            printContainer.appendChild(clone);
-            
-            document.body.appendChild(printContainer);
-            window.print();
-            
-            document.body.removeChild(printContainer);
-            document.getElementById('print-header').classList.add('hidden');
-        };
+    window.limparAssinatura = (canvasId) => {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    };
 
-    </script>
+    function canvasVazio(canvasId) {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext('2d');
+        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        return !pixels.some(p => p !== 0);
+    }
+
+    // ==========================================
+    // ATENDIMENTO
+    // ==========================================
+    let atendimentoAtual = null;
+
+    window.abrirAtendimento = (nomeAluno, idx) => {
+        if (!ehCoordenacao) return;
+
+        // Reseta o formulário
+        document.getElementById('atend-aluno').value = nomeAluno;
+        document.getElementById('atend-turma').value = usuarioAtual.turma;
+        document.getElementById('atend-professora').value = '';
+        document.getElementById('atend-nascimento').value = '';
+        document.getElementById('atend-turno').value = '';
+        document.getElementById('atend-filiacao').value = '';
+        document.getElementById('atend-objetivos').value = '';
+        document.getElementById('atend-dados-familia').value = '';
+        document.getElementById('atend-dados-escola').value = '';
+        document.getElementById('atend-consideracoes').value = '';
+        document.getElementById('atend-participantes').value = '';
+        document.getElementById('atend-coord-nome').value = usuarioAtual.nome.replace(' (Coord)','');
+
+        const hoje = new Date().toLocaleDateString('pt-BR');
+        document.getElementById('atend-data-header').innerText = `Data: ${hoje}`;
+
+        window.limparAssinatura('sig-coord');
+        document.getElementById('atend-qr-section').style.display = 'none';
+        document.getElementById('atend-acoes').style.display = 'flex';
+        document.getElementById('qrcode-container').innerHTML = '';
+
+        atendimentoAtual = { nomeAluno, idx, data: getHoje() };
+
+        document.getElementById('modal-atendimento').style.display = 'flex';
+    };
+
+    window.fecharAtendimento = () => {
+        document.getElementById('modal-atendimento').style.display = 'none';
+    };
+
+    window.finalizarAtendimento = async () => {
+        const coordNome = document.getElementById('atend-coord-nome').value.trim();
+        if (!coordNome) return alert("Informe o nome da coordenadora.");
+        if (canvasVazio('sig-coord')) return alert("Por favor, assine o documento antes de finalizar.");
+
+        loading(true);
+        try {
+            const sigCoordData = document.getElementById('sig-coord').toDataURL('image/png');
+
+            const atendDoc = {
+                aluno: document.getElementById('atend-aluno').value,
+                turma: document.getElementById('atend-turma').value,
+                turno: document.getElementById('atend-turno').value,
+                professora: document.getElementById('atend-professora').value,
+                filiacao: document.getElementById('atend-filiacao').value,
+                nascimento: document.getElementById('atend-nascimento').value,
+                objetivos: document.getElementById('atend-objetivos').value,
+                dadosFamilia: document.getElementById('atend-dados-familia').value,
+                dadosEscola: document.getElementById('atend-dados-escola').value,
+                consideracoes: document.getElementById('atend-consideracoes').value,
+                participantes: document.getElementById('atend-participantes').value,
+                coordenadora: coordNome,
+                assinaturaCoord: sigCoordData,
+                dataAtendimento: getHoje(),
+                criadoEm: serverTimestamp(),
+                escola: usuarioAtual.turma,
+                status: 'aguardando_familia',
+                assinaturaFamilia: null,
+                nomeFamilia: null
+            };
+
+            const docRef = await addDoc(collection(db, "atendimentos"), atendDoc);
+            const idAtendimento = docRef.id;
+
+            await registrarLog(`Registrou Atendimento: ${atendDoc.aluno}`);
+
+            // Gera link e QR Code
+            const linkBase = window.location.href.split('#')[0];
+            const linkAtendimento = `${linkBase}#assinar/${idAtendimento}`;
+
+            document.getElementById('atend-link-url').href = linkAtendimento;
+            document.getElementById('atend-link-url').innerText = linkAtendimento;
+            document.getElementById('atend-qr-section').style.display = 'block';
+            document.getElementById('atend-acoes').style.display = 'none';
+            document.getElementById('qrcode-container').innerHTML = '';
+
+            new QRCode(document.getElementById('qrcode-container'), {
+                text: linkAtendimento,
+                width: 180,
+                height: 180,
+                colorDark: "#004aad",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+
+            atendimentoAtual.id = idAtendimento;
+            atendimentoAtual.link = linkAtendimento;
+
+        } catch(e) {
+            console.error(e);
+            alert("Erro ao salvar atendimento: " + e.message);
+        } finally { loading(false); }
+    };
+
+    window.copiarLinkAtendimento = () => {
+        if (!atendimentoAtual?.link) return;
+        navigator.clipboard.writeText(atendimentoAtual.link)
+            .then(() => alert("✅ Link copiado!"))
+            .catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = atendimentoAtual.link;
+                document.body.appendChild(ta); ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                alert("✅ Link copiado!");
+            });
+    };
+
+    window.compartilharAtendimento = () => {
+        if (!atendimentoAtual?.link) return;
+        if (navigator.share) {
+            navigator.share({
+                title: `Atendimento — ${atendimentoAtual.nomeAluno}`,
+                text: `Registro de atendimento de ${atendimentoAtual.nomeAluno}. Acesse para assinar e receber sua cópia:`,
+                url: atendimentoAtual.link
+            });
+        } else {
+            window.copiarLinkAtendimento();
+        }
+    };
+
+    window.imprimirAtendimento = () => {
+        document.body.classList.add('printing-atend');
+        window.print();
+        setTimeout(() => document.body.classList.remove('printing-atend'), 1000);
+    };
+
+    // ==========================================
+    // ASSINATURA FAMÍLIA (página pública)
+    // ==========================================
+    async function carregarDocParaFamiliaAssinar(idAtend) {
+        loading(true);
+        try {
+            const docSnap = await getDoc(doc(db, "atendimentos", idAtend));
+            if (!docSnap.exists()) {
+                alert("Documento não encontrado ou link inválido.");
+                loading(false);
+                return;
+            }
+            const data = docSnap.data();
+
+            // Esconde o app e mostra apenas o modal de assinatura
+            document.getElementById('view-login').style.display = 'none';
+
+            let preview = `
+                <h4 style="color:var(--primary);margin-bottom:12px;">📋 Registro de Atendimento</h4>
+                <p><strong>Aluno:</strong> ${data.aluno}</p>
+                <p><strong>Turma:</strong> ${data.turma} | <strong>Turno:</strong> ${data.turno || 'N/A'}</p>
+                <p><strong>Data:</strong> ${formatData(data.dataAtendimento)}</p>
+                <hr style="margin:12px 0; border:none; border-top:1px solid var(--border);">
+                <p><strong>Objetivos:</strong></p>
+                <p style="white-space:pre-wrap;color:var(--text-2);">${data.objetivos || 'N/A'}</p>
+                <p><strong>Dados Família/Clínico:</strong></p>
+                <p style="white-space:pre-wrap;color:var(--text-2);">${data.dadosFamilia || 'N/A'}</p>
+                <p><strong>Dados Escola:</strong></p>
+                <p style="white-space:pre-wrap;color:var(--text-2);">${data.dadosEscola || 'N/A'}</p>
+                <p><strong>Considerações Finais:</strong></p>
+                <p style="white-space:pre-wrap;color:var(--text-2);">${data.consideracoes || 'N/A'}</p>
+                <p><strong>Participantes:</strong></p>
+                <p style="white-space:pre-wrap;color:var(--text-2);">${data.participantes || 'N/A'}</p>
+                <hr style="margin:12px 0; border:none; border-top:1px solid var(--border);">
+                <p><strong>Assinado pela Coordenação:</strong> ${data.coordenadora}</p>
+            `;
+
+            if (data.assinaturaCoord) {
+                preview += `<img src="${data.assinaturaCoord}" style="height:50px;display:block;margin-top:6px;" alt="Assinatura coord">`;
+            }
+
+            if (data.status === 'assinado_familia') {
+                preview += `<div style="background:var(--success-light);color:var(--success);padding:10px 14px;border-radius:var(--radius-sm);margin-top:12px;font-weight:700;">✅ Este documento já foi assinado pela família.</div>`;
+            }
+
+            document.getElementById('familia-doc-preview').innerHTML = preview;
+
+            // Armazena ID para quando assinar
+            window._idAtendParaAssinar = idAtend;
+            window._statusAtend = data.status;
+
+            document.getElementById('modal-assinar-familia').style.display = 'flex';
+        } catch(e) {
+            console.error(e);
+            alert("Erro ao carregar documento.");
+        } finally { loading(false); }
+    }
+
+    window.confirmarAssinaturaFamilia = async () => {
+        if (window._statusAtend === 'assinado_familia') return alert("Este documento já foi assinado.");
+        const nome = document.getElementById('familia-nome').value.trim();
+        if (!nome) return alert("Informe seu nome completo.");
+        if (canvasVazio('sig-familia')) return alert("Por favor, assine antes de confirmar.");
+
+        loading(true);
+        try {
+            const sigData = document.getElementById('sig-familia').toDataURL('image/png');
+            await setDoc(doc(db, "atendimentos", window._idAtendParaAssinar), {
+                assinaturaFamilia: sigData,
+                nomeFamilia: nome,
+                status: 'assinado_familia',
+                assinadoEm: serverTimestamp()
+            }, { merge: true });
+
+            document.getElementById('modal-assinar-familia').style.display = 'none';
+            document.body.innerHTML = `
+                <div style="font-family:'Plus Jakarta Sans',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:var(--bg);text-align:center;padding:20px;--bg:#f0f4f8;--primary:#004aad;--success:#10b981;">
+                    <div style="font-size:3.5rem;margin-bottom:16px;">✅</div>
+                    <h2 style="color:#004aad;margin-bottom:8px;">Documento Assinado!</h2>
+                    <p style="color:#4a5568;max-width:400px;margin-bottom:24px;">Obrigado, <strong>${nome}</strong>! Sua assinatura foi registrada com sucesso. A escola receberá uma cópia do documento assinado.</p>
+                    <div style="background:#d1fae5;color:#065f46;padding:12px 24px;border-radius:12px;font-weight:700;">
+                        Assinatura confirmada em ${new Date().toLocaleString('pt-BR')}
+                    </div>
+                </div>
+            `;
+        } catch(e) {
+            alert("Erro ao confirmar assinatura: " + e.message);
+        } finally { loading(false); }
+    };
+
+</script>
 </body>
 </html>
