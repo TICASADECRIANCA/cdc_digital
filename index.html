@@ -1041,95 +1041,54 @@
     // ==========================================
     // BUSCA ALUNOS NO SOPHIA (COM PUT DE FREQUÊNCIA)
     // ==========================================
-    window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
-        try {
-            const token = await autenticarSophia();
-            if (!token) return false;
+window.buscarAlunosSophia = async function() {
+    try {
+        // 1. Autenticação (certifique-se que o nome da função de login é 'autenticarSophia' ou similar)
+        const token = await autenticarSophia(); 
 
-            console.log(`🔍 Buscando professor "${nomeProf}" no SophiA...`);
-            const respColab = await fetch(`${SOPHIA_URL}/Colaboradores`, {
-                headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
-            });
-            if (!respColab.ok) throw new Error("Erro ao buscar colaboradores.");
-            const colaboradores = await respColab.json();
+        // 2. Busca as turmas associadas EXCLUSIVAMENTE a este professor
+        // Nota: Certifique-se de que usuarioAtual.id contém o ID do professor
+        const respTurmas = await fetch(`${SOPHIA_URL}/ListaChamada/Professor/${usuarioAtual.id}`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
 
-            const normalizar = (str) => (str||"").toString().toUpperCase()
-                .normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
-            const nomeProfLimpo = normalizar(nomeProf.replace(/\(Coord\)/i,"").trim());
+        if (!respTurmas.ok) throw new Error("Erro ao buscar turmas do professor");
+        const turmas = await respTurmas.json();
 
-            const professorSophia = colaboradores.find(c =>
-                normalizar(c.nome) === nomeProfLimpo ||
-                normalizar(c.nome).includes(nomeProfLimpo) ||
-                nomeProfLimpo.includes(normalizar(c.nome).split(' ')[0])
-            );
+        // 3. Encontra a turma correta com tratamento de nomes (ignora º vs O, espaços, etc)
+        const turmaEscolhida = turmas.find(t => 
+            t.nomeTurma.trim().toUpperCase().replace('º', 'O') === 
+            usuarioAtual.turma.trim().toUpperCase().replace('º', 'O')
+        );
 
-            if (!professorSophia) {
-                console.warn(`❌ Professor "${nomeProf}" não encontrado no SophiA.`);
-                return false;
-            }
-
-            const idProfessor = professorSophia.codigo || professorSophia.id;
-            window.idProfessorSophiAtual = idProfessor;
-            console.log(`✅ Professor encontrado, ID: ${idProfessor}`);
-
-            const respListas = await fetch(`${SOPHIA_URL}/ListaChamada/professor/${idProfessor}`, {
-                headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
-            });
-            if (!respListas.ok) {
-                console.warn(`⚠️ Nenhuma lista (Erro ${respListas.status}). Usando Firebase.`);
-                return false;
-            }
-
-            const listas = await respListas.json();
-            const turmaNorm = normalizar(turmaNome);
-            const listaCerta = listas.find(l =>
-                normalizar(l.nomeListaChamada).includes(turmaNorm) ||
-                normalizar(l.nomeTurma).includes(turmaNorm)
-            );
-
-            if (!listaCerta) {
-                console.warn(`⚠️ Turma "${turmaNome}" não encontrada nas listas do SophiA.`);
-                return false;
-            }
-
-            window.idListaAtualSophia = listaCerta.codigoListaChamada;
-            console.log(`✅ Lista encontrada, ID: ${window.idListaAtualSophia}`);
-
-            const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${window.idListaAtualSophia}`, {
-                headers: { 'Authorization': `Bearer ${token}`, 'Token': token, 'Accept': 'application/json' }
-            });
-            if (!respAlunos.ok) return false;
-
-            const alunosBrutos = await respAlunos.json();
-            console.log(`📡 ${alunosBrutos.length} alunos recebidos do SophiA`);
-
-            listaAlunosCache = [];
-            const idsAdicionados = new Set();
-
-            alunosBrutos.forEach(aluno => {
-                const idAluno = aluno.codigoMatricula || aluno.codigo || aluno.id;
-                if (idAluno && !idsAdicionados.has(idAluno)) {
-                    idsAdicionados.add(idAluno);
-                    listaAlunosCache.push({
-                        id: idAluno,
-                        nome: aluno.nomeAluno || aluno.nome || aluno.Nome || "ALUNO DESCONHECIDO",
-                        codigoListaChamadaAula: aluno.codigoListaChamadaAula,
-                        turma: turmaNome,
-                        presenca: true,
-                        exAluno: false
-                    });
-                }
-            });
-
-            listaAlunosCache.sort((a,b) => (a.nome||"").localeCompare(b.nome||""));
-            renderizarTabelaAlunos(listaAlunosCache, []);
-            return true;
-        } catch (e) {
-            console.error("❌ Erro ao buscar SophiA:", e);
-            return false;
+        if (!turmaEscolhida) {
+            console.warn("⚠️ Turma não encontrada na lista do professor.");
+            return null; // Força o modo Firebase/Offline
         }
-    };
 
+        // 4. Busca os alunos usando o ID da turma encontrada (fluxo correto da API)
+        const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${turmaEscolhida.idListaChamada}`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+
+        if (!respAlunos.ok) throw new Error("Erro ao buscar alunos da turma");
+        const listaAlunos = await respAlunos.json();
+
+        console.log("✅ Alunos carregados via API com sucesso!");
+        return listaAlunos;
+
+    } catch (error) {
+        console.error("❌ Falha na integração SophiA:", error);
+        return null; // Retorna nulo para o sistema entender que deve usar o modo Firebase
+    }
+};
+
+
+
+
+
+
+    
     // ==========================================
     // SALVAR FREQUÊNCIA NO SOPHIA (PUT)
     // ==========================================
