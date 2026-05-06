@@ -1039,109 +1039,249 @@
     }
 
     // ==========================================
-    // BUSCA ALUNOS NO SOPHIA (COM PUT DE FREQUÊNCIA)
+    // NORMALIZAÇÃO DE STRINGS
     // ==========================================
-window.buscarAlunosSophia = async function() {
-    try {
-        // 1. Autenticação (certifique-se que o nome da função de login é 'autenticarSophia' ou similar)
-        const token = await autenticarSophia(); 
+    const normalizar = (str) => (str||"").toString().toUpperCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+        .replace(/[°º]/g,"").trim();
 
-        // 2. Busca as turmas associadas EXCLUSIVAMENTE a este professor
-        // Nota: Certifique-se de que usuarioAtual.id contém o ID do professor
-        const respTurmas = await fetch(`${SOPHIA_URL}/ListaChamada/Professor/${usuarioAtual.id}`, {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
+    // Tenta extrair o nome da turma do campo "turma" retornado pela API
+    // Ex: "INFANTIL 3 A", "3 ANO A", "BERCARIO B"
+    function turmaCoincide(turmaSophia, turmaCasa) {
+        const s = normalizar(turmaSophia);
+        const c = normalizar(turmaCasa);
+        if (s === c) return true;
+        if (s.includes(c)) return true;
+        if (c.includes(s)) return true;
 
-        if (!respTurmas.ok) throw new Error("Erro ao buscar turmas do professor");
-        const turmas = await respTurmas.json();
+        // Mapeia variações: "3 ANO" <-> "3º ANO", "BERCARIO" <-> "BERCARIO"
+        const norm = (t) => t
+            .replace(/(\d)(º|ª|\.)/g, '$1')      // 3º -> 3
+            .replace(/\bANO\b/g, 'ANO')
+            .replace(/\bBERCARIO\b/g, 'BERCARIO')
+            .replace(/\s+/g, ' ').trim();
 
-        // 3. Encontra a turma correta com tratamento de nomes (ignora º vs O, espaços, etc)
-        const turmaEscolhida = turmas.find(t => 
-            t.nomeTurma.trim().toUpperCase().replace('º', 'O') === 
-            usuarioAtual.turma.trim().toUpperCase().replace('º', 'O')
-        );
-
-        if (!turmaEscolhida) {
-            console.warn("⚠️ Turma não encontrada na lista do professor.");
-            return null; // Força o modo Firebase/Offline
-        }
-
-        // 4. Busca os alunos usando o ID da turma encontrada (fluxo correto da API)
-        const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${turmaEscolhida.idListaChamada}`, {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-
-        if (!respAlunos.ok) throw new Error("Erro ao buscar alunos da turma");
-        const listaAlunos = await respAlunos.json();
-
-        console.log("✅ Alunos carregados via API com sucesso!");
-        return listaAlunos;
-
-    } catch (error) {
-        console.error("❌ Falha na integração SophiA:", error);
-        return null; // Retorna nulo para o sistema entender que deve usar o modo Firebase
+        return norm(s) === norm(c) || norm(s).includes(norm(c)) || norm(c).includes(norm(s));
     }
-};
 
-
-
-
-
-
-    
     // ==========================================
-    // SALVAR FREQUÊNCIA NO SOPHIA (PUT)
+    // BUSCA ALUNOS NO SOPHIA — corrigido com campos reais da API
+    // GET /ListaChamada/Professor/{id} retorna: codigoLista, codigoListaAula, turma, dataListaChamada, status
+    // GET /ListaChamada/Alunos/{idListaChamada} retorna os alunos
+    // ==========================================
+    window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
+        try {
+            const token = await autenticarSophia();
+            if (!token) return false;
+
+            // ── PASSO 1: buscar ID do professor via /Colaboradores ──
+            console.log(`🔍 [1/3] Buscando professor "${nomeProf}" em /Colaboradores...`);
+            const respColab = await fetch(`${SOPHIA_URL}/Colaboradores`, {
+                headers: { 'Token': token, 'Accept': 'application/json' }
+            });
+            if (!respColab.ok) throw new Error(`Colaboradores: HTTP ${respColab.status}`);
+            const colaboradores = await respColab.json();
+            console.log(`   ↳ ${colaboradores.length} colaboradores retornados`);
+
+            const nomeProfLimpo = normalizar(nomeProf.replace(/\(Coord\)/i,"").split(' ').slice(0,2).join(' '));
+
+            let professorSophia = null;
+            // Tenta match exato primeiro, depois parcial (primeiro + segundo nome)
+            for (const c of colaboradores) {
+                const nC = normalizar(c.nome || c.Nome || "");
+                if (nC === normalizar(nomeProf.replace(/\(Coord\)/i,"").trim())) {
+                    professorSophia = c; break;
+                }
+            }
+            if (!professorSophia) {
+                for (const c of colaboradores) {
+                    const nC = normalizar(c.nome || c.Nome || "");
+                    if (nC.startsWith(nomeProfLimpo) || nomeProfLimpo.split(' ').every(p => nC.includes(p))) {
+                        professorSophia = c; break;
+                    }
+                }
+            }
+
+            if (!professorSophia) {
+                console.warn(`   ↳ ❌ Professor "${nomeProf}" não encontrado. Fallback Firebase.`);
+                return false;
+            }
+
+            // A API retorna "codigo" conforme documentação de Colaboradores
+            const idProfessor = professorSophia.codigo || professorSophia.Codigo
+                              || professorSophia.id    || professorSophia.Id;
+            window.idProfessorSophiAtual = idProfessor;
+            console.log(`   ↳ ✅ Professor: "${professorSophia.nome || professorSophia.Nome}", ID: ${idProfessor}`);
+
+            // ── PASSO 2: buscar listas do professor via /ListaChamada/Professor/{id} ──
+            // Conforme doc: retorna { codigoLista, codigoListaAula, turma, dataListaChamada, status, ... }
+            // Busca listas com status -1 (todos) e datas de hoje
+            const hoje = new Date().toISOString().split('T')[0];
+            const anoInicio = `${new Date().getFullYear()}-01-01T00:00:00`;
+            const anoFim    = `${new Date().getFullYear()}-12-31T23:59:59`;
+
+            console.log(`🔍 [2/3] Buscando listas via /ListaChamada/Professor/${idProfessor}...`);
+            const urlListas = `${SOPHIA_URL}/ListaChamada/Professor/${idProfessor}?DataInicial=${anoInicio}&DataFinal=${anoFim}&Status=-1`;
+            const respListas = await fetch(urlListas, {
+                headers: { 'Token': token, 'Accept': 'application/json' }
+            });
+
+            if (!respListas.ok) {
+                console.warn(`   ↳ ⚠️ HTTP ${respListas.status}. Fallback Firebase.`);
+                return false;
+            }
+
+            const listas = await respListas.json();
+            console.log(`   ↳ ${listas.length} listas encontradas para o professor`);
+            if (listas.length > 0) {
+                console.log("   ↳ Amostra:", JSON.stringify(listas[0]));
+            }
+
+            // Encontra a lista que corresponde à turma
+            // Campo correto conforme doc: "turma" (não "nomeTurma" nem "nomeListaChamada")
+            const listaCerta = listas.find(l => {
+                const turmaDaLista = l.turma || l.Turma || l.nomeTurma || l.nomeListaChamada || "";
+                return turmaCoincide(turmaDaLista, turmaNome);
+            });
+
+            if (!listaCerta) {
+                console.warn(`   ↳ ⚠️ Turma "${turmaNome}" não encontrada nas listas. Turmas disponíveis:`);
+                listas.forEach(l => console.log(`      - "${l.turma || l.Turma}" (codigoLista: ${l.codigoLista})`));
+                return false;
+            }
+
+            // Campo correto conforme doc: "codigoLista" (não "codigoListaChamada")
+            const idListaChamada = listaCerta.codigoLista || listaCerta.codigoListaChamada;
+            window.idListaAtualSophia      = idListaChamada;
+            window.idListaAulaAtualSophia  = listaCerta.codigoListaAula;
+            console.log(`   ↳ ✅ Lista: "${listaCerta.turma}", codigoLista: ${idListaChamada}`);
+
+            // ── PASSO 3: buscar alunos via /ListaChamada/Alunos/{idListaChamada} ──
+            console.log(`🔍 [3/3] Buscando alunos via /ListaChamada/Alunos/${idListaChamada}...`);
+            const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${idListaChamada}`, {
+                headers: { 'Token': token, 'Accept': 'application/json' }
+            });
+            if (!respAlunos.ok) {
+                console.warn(`   ↳ ⚠️ HTTP ${respAlunos.status} ao buscar alunos. Fallback Firebase.`);
+                return false;
+            }
+
+            const alunosBrutos = await respAlunos.json();
+            console.log(`   ↳ ${Array.isArray(alunosBrutos) ? alunosBrutos.length : '?'} alunos recebidos`);
+            if (Array.isArray(alunosBrutos) && alunosBrutos.length > 0) {
+                console.log("   ↳ Campos disponíveis:", Object.keys(alunosBrutos[0]).join(', '));
+            }
+
+            if (!Array.isArray(alunosBrutos) || alunosBrutos.length === 0) {
+                console.warn("   ↳ ⚠️ Nenhum aluno retornado. Fallback Firebase.");
+                return false;
+            }
+
+            listaAlunosCache = [];
+            const idsAdicionados = new Set();
+
+            alunosBrutos.forEach(aluno => {
+                // Tenta todos os possíveis campos de ID conforme doc: codigoMatricula
+                const idAluno = aluno.codigoMatricula || aluno.CodigoMatricula
+                              || aluno.codigo || aluno.Codigo
+                              || aluno.id     || aluno.Id;
+                // Nome: nomeAluno conforme doc
+                const nomeAluno = aluno.nomeAluno || aluno.NomeAluno
+                                || aluno.nome    || aluno.Nome || "DESCONHECIDO";
+                // codigoListaChamadaAula: necessário para o PUT
+                const codAula = aluno.codigoListaChamadaAula || aluno.CodigoListaChamadaAula || 0;
+
+                if (idAluno && !idsAdicionados.has(String(idAluno))) {
+                    idsAdicionados.add(String(idAluno));
+                    listaAlunosCache.push({
+                        id: idAluno,
+                        nome: nomeAluno,
+                        codigoListaChamadaAula: codAula,
+                        turma: turmaNome,
+                        presenca: true,
+                        exAluno: false
+                    });
+                }
+            });
+
+            listaAlunosCache.sort((a,b) => a.nome.localeCompare(b.nome));
+            console.log(`✅ Cache montado com ${listaAlunosCache.length} alunos`);
+            renderizarTabelaAlunos(listaAlunosCache, []);
+            return true;
+
+        } catch (e) {
+            console.error("❌ Erro crítico buscarAlunosSophia:", e);
+            return false;
+        }
+    };
+
+    // ==========================================
+    // SALVAR FREQUÊNCIA NO SOPHIA — PUT /ListaChamada/Alunos
+    // Payload conforme doc: { codigoProfessor, quantidadeAula, codigoListaChamada, status, alunos[] }
+    // aluno: { codigoListaChamadaAula, codigoMatricula, falta (0=presente, 1=falta), ocorrencias[] }
     // ==========================================
     window.salvarNoSophiA_Interno = async () => {
         try {
             const token = await autenticarSophia();
-            const idProf = window.idProfessorSophiAtual;
-            const idLista = window.idListaAtualSophia;
+            const idProf  = window.idProfessorSophiAtual;
+            const idLista = window.idListaAtualSophia;       // codigoLista da listaChamada
 
             if (!idProf || !idLista) {
-                console.warn("⚠️ IDs SophiA ausentes. Não é possível sincronizar.");
+                console.warn("⚠️ IDs SophiA ausentes — skipping sync.");
                 return false;
             }
 
-            // Monta o payload com a marcação REAL de presença
+            const alunosPayload = listaAlunosCache
+                .filter(a => !a.exAluno && a.id)
+                .map(a => ({
+                    codigoListaChamadaAula: parseInt(a.codigoListaChamadaAula) || 0,
+                    codigoMatricula:        parseInt(a.id),
+                    falta:                  a.presenca ? 0 : 1,  // 0 = presente, 1 = falta
+                    ocorrencias:            []
+                }));
+
             const payload = {
-                codigoProfessor: parseInt(idProf),
-                quantidadeAula: 1,
+                codigoProfessor:   parseInt(idProf),
+                quantidadeAula:    1,
                 codigoListaChamada: parseInt(idLista),
-                status: 1,
-                alunos: listaAlunosCache
-                    .filter(a => !a.exAluno)
-                    .map(aluno => ({
-                        codigoListaChamadaAula: parseInt(aluno.codigoListaChamadaAula) || 0,
-                        codigoMatricula: parseInt(aluno.id),
-                        falta: aluno.presenca ? 0 : 1, // 0 = presente, 1 = falta
-                        ocorrencias: []
-                    }))
+                status:            1,   // 1 = finalizado
+                alunos:            alunosPayload
             };
 
-            console.log("📡 Payload SophiA:", JSON.stringify(payload, null, 2));
+            console.log(`📡 PUT /ListaChamada/Alunos — ${alunosPayload.length} alunos`);
+            console.log("   Payload:", JSON.stringify(payload));
 
             const response = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos`, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Token': token,
+                    'Token':        token,
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Accept':       'application/json'
                 },
                 body: JSON.stringify(payload)
             });
 
+            const respText = await response.text();
             if (!response.ok) {
-                const erroTxt = await response.text();
-                console.error("❌ SophiA recusou:", erroTxt);
+                console.error(`❌ SophiA PUT falhou (HTTP ${response.status}):`, respText);
                 return false;
             }
 
-            console.log("✅ Frequência enviada ao SophiA com sucesso!");
+            console.log("✅ Frequência sincronizada com SophiA!", respText);
+
+            // Também atualiza o status da lista para "fechado" (status 2) se necessário
+            // PUT /ListaChamada/ListaChamada { codigoListaChamada, status }
+            try {
+                await fetch(`${SOPHIA_URL}/ListaChamada/ListaChamada`, {
+                    method: 'PUT',
+                    headers: { 'Token': token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codigoListaChamada: parseInt(idLista), status: 1 })
+                });
+            } catch(e2) { /* não crítico */ }
+
             return true;
         } catch (e) {
-            console.error("❌ Falha na comunicação com SophiA:", e);
+            console.error("❌ Falha PUT SophiA:", e);
             return false;
         }
     };
