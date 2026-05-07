@@ -60,9 +60,7 @@
         button:active { transform: scale(0.97); }
         input, select, textarea { font-family: inherit; font-size: 15px; outline: none; }
 
-        /* ============================
-           LOADER
-        ============================ */
+        /* LOADER */
         #loader {
             display: none;
             position: fixed; top:0; left:0; width:100%; height:100%;
@@ -84,9 +82,7 @@
         .loader-text { color: var(--primary); font-weight: 600; font-size: 0.9rem; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ============================
-           AUTH
-        ============================ */
+        /* AUTH */
         .auth-container {
             position: absolute; top:0; left:0; width:100%; height:100%;
             z-index: 99;
@@ -155,9 +151,7 @@
         .link-text:hover { text-decoration: underline; }
         .link-text.muted { color: var(--text-3); font-weight: 400; font-size: 0.8rem; margin-top: 24px; }
 
-        /* ============================
-           APP LAYOUT
-        ============================ */
+        /* APP LAYOUT */
         #app-painel { display: flex; flex-direction: column; height: 100%; }
         
         .app-header {
@@ -187,9 +181,7 @@
         .btn-logout:hover { background: var(--danger); color: white; }
         .main-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px; }
 
-        /* ============================
-           TABS / NAV
-        ============================ */
+        /* TABS / NAV */
         .nav-tabs {
             display: flex; justify-content: center;
             background: white;
@@ -204,9 +196,7 @@
         .nav-item:hover { color: var(--primary); }
         .nav-item.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(0,74,173,0.03); }
 
-        /* ============================
-           ACTION BAR
-        ============================ */
+        /* ACTION BAR */
         .action-bar {
             background: white; padding: 16px 20px;
             border-radius: var(--radius); margin-bottom: 16px;
@@ -239,9 +229,7 @@
         .btn-atend { background: linear-gradient(135deg, #0097b2, #0077a0); box-shadow: 0 2px 8px rgba(0,151,178,0.3); }
         .btn-atend:hover { box-shadow: 0 4px 14px rgba(0,151,178,0.4); transform: translateY(-1px); }
 
-        /* ============================
-           DESKTOP TABLE
-        ============================ */
+        /* DESKTOP TABLE */
         .desktop-table {
             width: 100%; border-collapse: separate; border-spacing: 0;
             background: white; border-radius: var(--radius);
@@ -258,9 +246,7 @@
         .desktop-table tr:last-child td { border-bottom: none; }
         .desktop-table tbody tr:hover { background: var(--surface-2); }
 
-        /* ============================
-           MOBILE CARDS
-        ============================ */
+        /* MOBILE CARDS */
         .mobile-card-list { display: none; }
         .student-card {
             background: white; padding: 14px 16px;
@@ -287,9 +273,7 @@
         .toggle-btn.ausente { background: linear-gradient(135deg, var(--danger), #dc2626); }
         .toggle-btn.ex-btn { opacity: 0.5; cursor: default; background: var(--gray); }
 
-        /* ============================
-           PLANEJAMENTO
-        ============================ */
+        /* PLANEJAMENTO */
         .plan-box {
             background: white; padding: 24px;
             border-radius: var(--radius); box-shadow: var(--shadow-sm);
@@ -311,9 +295,7 @@
         .plan-input:disabled { opacity: 0.6; cursor: not-allowed; }
         textarea.plan-input { resize: vertical; min-height: 120px; }
 
-        /* ============================
-           COORD PANEL
-        ============================ */
+        /* COORD PANEL */
         #view-coord { height:100%; display:flex; flex-direction:column; }
         .grid-coord {
             display: grid;
@@ -334,9 +316,7 @@
         .card-turma strong { display: block; font-size: 0.95rem; margin-bottom: 4px; }
         .card-turma small { font-size: 0.78rem; opacity: 0.7; }
 
-        /* ============================
-           MODAIS
-        ============================ */
+        /* MODAIS */
         .modal-overlay {
             position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(15,23,42,0.6);
@@ -369,10 +349,7 @@
         }
         .btn-close:hover { background: var(--danger-light); color: var(--danger); border-color: var(--danger); }
 
-        /* ============================
-           ATENDIMENTO MODAL
-        ============================ */
-        .atend-form { }
+        /* ATENDIMENTO MODAL */
         .form-section {
             background: var(--surface-2); border: 1px solid var(--border);
             border-radius: var(--radius); padding: 16px; margin-bottom: 14px;
@@ -383,7 +360,6 @@
             margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
         }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         .form-group { display: flex; flex-direction: column; gap: 4px; }
         .form-group.full { grid-column: 1 / -1; }
         .form-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.3px; }
@@ -434,15 +410,6 @@
             border: 1px solid var(--border); display: block; margin-top: 8px;
         }
 
-        /* STATUS BADGE */
-        .status-chip {
-            display: inline-flex; align-items: center; gap: 4px;
-            padding: 3px 10px; border-radius: 12px;
-            font-size: 0.75rem; font-weight: 700;
-        }
-        .chip-sophia { background: #dbeafe; color: #1d4ed8; }
-        .chip-firebase { background: #fef3c7; color: #92400e; }
-
         /* ADMIN */
         .admin-section {
             border: 1px solid var(--border); padding: 16px;
@@ -457,9 +424,7 @@
             border-radius: var(--radius-sm); font-family: inherit; font-size: 0.85rem;
             background: white; resize: vertical; margin-bottom: 8px;
         }
-        .danger-zone {
-            border-color: #fecaca; background: #fff5f5;
-        }
+        .danger-zone { border-color: #fecaca; background: #fff5f5; }
         .danger-zone h4 { color: var(--danger); }
 
         /* RELATORIO */
@@ -505,9 +470,7 @@
             th, td { border: 1px solid #000 !important; padding: 8px !important; }
         }
 
-        /* ============================
-           MOBILE
-        ============================ */
+        /* MOBILE */
         @media (max-width: 768px) {
             .main-content { padding: 12px; padding-bottom: 90px; }
             .nav-tabs {
@@ -533,7 +496,6 @@
             .btn-group button { width: 100%; justify-content: center; }
             .modal-content { border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
             .form-grid { grid-template-columns: 1fr; }
-            .form-grid-3 { grid-template-columns: 1fr 1fr; }
             .relatorio-grid { grid-template-columns: 1fr; }
             .grid-coord { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
         }
@@ -552,9 +514,7 @@
     <hr>
 </div>
 
-<!-- ============================
-     LOGIN
-============================ -->
+<!-- LOGIN -->
 <div id="view-login" class="auth-container">
     <div class="card-auth">
         <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
@@ -568,9 +528,7 @@
     </div>
 </div>
 
-<!-- ============================
-     CADASTRO
-============================ -->
+<!-- CADASTRO -->
 <div id="view-cadastro" class="auth-container hidden">
     <div class="card-auth" style="max-width: 440px;">
         <h3>Novo Usuário</h3>
@@ -608,9 +566,7 @@
     </div>
 </div>
 
-<!-- ============================
-     COORD VIEW
-============================ -->
+<!-- COORD VIEW -->
 <div id="view-coord" class="hidden">
     <div class="app-header">
         <div class="header-title">👑 Painel de Gestão</div>
@@ -622,9 +578,7 @@
     </div>
 </div>
 
-<!-- ============================
-     APP PRINCIPAL
-============================ -->
+<!-- APP PRINCIPAL -->
 <div id="app-painel" class="hidden">
     <div class="app-header">
         <div class="header-left">
@@ -653,7 +607,6 @@
                 </div>
             </div>
 
-            <!-- Indicador de sync -->
             <div id="sync-status" style="display:none; margin-bottom:12px;">
                 <div style="background:white; border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 14px; display:flex; align-items:center; gap:10px; font-size:0.82rem;">
                     <span id="sync-icon">⏳</span>
@@ -707,6 +660,7 @@
         </div>
     </div>
 
+    <!-- FIX 3: Botão Indicadores aponta para a URL correta; apenas coord vê -->
     <div class="nav-tabs">
         <div class="nav-item active" id="nav-freq" onclick="window.mudarAba('freq')">
             <span class="nav-icon">📅</span> Chamada
@@ -717,12 +671,13 @@
         <div class="nav-item" onclick="window.open('reunioes.html', '_blank')">
             <span class="nav-icon">📝</span> Reuniões
         </div>
+        <div class="nav-item" id="nav-indicadores" onclick="window.abrirIndicadores()">
+            <span class="nav-icon">📊</span> Indicadores
+        </div>
     </div>
 </div>
 
-<!-- ============================
-     MODAL RELATÓRIO
-============================ -->
+<!-- MODAL RELATÓRIO -->
 <div id="modal-relatorio" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
@@ -750,9 +705,7 @@
     </div>
 </div>
 
-<!-- ============================
-     MODAL HISTÓRICO
-============================ -->
+<!-- MODAL HISTÓRICO -->
 <div id="modal-historico" class="modal-overlay" onclick="if(event.target===this)window.fecharHistorico()">
     <div class="modal-content">
         <div class="modal-header">
@@ -763,9 +716,7 @@
     </div>
 </div>
 
-<!-- ============================
-     MODAL ADMIN
-============================ -->
+<!-- MODAL ADMIN -->
 <div id="modal-admin" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
@@ -792,114 +743,55 @@
     </div>
 </div>
 
-<!-- ============================
-     MODAL ATENDIMENTO
-============================ -->
+<!-- MODAL ATENDIMENTO -->
 <div id="modal-atendimento" class="modal-overlay" onclick="if(event.target===this)window.fecharAtendimento()">
     <div class="modal-content" style="max-width:760px;">
         <div class="modal-header">
             <h3>📋 Registro de Atendimento</h3>
             <button class="btn-close" onclick="window.fecharAtendimento()">✕</button>
         </div>
-
-        <!-- Cabeçalho do formulário -->
         <div style="text-align:center; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--border);">
             <div style="font-size:0.7rem; font-weight:800; letter-spacing:1px; color:var(--text-3); text-transform:uppercase; margin-bottom:4px;">Casa de Criança</div>
             <h4 style="color:var(--primary); font-size:1rem; margin-bottom:2px;">Registro de Atendimento</h4>
             <div style="font-size:0.8rem; color:var(--text-3);" id="atend-data-header">Data: --/--/----</div>
         </div>
-
         <div class="atend-form" id="atend-form-content">
-            <!-- 1. IDENTIFICAÇÃO -->
             <div class="form-section">
                 <div class="form-section-title">🔖 1. Identificação</div>
                 <div class="form-grid">
-                    <div class="form-group">
-                        <label>Aluno(a)</label>
-                        <input type="text" id="atend-aluno" readonly style="background:var(--surface-2);">
-                    </div>
-                    <div class="form-group">
-                        <label>Data de Nascimento</label>
-                        <input type="date" id="atend-nascimento">
-                    </div>
-                    <div class="form-group">
-                        <label>Turma</label>
-                        <input type="text" id="atend-turma" readonly style="background:var(--surface-2);">
-                    </div>
-                    <div class="form-group">
-                        <label>Turno</label>
-                        <select id="atend-turno">
-                            <option value="">Selecione</option>
-                            <option value="Manhã">Manhã</option>
-                            <option value="Tarde">Tarde</option>
-                            <option value="Integral">Integral</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Professora</label>
-                        <input type="text" id="atend-professora">
-                    </div>
-                    <div class="form-group">
-                        <label>Filiação</label>
-                        <input type="text" id="atend-filiacao" placeholder="Nome dos pais/responsáveis">
-                    </div>
+                    <div class="form-group"><label>Aluno(a)</label><input type="text" id="atend-aluno" readonly style="background:var(--surface-2);"></div>
+                    <div class="form-group"><label>Data de Nascimento</label><input type="date" id="atend-nascimento"></div>
+                    <div class="form-group"><label>Turma</label><input type="text" id="atend-turma" readonly style="background:var(--surface-2);"></div>
+                    <div class="form-group"><label>Turno</label><select id="atend-turno"><option value="">Selecione</option><option value="Manhã">Manhã</option><option value="Tarde">Tarde</option><option value="Integral">Integral</option></select></div>
+                    <div class="form-group"><label>Professora</label><input type="text" id="atend-professora"></div>
+                    <div class="form-group"><label>Filiação</label><input type="text" id="atend-filiacao" placeholder="Nome dos pais/responsáveis"></div>
                 </div>
             </div>
-
-            <!-- 2. OBJETIVOS -->
             <div class="form-section">
                 <div class="form-section-title">🎯 2. Objetivos do Atendimento</div>
-                <div class="form-group">
-                    <label>Descreva os objetivos desta reunião</label>
-                    <textarea id="atend-objetivos" placeholder="Ex: Acompanhamento do desenvolvimento, questão comportamental, integração..."></textarea>
-                </div>
+                <div class="form-group"><label>Descreva os objetivos desta reunião</label><textarea id="atend-objetivos" placeholder="Ex: Acompanhamento do desenvolvimento, questão comportamental, integração..."></textarea></div>
             </div>
-
-            <!-- 3. DADOS PELA FAMÍLIA -->
             <div class="form-section">
                 <div class="form-section-title">👨‍👩‍👧 3. Dados Pontuados pela Família / Profissional Clínico</div>
-                <div class="form-group">
-                    <label>Informações trazidas pela família</label>
-                    <textarea id="atend-dados-familia" placeholder="Relatos, observações da família ou profissional clínico..."></textarea>
-                </div>
+                <div class="form-group"><label>Informações trazidas pela família</label><textarea id="atend-dados-familia" placeholder="Relatos, observações da família ou profissional clínico..."></textarea></div>
             </div>
-
-            <!-- 4. DADOS PELA ESCOLA -->
             <div class="form-section">
                 <div class="form-section-title">🏫 4. Dados Pontuados pela Escola</div>
-                <div class="form-group">
-                    <label>Observações da escola</label>
-                    <textarea id="atend-dados-escola" placeholder="Comportamento, rendimento, socialização, observações da equipe..."></textarea>
-                </div>
+                <div class="form-group"><label>Observações da escola</label><textarea id="atend-dados-escola" placeholder="Comportamento, rendimento, socialização, observações da equipe..."></textarea></div>
             </div>
-
-            <!-- 5. CONSIDERAÇÕES FINAIS -->
             <div class="form-section">
                 <div class="form-section-title">📝 5. Considerações Finais</div>
-                <div class="form-group">
-                    <label>Conclusões e encaminhamentos</label>
-                    <textarea id="atend-consideracoes" placeholder="Acordos, encaminhamentos, próximos passos..."></textarea>
-                </div>
+                <div class="form-group"><label>Conclusões e encaminhamentos</label><textarea id="atend-consideracoes" placeholder="Acordos, encaminhamentos, próximos passos..."></textarea></div>
             </div>
-
-            <!-- 6. PARTICIPANTES -->
             <div class="form-section">
                 <div class="form-section-title">👥 6. Participantes desta Reunião</div>
-                <div class="form-group">
-                    <label>Nome e função de cada participante</label>
-                    <textarea id="atend-participantes" placeholder="Ex: Ana Lima (Coordenadora), Maria Santos (Mãe), João Santos (Pai)..."></textarea>
-                </div>
+                <div class="form-group"><label>Nome e função de cada participante</label><textarea id="atend-participantes" placeholder="Ex: Ana Lima (Coordenadora), Maria Santos (Mãe)..."></textarea></div>
             </div>
-
-            <!-- ASSINATURAS -->
             <div class="form-section">
                 <div class="form-section-title">✍️ Assinatura da Coordenação</div>
-                <div class="form-group">
-                    <label>Nome da Coordenadora</label>
-                    <input type="text" id="atend-coord-nome" placeholder="Nome completo">
-                </div>
+                <div class="form-group"><label>Nome da Coordenadora</label><input type="text" id="atend-coord-nome" placeholder="Nome completo"></div>
                 <div style="margin-top:10px;">
-                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.3px; display:block; margin-bottom:6px;">Assinar digitalmente (desenhe abaixo)</label>
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.3px; display:block; margin-bottom:6px;">Assinar digitalmente</label>
                     <div class="signature-area">
                         <canvas id="sig-coord" width="600" height="120"></canvas>
                         <button class="btn-clear-sig" onclick="window.limparAssinatura('sig-coord')">Limpar</button>
@@ -907,25 +799,15 @@
                     </div>
                 </div>
             </div>
-
-            <!-- BOTÕES DE AÇÃO -->
             <div id="atend-acoes" style="display:flex; flex-direction:column; gap:8px; margin-top:4px;">
-                <button onclick="window.finalizarAtendimento()" class="btn-action btn-save" style="width:100%; padding:14px; font-size:0.95rem;">
-                    ✅ Finalizar e Gerar Link para Família
-                </button>
-                <button onclick="window.imprimirAtendimento()" class="btn-action btn-print" style="width:100%;">
-                    🖨️ Imprimir Documento
-                </button>
-                <button onclick="window.fecharAtendimento()" class="btn-action btn-hist" style="width:100%;">
-                    Cancelar
-                </button>
+                <button onclick="window.finalizarAtendimento()" class="btn-action btn-save" style="width:100%; padding:14px; font-size:0.95rem;">✅ Finalizar e Gerar Link para Família</button>
+                <button onclick="window.imprimirAtendimento()" class="btn-action btn-print" style="width:100%;">🖨️ Imprimir Documento</button>
+                <button onclick="window.fecharAtendimento()" class="btn-action btn-hist" style="width:100%;">Cancelar</button>
             </div>
-
-            <!-- QR CODE / LINK (aparece após finalizar) -->
             <div id="atend-qr-section" style="display:none; margin-top:16px;">
                 <div class="qr-section">
                     <h4>📲 Link para assinatura da família</h4>
-                    <p>Compartilhe o QR Code abaixo com a família para que assine digitalmente e receba uma cópia do documento.</p>
+                    <p>Compartilhe o QR Code abaixo com a família para que assine digitalmente.</p>
                     <div id="qrcode-container"></div>
                     <a id="atend-link-url" class="qr-link" target="_blank" href="#">Toque para abrir o link</a>
                     <div style="display:flex; gap:8px; margin-top:12px;">
@@ -938,10 +820,7 @@
     </div>
 </div>
 
-<!-- ============================
-     MODAL ASSINATURA FAMÍLIA
-     (página pública acessada via link)
-============================ -->
+<!-- MODAL ASSINATURA FAMÍLIA -->
 <div id="modal-assinar-familia" class="modal-overlay" onclick="if(event.target===this)document.getElementById('modal-assinar-familia').style.display='none'">
     <div class="modal-content" style="max-width:680px;">
         <div class="modal-header">
@@ -949,13 +828,9 @@
             <button class="btn-close" onclick="document.getElementById('modal-assinar-familia').style.display='none'">✕</button>
         </div>
         <div id="familia-doc-preview" style="background:var(--surface-2); padding:16px; border-radius:var(--radius); border:1px solid var(--border); margin-bottom:16px; font-size:0.875rem; max-height:300px; overflow-y:auto;"></div>
-        
         <div class="form-section">
             <div class="form-section-title">✍️ Assinatura da Família / Responsável</div>
-            <div class="form-group" style="margin-bottom:10px;">
-                <label>Seu Nome Completo</label>
-                <input type="text" id="familia-nome" placeholder="Como consta no documento">
-            </div>
+            <div class="form-group" style="margin-bottom:10px;"><label>Seu Nome Completo</label><input type="text" id="familia-nome" placeholder="Como consta no documento"></div>
             <div style="margin-top:8px;">
                 <label style="font-size:0.75rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.3px; display:block; margin-bottom:6px;">Assine digitalmente</label>
                 <div class="signature-area">
@@ -965,9 +840,7 @@
                 </div>
             </div>
         </div>
-        <button onclick="window.confirmarAssinaturaFamilia()" class="btn-action btn-save" style="width:100%; padding:14px; font-size:0.95rem;">
-            ✅ Confirmar Assinatura e Receber Cópia
-        </button>
+        <button onclick="window.confirmarAssinaturaFamilia()" class="btn-action btn-save" style="width:100%; padding:14px; font-size:0.95rem;">✅ Confirmar Assinatura e Receber Cópia</button>
     </div>
 </div>
 
@@ -1003,6 +876,41 @@
     const getHoje = () => new Date().toISOString().split('T')[0];
 
     // ==========================================
+    // FIX 1: ESTRUTURA DE TURMAS — até 1º Ano do Fundamental
+    // ==========================================
+    const ESTRUTURA_TURMAS = {
+        "Berçário": [{ nome: "Berçário", letras: ["A","B"] }],
+        "Infantil 1": [{ nome: "Infantil 1", letras: ["A","B","C","D","E","F","G","I"] }],
+        "Infantil 2": [{ nome: "Infantil 2", letras: ["A","B","C","D","E","F","G","I","J"] }],
+        "Infantil 3": [{ nome: "Infantil 3", letras: ["A","B","C","D","E","F","G","H","I","J"] }],
+        "Infantil 4": [{ nome: "Infantil 4", letras: ["A","B","C","D","E","F","G","I","J"] }],
+        "Infantil 5": [{ nome: "Infantil 5", letras: ["A","B","C","D","E","F","G","I"] }],
+        "Fundamental 1": [
+            { nome: "1º Ano", letras: ["A","B","C","D","I"] }
+            // FIX 1: Removidos 2º, 3º, 4º e 5º Ano — escola só vai até 1º Ano
+        ],
+        "Integral": [{ nome: "Integral", letras: ["1","2"] }],
+        "Atividades Extras": [
+            { nome: "Futsal", letras: ["A","B","C"] },
+            { nome: "Dança", letras: ["A","B","C"] },
+            { nome: "Ginástica Rítmica", letras: ["A","B"] },
+            { nome: "Judô", letras: ["A","B"] }
+        ]
+    };
+
+    const PERFIS_COORDENACAO = {
+        "GERAL": "ALL",
+        "CRISTIANE": ["Berçário A","Berçário B","Infantil 1 A","Infantil 1 B","Infantil 1 C","Infantil 1 D","Infantil 1 E","Infantil 1 F","Infantil 1 G","Infantil 1 I","Infantil 2 A","Infantil 2 B","Infantil 2 C","Infantil 2 D","Infantil 2 E","Infantil 2 F","Infantil 2 G","Infantil 2 I","Infantil 2 J"],
+        "ADNA": ["1º Ano A","1º Ano B","1º Ano C","1º Ano D","1º Ano I"],
+        "NAYARA": ["Infantil 3 A","Infantil 3 B","Infantil 3 C","Infantil 3 D","Infantil 3 E","Infantil 3 F","Infantil 3 G","Infantil 3 H"],
+        "LUDMILLA": ["Infantil 3 I","Infantil 3 J","Infantil 4 I","Infantil 4 J","Infantil 5 A","Infantil 5 B","Infantil 5 C","Infantil 5 D","Infantil 5 E","Infantil 5 F","Infantil 5 G","Infantil 5 I","1º Ano I"],
+        "ELIONEIDE": ["Infantil 4 A","Infantil 4 B","Infantil 4 C","Infantil 4 D","Infantil 4 E","Infantil 4 F","Infantil 4 G"],
+        "SAVIA": ["1º Ano A","1º Ano B","1º Ano C","1º Ano D"],
+        "COORD_ESPORTES": ["Futsal A","Dança A","Ginástica Rítmica A","Judô A"],
+        "SISTEMA INTEGRAL": ["Integral 1","Integral 2"]
+    };
+
+    // ==========================================
     // LOG AUDITORIA
     // ==========================================
     async function registrarLog(acao) {
@@ -1031,6 +939,7 @@
             });
             if (!response.ok) throw new Error(`Erro ${response.status}`);
             sophiaToken = await response.text();
+            sophiaToken = sophiaToken.replace(/^"|"$/g, '').trim();
             return sophiaToken;
         } catch (e) {
             console.error("❌ Erro Auth Sophia:", e);
@@ -1039,92 +948,91 @@
     }
 
     // ==========================================
-    // NORMALIZAÇÃO DE STRINGS
+    // NORMALIZAÇÃO
     // ==========================================
     const normalizar = (str) => (str||"").toString().toUpperCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
         .replace(/[°º]/g,"").trim();
 
-    // Tenta extrair o nome da turma do campo "turma" retornado pela API
-    // Ex: "INFANTIL 3 A", "3 ANO A", "BERCARIO B"
     function turmaCoincide(turmaSophia, turmaCasa) {
         const s = normalizar(turmaSophia);
         const c = normalizar(turmaCasa);
         if (s === c) return true;
         if (s.includes(c)) return true;
         if (c.includes(s)) return true;
-
-        // Mapeia variações: "3 ANO" <-> "3º ANO", "BERCARIO" <-> "BERCARIO"
         const norm = (t) => t
-            .replace(/(\d)(º|ª|\.)/g, '$1')      // 3º -> 3
+            .replace(/(\d)(º|ª|\.)/g, '$1')
             .replace(/\bANO\b/g, 'ANO')
             .replace(/\bBERCARIO\b/g, 'BERCARIO')
             .replace(/\s+/g, ' ').trim();
-
         return norm(s) === norm(c) || norm(s).includes(norm(c)) || norm(c).includes(norm(s));
     }
 
     // ==========================================
-    // BUSCA ALUNOS NO SOPHIA — corrigido com campos reais da API
-    // GET /ListaChamada/Professor/{id} retorna: codigoLista, codigoListaAula, turma, dataListaChamada, status
-    // GET /ListaChamada/Alunos/{idListaChamada} retorna os alunos
+    // FIX 2: BUSCA ALUNOS — coordenação usa mesma integração que professor
+    // Fluxo: busca colaboradores → acha professor ou coord por nome → busca listas → busca alunos
     // ==========================================
     window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
         try {
             const token = await autenticarSophia();
             if (!token) return false;
 
-            // ── PASSO 1: buscar ID do professor via /Colaboradores ──
-            console.log(`🔍 [1/3] Buscando professor "${nomeProf}" em /Colaboradores...`);
+            // Para coordenação: tenta encontrar o professor da turma no Firebase
+            // e usa o nome dele para buscar no SophiA
+            let nomeBusca = nomeProf.replace(/\s*\(Coord\)\s*/i, "").trim();
+            
+            // FIX 2: Se for coordenação, busca o professor responsável pela turma no Firebase
+            if (ehCoordenacao) {
+                console.log(`🔍 [Coord] Buscando professor da turma "${turmaNome}" no Firebase...`);
+                const profSnap = await getDocs(query(collection(db, "professores"), where("turma","==",turmaNome)));
+                if (!profSnap.empty) {
+                    const profData = profSnap.docs[0].data();
+                    nomeBusca = profData.nome;
+                    console.log(`   ↳ Professor encontrado: "${nomeBusca}"`);
+                } else {
+                    console.warn(`   ↳ Nenhum professor cadastrado para "${turmaNome}". Usando nome da coord.`);
+                }
+            }
+
+            console.log(`🔍 [1/3] Buscando "${nomeBusca}" em /Colaboradores...`);
             const respColab = await fetch(`${SOPHIA_URL}/Colaboradores`, {
                 headers: { 'Token': token, 'Accept': 'application/json' }
             });
             if (!respColab.ok) throw new Error(`Colaboradores: HTTP ${respColab.status}`);
             const colaboradores = await respColab.json();
-            console.log(`   ↳ ${colaboradores.length} colaboradores retornados`);
+            console.log(`   ↳ ${colaboradores.length} colaboradores`);
 
-            const nomeProfLimpo = normalizar(nomeProf.replace(/\(Coord\)/i,"").split(' ').slice(0,2).join(' '));
-
+            const nomeLimpo = normalizar(nomeBusca.split(' ').slice(0,2).join(' '));
             let professorSophia = null;
-            // Tenta match exato primeiro, depois parcial (primeiro + segundo nome)
+
             for (const c of colaboradores) {
                 const nC = normalizar(c.nome || c.Nome || "");
-                if (nC === normalizar(nomeProf.replace(/\(Coord\)/i,"").trim())) {
-                    professorSophia = c; break;
-                }
+                if (nC === normalizar(nomeBusca)) { professorSophia = c; break; }
             }
             if (!professorSophia) {
                 for (const c of colaboradores) {
                     const nC = normalizar(c.nome || c.Nome || "");
-                    if (nC.startsWith(nomeProfLimpo) || nomeProfLimpo.split(' ').every(p => nC.includes(p))) {
+                    if (nC.startsWith(nomeLimpo) || nomeLimpo.split(' ').every(p => nC.includes(p))) {
                         professorSophia = c; break;
                     }
                 }
             }
 
             if (!professorSophia) {
-                console.warn(`   ↳ ❌ Professor "${nomeProf}" não encontrado. Fallback Firebase.`);
+                console.warn(`   ↳ ❌ "${nomeBusca}" não encontrado. Fallback Firebase.`);
                 return false;
             }
 
-            // A API retorna "codigo" conforme documentação de Colaboradores
-            const idProfessor = professorSophia.codigo || professorSophia.Codigo
-                              || professorSophia.id    || professorSophia.Id;
+            const idProfessor = professorSophia.codigo || professorSophia.Codigo || professorSophia.id || professorSophia.Id;
             window.idProfessorSophiAtual = idProfessor;
-            console.log(`   ↳ ✅ Professor: "${professorSophia.nome || professorSophia.Nome}", ID: ${idProfessor}`);
+            console.log(`   ↳ ✅ "${professorSophia.nome || professorSophia.Nome}", ID: ${idProfessor}`);
 
-            // ── PASSO 2: buscar listas do professor via /ListaChamada/Professor/{id} ──
-            // Conforme doc: retorna { codigoLista, codigoListaAula, turma, dataListaChamada, status, ... }
-            // Busca listas com status -1 (todos) e datas de hoje
-            const hoje = new Date().toISOString().split('T')[0];
             const anoInicio = `${new Date().getFullYear()}-01-01T00:00:00`;
             const anoFim    = `${new Date().getFullYear()}-12-31T23:59:59`;
 
             console.log(`🔍 [2/3] Buscando listas via /ListaChamada/Professor/${idProfessor}...`);
             const urlListas = `${SOPHIA_URL}/ListaChamada/Professor/${idProfessor}?DataInicial=${anoInicio}&DataFinal=${anoFim}&Status=-1`;
-            const respListas = await fetch(urlListas, {
-                headers: { 'Token': token, 'Accept': 'application/json' }
-            });
+            const respListas = await fetch(urlListas, { headers: { 'Token': token, 'Accept': 'application/json' } });
 
             if (!respListas.ok) {
                 console.warn(`   ↳ ⚠️ HTTP ${respListas.status}. Fallback Firebase.`);
@@ -1132,145 +1040,86 @@
             }
 
             const listas = await respListas.json();
-            console.log(`   ↳ ${listas.length} listas encontradas para o professor`);
-            if (listas.length > 0) {
-                console.log("   ↳ Amostra:", JSON.stringify(listas[0]));
-            }
+            console.log(`   ↳ ${listas.length} listas`);
 
-            // Encontra a lista que corresponde à turma
-            // Campo correto conforme doc: "turma" (não "nomeTurma" nem "nomeListaChamada")
             const listaCerta = listas.find(l => {
-                const turmaDaLista = l.turma || l.Turma || l.nomeTurma || l.nomeListaChamada || "";
-                return turmaCoincide(turmaDaLista, turmaNome);
+                const td = l.turma || l.Turma || l.nomeTurma || l.nomeListaChamada || "";
+                return turmaCoincide(td, turmaNome);
             });
 
             if (!listaCerta) {
-                console.warn(`   ↳ ⚠️ Turma "${turmaNome}" não encontrada nas listas. Turmas disponíveis:`);
-                listas.forEach(l => console.log(`      - "${l.turma || l.Turma}" (codigoLista: ${l.codigoLista})`));
+                console.warn(`   ↳ ⚠️ Turma "${turmaNome}" não achada. Disponíveis:`, listas.map(l=>l.turma));
                 return false;
             }
 
-            // Campo correto conforme doc: "codigoLista" (não "codigoListaChamada")
             const idListaChamada = listaCerta.codigoLista || listaCerta.codigoListaChamada;
-            window.idListaAtualSophia      = idListaChamada;
-            window.idListaAulaAtualSophia  = listaCerta.codigoListaAula;
+            window.idListaAtualSophia     = idListaChamada;
+            window.idListaAulaAtualSophia = listaCerta.codigoListaAula;
             console.log(`   ↳ ✅ Lista: "${listaCerta.turma}", codigoLista: ${idListaChamada}`);
 
-            // ── PASSO 3: buscar alunos via /ListaChamada/Alunos/{idListaChamada} ──
             console.log(`🔍 [3/3] Buscando alunos via /ListaChamada/Alunos/${idListaChamada}...`);
             const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${idListaChamada}`, {
                 headers: { 'Token': token, 'Accept': 'application/json' }
             });
-            if (!respAlunos.ok) {
-                console.warn(`   ↳ ⚠️ HTTP ${respAlunos.status} ao buscar alunos. Fallback Firebase.`);
-                return false;
-            }
+            if (!respAlunos.ok) { console.warn(`   ↳ ⚠️ HTTP ${respAlunos.status}. Fallback.`); return false; }
 
             const alunosBrutos = await respAlunos.json();
-            console.log(`   ↳ ${Array.isArray(alunosBrutos) ? alunosBrutos.length : '?'} alunos recebidos`);
-            if (Array.isArray(alunosBrutos) && alunosBrutos.length > 0) {
-                console.log("   ↳ Campos disponíveis:", Object.keys(alunosBrutos[0]).join(', '));
-            }
+            console.log(`   ↳ ${Array.isArray(alunosBrutos) ? alunosBrutos.length : '?'} alunos`);
 
-            if (!Array.isArray(alunosBrutos) || alunosBrutos.length === 0) {
-                console.warn("   ↳ ⚠️ Nenhum aluno retornado. Fallback Firebase.");
-                return false;
-            }
+            if (!Array.isArray(alunosBrutos) || alunosBrutos.length === 0) return false;
 
             listaAlunosCache = [];
             const idsAdicionados = new Set();
-
             alunosBrutos.forEach(aluno => {
-                // Tenta todos os possíveis campos de ID conforme doc: codigoMatricula
-                const idAluno = aluno.codigoMatricula || aluno.CodigoMatricula
-                              || aluno.codigo || aluno.Codigo
-                              || aluno.id     || aluno.Id;
-                // Nome: nomeAluno conforme doc
-                const nomeAluno = aluno.nomeAluno || aluno.NomeAluno
-                                || aluno.nome    || aluno.Nome || "DESCONHECIDO";
-                // codigoListaChamadaAula: necessário para o PUT
-                const codAula = aluno.codigoListaChamadaAula || aluno.CodigoListaChamadaAula || 0;
-
+                const idAluno   = aluno.codigoMatricula || aluno.CodigoMatricula || aluno.codigo || aluno.id;
+                const nomeAluno = aluno.nomeAluno || aluno.NomeAluno || aluno.nome || aluno.Nome || "DESCONHECIDO";
+                const codAula   = aluno.codigoListaChamadaAula || aluno.CodigoListaChamadaAula || 0;
                 if (idAluno && !idsAdicionados.has(String(idAluno))) {
                     idsAdicionados.add(String(idAluno));
-                    listaAlunosCache.push({
-                        id: idAluno,
-                        nome: nomeAluno,
-                        codigoListaChamadaAula: codAula,
-                        turma: turmaNome,
-                        presenca: true,
-                        exAluno: false
-                    });
+                    listaAlunosCache.push({ id: idAluno, nome: nomeAluno, codigoListaChamadaAula: codAula, turma: turmaNome, presenca: true, exAluno: false });
                 }
             });
 
             listaAlunosCache.sort((a,b) => a.nome.localeCompare(b.nome));
-            console.log(`✅ Cache montado com ${listaAlunosCache.length} alunos`);
+            console.log(`✅ Cache: ${listaAlunosCache.length} alunos`);
             renderizarTabelaAlunos(listaAlunosCache, []);
             return true;
-
         } catch (e) {
-            console.error("❌ Erro crítico buscarAlunosSophia:", e);
+            console.error("❌ Erro buscarAlunosSophia:", e);
             return false;
         }
     };
 
     // ==========================================
-    // SALVAR FREQUÊNCIA NO SOPHIA — PUT /ListaChamada/Alunos
-    // Payload conforme doc: { codigoProfessor, quantidadeAula, codigoListaChamada, status, alunos[] }
-    // aluno: { codigoListaChamadaAula, codigoMatricula, falta (0=presente, 1=falta), ocorrencias[] }
+    // SALVAR FREQUÊNCIA NO SOPHIA
     // ==========================================
     window.salvarNoSophiA_Interno = async () => {
         try {
-            const token = await autenticarSophia();
-            const idProf  = window.idProfessorSophiAtual;
-            const idLista = window.idListaAtualSophia;       // codigoLista da listaChamada
+            const token    = await autenticarSophia();
+            const idProf   = window.idProfessorSophiAtual;
+            const idLista  = window.idListaAtualSophia;
+            if (!idProf || !idLista) { console.warn("⚠️ IDs SophiA ausentes."); return false; }
 
-            if (!idProf || !idLista) {
-                console.warn("⚠️ IDs SophiA ausentes — skipping sync.");
-                return false;
-            }
+            const alunosPayload = listaAlunosCache.filter(a => !a.exAluno && a.id).map(a => ({
+                codigoListaChamadaAula: parseInt(a.codigoListaChamadaAula) || 0,
+                codigoMatricula: parseInt(a.id),
+                falta: a.presenca ? 0 : 1,
+                ocorrencias: []
+            }));
 
-            const alunosPayload = listaAlunosCache
-                .filter(a => !a.exAluno && a.id)
-                .map(a => ({
-                    codigoListaChamadaAula: parseInt(a.codigoListaChamadaAula) || 0,
-                    codigoMatricula:        parseInt(a.id),
-                    falta:                  a.presenca ? 0 : 1,  // 0 = presente, 1 = falta
-                    ocorrencias:            []
-                }));
-
-            const payload = {
-                codigoProfessor:   parseInt(idProf),
-                quantidadeAula:    1,
-                codigoListaChamada: parseInt(idLista),
-                status:            1,   // 1 = finalizado
-                alunos:            alunosPayload
-            };
-
+            const payload = { codigoProfessor: parseInt(idProf), quantidadeAula: 1, codigoListaChamada: parseInt(idLista), status: 1, alunos: alunosPayload };
             console.log(`📡 PUT /ListaChamada/Alunos — ${alunosPayload.length} alunos`);
-            console.log("   Payload:", JSON.stringify(payload));
 
             const response = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos`, {
                 method: 'PUT',
-                headers: {
-                    'Token':        token,
-                    'Content-Type': 'application/json',
-                    'Accept':       'application/json'
-                },
+                headers: { 'Token': token, 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
             const respText = await response.text();
-            if (!response.ok) {
-                console.error(`❌ SophiA PUT falhou (HTTP ${response.status}):`, respText);
-                return false;
-            }
+            if (!response.ok) { console.error(`❌ SophiA PUT (HTTP ${response.status}):`, respText); return false; }
+            console.log("✅ Frequência sincronizada!", respText);
 
-            console.log("✅ Frequência sincronizada com SophiA!", respText);
-
-            // Também atualiza o status da lista para "fechado" (status 2) se necessário
-            // PUT /ListaChamada/ListaChamada { codigoListaChamada, status }
             try {
                 await fetch(`${SOPHIA_URL}/ListaChamada/ListaChamada`, {
                     method: 'PUT',
@@ -1280,48 +1129,7 @@
             } catch(e2) { /* não crítico */ }
 
             return true;
-        } catch (e) {
-            console.error("❌ Falha PUT SophiA:", e);
-            return false;
-        }
-    };
-
-    // ==========================================
-    // ESTRUTURA DE TURMAS E PERFIS
-    // ==========================================
-    const ESTRUTURA_TURMAS = {
-        "Berçário": [{ nome: "Berçário", letras: ["A","B"] }],
-        "Infantil 1": [{ nome: "Infantil 1", letras: ["A","B","C","D","E","F","G","I"] }],
-        "Infantil 2": [{ nome: "Infantil 2", letras: ["A","B","C","D","E","F","G","I","J"] }],
-        "Infantil 3": [{ nome: "Infantil 3", letras: ["A","B","C","D","E","F","G","H","I","J"] }],
-        "Infantil 4": [{ nome: "Infantil 4", letras: ["A","B","C","D","E","F","G","I","J"] }],
-        "Infantil 5": [{ nome: "Infantil 5", letras: ["A","B","C","D","E","F","G","I"] }],
-        "Fundamental 1": [
-            { nome: "1º Ano", letras: ["A","B","C","D","I"] },
-            { nome: "2º Ano", letras: ["A","B","C","D","I"] },
-            { nome: "3º Ano", letras: ["A","B","C","D","I"] },
-            { nome: "4º Ano", letras: ["A","B","C","I"] },
-            { nome: "5º Ano", letras: ["A","B","C","I"] }
-        ],
-        "Integral": [{ nome: "Integral", letras: ["1","2"] }],
-        "Atividades Extras": [
-            { nome: "Futsal", letras: ["A","B","C"] },
-            { nome: "Dança", letras: ["A","B","C"] },
-            { nome: "Ginástica Rítmica", letras: ["A","B"] },
-            { nome: "Judô", letras: ["A","B"] }
-        ]
-    };
-
-    const PERFIS_COORDENACAO = {
-        "GERAL": "ALL",
-        "CRISTIANE": ["Berçário A","Berçário B","Infantil 1 A","Infantil 1 B","Infantil 1 C","Infantil 1 D","Infantil 1 E","Infantil 1 F","Infantil 1 G","Infantil 1 I","Infantil 2 A","Infantil 2 B","Infantil 2 C","Infantil 2 D","Infantil 2 E","Infantil 2 F","Infantil 2 G","Infantil 2 I","Infantil 2 J"],
-        "ADNA": ["2º Ano A","2º Ano B","2º Ano C","2º Ano D","2º Ano I","3º Ano A","3º Ano B","3º Ano C","3º Ano D","3º Ano I","4º Ano A","4º Ano B","4º Ano C","4º Ano I","5º Ano A","5º Ano B","5º Ano C","5º Ano I"],
-        "NAYARA": ["Infantil 3 A","Infantil 3 B","Infantil 3 C","Infantil 3 D","Infantil 3 E","Infantil 3 F","Infantil 3 G","Infantil 3 H"],
-        "LUDMILLA": ["Infantil 3 I","Infantil 3 J","Infantil 4 I","Infantil 4 J","Infantil 5 A","Infantil 5 B","Infantil 5 C","Infantil 5 D","Infantil 5 E","Infantil 5 F","Infantil 5 G","Infantil 5 I","1º Ano I"],
-        "ELIONEIDE": ["Infantil 4 A","Infantil 4 B","Infantil 4 C","Infantil 4 D","Infantil 4 E","Infantil 4 F","Infantil 4 G"],
-        "SAVIA": ["1º Ano A","1º Ano B","1º Ano C","1º Ano D"],
-        "COORD_ESPORTES": ["Futsal A","Dança A","Ginástica Rítmica A","Judô A"],
-        "SISTEMA INTEGRAL": ["Integral 1","Integral 2"]
+        } catch (e) { console.error("❌ Falha PUT SophiA:", e); return false; }
     };
 
     // ==========================================
@@ -1336,11 +1144,7 @@
                 if (e.key === 'Enter') window.fazerLogin();
             });
         });
-
-        // Verifica se é página de assinatura (via hash)
         verificarPaginaAssinatura();
-
-        // Inicializa canvas de assinatura
         inicializarAssinaturas();
     };
 
@@ -1372,7 +1176,20 @@
         document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
         document.getElementById('tab-' + aba).classList.remove('hidden');
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        document.getElementById('nav-' + aba).classList.add('active');
+        document.getElementById('nav-' + aba)?.classList.add('active');
+    };
+
+    // ==========================================
+    // FIX 3: BOTÃO INDICADORES — passa perfil da coord na URL
+    // ==========================================
+    window.abrirIndicadores = () => {
+        if (!usuarioAtual) return;
+        // Passa o perfil como parâmetro para que indicadores.html filtre corretamente
+        const perfil = ehCoordenacao ? (perfilCoord?.perfil || 'GERAL') : 'PROFESSOR';
+        const turma  = usuarioAtual.turma || '';
+        const nome   = encodeURIComponent(usuarioAtual.nome || '');
+        const url = `indicadores.html?perfil=${perfil}&turma=${encodeURIComponent(turma)}&nome=${nome}`;
+        window.open(url, '_blank');
     };
 
     // ==========================================
@@ -1404,8 +1221,7 @@
 
     window.fazerLogout = () => {
         registrarLog("Fez Logout");
-        usuarioAtual = null; perfilCoord = null; ehCoordenacao = false;
-        sophiaToken = null;
+        usuarioAtual = null; perfilCoord = null; ehCoordenacao = false; sophiaToken = null;
         document.getElementById('login-senha').value = '';
         window.showView('login');
     };
@@ -1447,13 +1263,9 @@
         window.mudarAba('freq');
         loading(true);
 
-        // Mostra/oculta coluna de atendimento
         const thAtend = document.getElementById('th-atend');
-        if (ehCoordenacao) {
-            thAtend.classList.remove('hidden');
-        } else {
-            thAtend.classList.add('hidden');
-        }
+        if (ehCoordenacao) thAtend.classList.remove('hidden');
+        else thAtend.classList.add('hidden');
 
         const sucessoSophia = await window.buscarAlunosSophia(turma, nomeProf);
         if (sucessoSophia) {
@@ -1463,7 +1275,6 @@
             await carregarAlunosBase();
         }
         loading(false);
-
         await window.carregarFrequencia();
         await window.carregarPlanejamento();
     }
@@ -1485,38 +1296,29 @@
         const tbody = document.getElementById('tbody-alunos');
         const listaMob = document.getElementById('mobile-lista');
         tbody.innerHTML = ""; listaMob.innerHTML = "";
-
         document.getElementById('empty-msg').style.display = listaExibicao.length === 0 ? 'block' : 'none';
 
         listaExibicao.forEach((a, i) => {
             const presente = !faltosos.includes(a.nome);
             a.presenca = presente;
-
             const btnClass = a.exAluno ? 'ex-btn' : (presente ? 'presente' : 'ausente');
-            const btnText = a.exAluno ? (a.statusHistorico ? 'Presente' : 'Ausente') : (presente ? 'Presente' : 'Ausente');
-            const onClick = a.exAluno ? '' : `onclick="window.alternarPresenca(this, ${i})"`;
+            const btnText  = a.exAluno ? (a.statusHistorico ? 'Presente' : 'Ausente') : (presente ? 'Presente' : 'Ausente');
+            const onClick  = a.exAluno ? '' : `onclick="window.alternarPresenca(this, ${i})"`;
             const tagRemovido = a.exAluno ? '<span class="texto-removido"> (Ex-Aluno)</span>' : '';
-
-            const btnAtend = ehCoordenacao ? `<button onclick="window.abrirAtendimento('${a.nome}', ${i})" style="background:var(--sec); color:white; border:none; border-radius:6px; padding:5px 10px; font-size:0.75rem; font-weight:700; cursor:pointer;" title="Registrar Atendimento">📋</button>` : '';
+            const btnAtend = ehCoordenacao ? `<button onclick="window.abrirAtendimento('${a.nome}', ${i})" style="background:var(--sec); color:white; border:none; border-radius:6px; padding:5px 10px; font-size:0.75rem; font-weight:700; cursor:pointer;">📋</button>` : '';
 
             tbody.innerHTML += `
                 <tr>
                     <td style="color:var(--text-3); font-weight:600;">${i+1}</td>
                     <td style="font-weight:500;">${a.nome}${tagRemovido}</td>
-                    <td style="text-align:center">
-                        <button class="toggle-btn ${btnClass}" ${onClick}>${btnText}</button>
-                    </td>
+                    <td style="text-align:center"><button class="toggle-btn ${btnClass}" ${onClick}>${btnText}</button></td>
                     ${ehCoordenacao ? `<td style="text-align:center" class="no-print">${btnAtend}</td>` : ''}
-                    <td class="no-print">
-                        <button onclick="window.apagarAluno('${a.id}')" style="background:var(--danger-light); color:var(--danger); border:none; border-radius:6px; padding:5px 8px; font-size:0.75rem; font-weight:700; cursor:pointer;" ${a.exAluno ? 'disabled style="opacity:0.4"' : ''}>🗑️</button>
-                    </td>
+                    <td class="no-print"><button onclick="window.apagarAluno('${a.id}')" style="background:var(--danger-light); color:var(--danger); border:none; border-radius:6px; padding:5px 8px; font-size:0.75rem; font-weight:700; cursor:pointer;" ${a.exAluno ? 'disabled' : ''}>🗑️</button></td>
                 </tr>`;
 
             listaMob.innerHTML += `
                 <div class="student-card status-${btnClass}" id="card-${i}">
-                    <div class="student-info">
-                        <strong>${i+1}. ${a.nome}${tagRemovido}</strong>
-                    </div>
+                    <div class="student-info"><strong>${i+1}. ${a.nome}${tagRemovido}</strong></div>
                     <div class="student-card-actions">
                         ${ehCoordenacao ? `<button onclick="window.abrirAtendimento('${a.nome}', ${i})" style="background:var(--sec); color:white; border:none; border-radius:6px; padding:7px 10px; font-size:0.75rem; font-weight:700;">📋</button>` : ''}
                         <button class="toggle-btn ${btnClass}" ${onClick}>${btnText}</button>
@@ -1556,9 +1358,7 @@
                     faltosos = dados.detalhes.filter(d => !d.presente).map(d => d.nome);
                     dados.detalhes.forEach(hist => {
                         const existe = listaFinal.find(a => a.nome === hist.nome);
-                        if (!existe) {
-                            listaFinal.push({ nome: hist.nome, id: null, exAluno: true, statusHistorico: hist.presente });
-                        }
+                        if (!existe) listaFinal.push({ nome: hist.nome, id: null, exAluno: true, statusHistorico: hist.presente });
                     });
                 }
             }
@@ -1569,57 +1369,41 @@
     };
 
     // ==========================================
-    // SALVAR CHAMADA GERAL
+    // SALVAR CHAMADA
     // ==========================================
     window.salvarChamadaGeral = async () => {
         const data = document.getElementById('data-freq').value;
         if (!data) return alert("Selecione uma data antes de salvar.");
-        if (!listaAlunosCache || listaAlunosCache.length === 0) return alert("Nenhum aluno encontrado para salvar.");
+        if (!listaAlunosCache || listaAlunosCache.length === 0) return alert("Nenhum aluno encontrado.");
 
-        // Mostra status
-        const syncDiv = document.getElementById('sync-status');
+        const syncDiv  = document.getElementById('sync-status');
         const syncIcon = document.getElementById('sync-icon');
         const syncText = document.getElementById('sync-text');
         syncDiv.style.display = 'block';
-        syncIcon.innerText = '⏳';
-        syncText.innerText = 'Salvando no CASA+...';
-
+        syncIcon.innerText = '⏳'; syncText.innerText = 'Salvando no CASA+...';
         loading(true);
         try {
-            // 1. Salva no Firebase
             const detalhes = listaAlunosCache.map(a => ({ nome: a.nome, presente: a.presenca }));
-            const idDoc = `${usuarioAtual.turma.replace(/\s/g,'')} _${data}`;
+            const idDoc = `${usuarioAtual.turma.replace(/\s/g,'')}_${data}`;
             await setDoc(doc(db, "frequencia", idDoc), {
-                turma: usuarioAtual.turma,
-                data: data,
-                detalhes: detalhes,
-                professor: usuarioAtual.nome,
-                atualizadoEm: new Date().toISOString()
+                turma: usuarioAtual.turma, data: data, detalhes: detalhes,
+                professor: usuarioAtual.nome, atualizadoEm: new Date().toISOString()
             });
 
-            syncIcon.innerText = '🔄';
-            syncText.innerText = 'Sincronizando com SophiA...';
-
-            // 2. Sincroniza com SophiA
+            syncIcon.innerText = '🔄'; syncText.innerText = 'Sincronizando com SophiA...';
             const sucessoSophia = await window.salvarNoSophiA_Interno();
-
             await registrarLog("Salvou Chamada");
 
             if (sucessoSophia) {
-                syncIcon.innerText = '✅';
-                syncText.innerText = 'Chamada salva no CASA+ e sincronizada com o SophiA!';
+                syncIcon.innerText = '✅'; syncText.innerText = 'Salvo e sincronizado com o SophiA!';
                 syncText.style.color = 'var(--success)';
-                setTimeout(() => { syncDiv.style.display = 'none'; syncText.style.color = ''; }, 4000);
             } else {
-                syncIcon.innerText = '⚠️';
-                syncText.innerText = 'Salvo no CASA+. SophiA não disponível no momento.';
+                syncIcon.innerText = '⚠️'; syncText.innerText = 'Salvo no CASA+. SophiA indisponível.';
                 syncText.style.color = 'var(--warning)';
-                setTimeout(() => { syncDiv.style.display = 'none'; syncText.style.color = ''; }, 5000);
             }
+            setTimeout(() => { syncDiv.style.display = 'none'; syncText.style.color = ''; }, 5000);
         } catch(e) {
-            console.error(e);
-            syncIcon.innerText = '❌';
-            syncText.innerText = 'Erro ao salvar: ' + e.message;
+            console.error(e); syncIcon.innerText = '❌'; syncText.innerText = 'Erro: ' + e.message;
             syncText.style.color = 'var(--danger)';
         } finally { loading(false); }
     };
@@ -1639,7 +1423,7 @@
 
     window.imprimirRelatorio = () => {
         const c = document.getElementById('resultado-relatorio').innerHTML;
-        if (!c || c === "Processando...") return alert("Gere o relatório primeiro!");
+        if (!c || c.includes("Processando")) return alert("Gere o relatório primeiro!");
         document.body.classList.add('printing-report');
         window.print();
         setTimeout(() => document.body.classList.remove('printing-report'), 1000);
@@ -1647,7 +1431,7 @@
 
     window.gerarRelatorioFaltas = async () => {
         const inicio = document.getElementById('mes-relatorio-inicio').value;
-        const fim = document.getElementById('mes-relatorio-fim').value;
+        const fim    = document.getElementById('mes-relatorio-fim').value;
         if (!inicio || !fim) return alert("Selecione o período.");
         const divRes = document.getElementById('resultado-relatorio');
         divRes.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-3);">⏳ Processando...</div>';
@@ -1669,33 +1453,21 @@
                 }
             });
             const presentes = Object.entries(mapaFaltas).filter(([,f]) => f === 0).length;
-            let html = `
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
-                    <div style="background:var(--primary);color:white;padding:12px;border-radius:var(--radius);text-align:center;">
-                        <div style="font-size:1.5rem;font-weight:800;">${dias}</div>
-                        <div style="font-size:0.75rem;opacity:0.9;">Dias com Chamada</div>
-                    </div>
-                    <div style="background:var(--success);color:white;padding:12px;border-radius:var(--radius);text-align:center;">
-                        <div style="font-size:1.5rem;font-weight:800;">${presentes}</div>
-                        <div style="font-size:0.75rem;opacity:0.9;">Sem Faltas</div>
-                    </div>
-                    <div style="background:var(--danger);color:white;padding:12px;border-radius:var(--radius);text-align:center;">
-                        <div style="font-size:1.5rem;font-weight:800;">${Object.values(mapaFaltas).filter(f=>f>0).length}</div>
-                        <div style="font-size:0.75rem;opacity:0.9;">Com Faltas</div>
-                    </div>
-                </div>
-                <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
-                    <thead><tr style="background:var(--surface-2);">
-                        <th style="text-align:left;padding:10px 12px;font-weight:700;color:var(--text-2);border-bottom:2px solid var(--border);">Aluno</th>
-                        <th style="text-align:center;padding:10px 12px;font-weight:700;color:var(--text-2);border-bottom:2px solid var(--border);">Faltas</th>
-                    </tr></thead><tbody>`;
-            Object.entries(mapaFaltas).sort((a,b) => a[0].localeCompare(b[0])).forEach(([n,f]) => {
-                html += `<tr>
-                    <td style="padding:9px 12px;border-bottom:1px solid var(--border);font-weight:500;">${n}</td>
-                    <td style="text-align:center;padding:9px 12px;border-bottom:1px solid var(--border);">
-                        ${f > 0 ? `<span style="background:var(--danger-light);color:var(--danger);padding:2px 10px;border-radius:12px;font-weight:700;">${f}</span>` : `<span style="background:var(--success-light);color:var(--success);padding:2px 10px;border-radius:12px;font-weight:700;">0</span>`}
-                    </td>
-                </tr>`;
+            let html = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
+                <div style="background:var(--primary);color:white;padding:12px;border-radius:var(--radius);text-align:center;"><div style="font-size:1.5rem;font-weight:800;">${dias}</div><div style="font-size:0.75rem;opacity:0.9;">Dias com Chamada</div></div>
+                <div style="background:var(--success);color:white;padding:12px;border-radius:var(--radius);text-align:center;"><div style="font-size:1.5rem;font-weight:800;">${presentes}</div><div style="font-size:0.75rem;opacity:0.9;">Sem Faltas</div></div>
+                <div style="background:var(--danger);color:white;padding:12px;border-radius:var(--radius);text-align:center;"><div style="font-size:1.5rem;font-weight:800;">${Object.values(mapaFaltas).filter(f=>f>0).length}</div><div style="font-size:0.75rem;opacity:0.9;">Com Faltas</div></div>
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
+                <thead><tr style="background:var(--surface-2);">
+                    <th style="text-align:left;padding:10px 12px;font-weight:700;color:var(--text-2);border-bottom:2px solid var(--border);">Aluno</th>
+                    <th style="text-align:center;padding:10px 12px;font-weight:700;color:var(--text-2);border-bottom:2px solid var(--border);">Faltas</th>
+                </tr></thead><tbody>`;
+            Object.entries(mapaFaltas).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([n,f]) => {
+                html += `<tr><td style="padding:9px 12px;border-bottom:1px solid var(--border);font-weight:500;">${n}</td>
+                <td style="text-align:center;padding:9px 12px;border-bottom:1px solid var(--border);">
+                    ${f > 0 ? `<span style="background:var(--danger-light);color:var(--danger);padding:2px 10px;border-radius:12px;font-weight:700;">${f}</span>` : `<span style="background:var(--success-light);color:var(--success);padding:2px 10px;border-radius:12px;font-weight:700;">0</span>`}
+                </td></tr>`;
             });
             html += `</tbody></table>`;
             divRes.innerHTML = html;
@@ -1705,7 +1477,7 @@
 
     window.exportarExcel = async () => {
         const inicio = document.getElementById('mes-relatorio-inicio').value;
-        const fim = document.getElementById('mes-relatorio-fim').value;
+        const fim    = document.getElementById('mes-relatorio-fim').value;
         if (!inicio || !fim) return alert("Selecione os meses primeiro.");
         const snap = await getDocs(query(collection(db,"frequencia"), where("turma","==",usuarioAtual.turma)));
         let mapaFaltas = {};
@@ -1719,7 +1491,7 @@
                 });
         });
         let csv = ["Aluno,Total de Faltas"];
-        Object.entries(mapaFaltas).sort((a,b) => a[0].localeCompare(b[0])).forEach(([n,f]) => csv.push(`"${n}",${f}`));
+        Object.entries(mapaFaltas).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([n,f]) => csv.push(`"${n}",${f}`));
         const blob = new Blob(["\uFEFF" + csv.join("\n")], { type: 'text/csv;charset=utf-8;' });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
@@ -1756,8 +1528,7 @@
                 disciplina: document.getElementById('plan-disciplina').value,
                 metodologia: document.getElementById('plan-metodologia').value
             });
-            alert("✅ Diário Salvo!");
-            await registrarLog("Salvou Diário");
+            alert("✅ Diário Salvo!"); await registrarLog("Salvou Diário");
             window.carregarPlanejamento();
         } catch(e) { alert("Erro ao salvar."); }
         finally { loading(false); }
@@ -1785,7 +1556,7 @@
     // CADASTRO
     // ==========================================
     function carregarOpcoesTurma() {
-        const s1 = document.getElementById('cad-turma-unica');
+        const s1   = document.getElementById('cad-turma-unica');
         const contC = document.getElementById('container-checkboxes');
         s1.innerHTML = '<option value="" disabled selected>Selecione a Turma</option>';
         contC.innerHTML = '';
@@ -1817,10 +1588,10 @@
     };
 
     window.fazerCadastro = async () => {
-        const nome = document.getElementById('cad-nome').value.trim();
+        const nome  = document.getElementById('cad-nome').value.trim();
         const email = document.getElementById('cad-email').value.trim();
         const senha = document.getElementById('cad-senha').value;
-        const tipo = document.getElementById('cad-tipo').value;
+        const tipo  = document.getElementById('cad-tipo').value;
         if (!nome || !email || !senha) return alert("Preencha todos os campos.");
         let turma = "", acessos = null;
         if (tipo === 'professor') {
@@ -1867,9 +1638,7 @@
                 if (nome && turma) { promises.push(addDoc(collection(db,"alunos"), { nome, turma })); count++; }
             }
         }
-        await Promise.all(promises);
-        loading(false);
-        alert(`✅ ${count} alunos importados!`);
+        await Promise.all(promises); loading(false); alert(`✅ ${count} alunos importados!`);
         document.getElementById('lista-alunos-massa').value = "";
     };
 
@@ -1945,10 +1714,7 @@
             let html = "";
             snap.forEach(d => {
                 const dd = d.data();
-                html += `<div class="hist-item">
-                    <div><span class="hist-date">📅 ${formatData(dd.data)}</span></div>
-                    <button class="btn-ver" onclick="window.carregarDoHist('${dd.data}','${tipo}')">Ver</button>
-                </div>`;
+                html += `<div class="hist-item"><div><span class="hist-date">📅 ${formatData(dd.data)}</span></div><button class="btn-ver" onclick="window.carregarDoHist('${dd.data}','${tipo}')">Ver</button></div>`;
             });
             div.innerHTML = html || '<p style="text-align:center;color:var(--text-3);padding:20px;">Nenhum registro encontrado.</p>';
         } catch(e) { document.getElementById('modal-lista-conteudo').innerHTML = "Erro ao carregar."; }
@@ -1971,9 +1737,7 @@
         const pc = document.createElement('div'); pc.id = 'print-container';
         pc.appendChild(document.getElementById('print-header').cloneNode(true));
         pc.appendChild(clone);
-        document.body.appendChild(pc);
-        window.print();
-        document.body.removeChild(pc);
+        document.body.appendChild(pc); window.print(); document.body.removeChild(pc);
         document.getElementById('print-header').style.display = 'none';
     };
 
@@ -1984,72 +1748,31 @@
         ['sig-coord', 'sig-familia'].forEach(id => {
             const canvas = document.getElementById(id);
             if (!canvas) return;
-            let drawing = false;
-            let lastX, lastY;
-
+            let drawing = false, lastX, lastY;
             const getPos = (e, canvas) => {
                 const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / rect.width;
-                const scaleY = canvas.height / rect.height;
-                if (e.touches) {
-                    return {
-                        x: (e.touches[0].clientX - rect.left) * scaleX,
-                        y: (e.touches[0].clientY - rect.top) * scaleY
-                    };
-                }
-                return {
-                    x: (e.clientX - rect.left) * scaleX,
-                    y: (e.clientY - rect.top) * scaleY
-                };
+                const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+                if (e.touches) return { x: (e.touches[0].clientX - rect.left) * scaleX, y: (e.touches[0].clientY - rect.top) * scaleY };
+                return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
             };
-
             const ctx = canvas.getContext('2d');
-            ctx.strokeStyle = '#1a2332';
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-
-            const start = (e) => {
-                e.preventDefault();
-                drawing = true;
-                const pos = getPos(e, canvas);
-                lastX = pos.x; lastY = pos.y;
-                ctx.beginPath();
-                ctx.moveTo(lastX, lastY);
-            };
-
-            const draw = (e) => {
-                e.preventDefault();
-                if (!drawing) return;
-                const pos = getPos(e, canvas);
-                ctx.lineTo(pos.x, pos.y);
-                ctx.stroke();
-                lastX = pos.x; lastY = pos.y;
-            };
-
-            const stop = (e) => { e.preventDefault(); drawing = false; ctx.beginPath(); };
-
-            canvas.addEventListener('mousedown', start);
-            canvas.addEventListener('mousemove', draw);
-            canvas.addEventListener('mouseup', stop);
-            canvas.addEventListener('mouseleave', stop);
-            canvas.addEventListener('touchstart', start, { passive: false });
-            canvas.addEventListener('touchmove', draw, { passive: false });
-            canvas.addEventListener('touchend', stop, { passive: false });
+            ctx.strokeStyle = '#1a2332'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            const start = (e) => { e.preventDefault(); drawing = true; const pos = getPos(e, canvas); lastX = pos.x; lastY = pos.y; ctx.beginPath(); ctx.moveTo(lastX, lastY); };
+            const draw  = (e) => { e.preventDefault(); if (!drawing) return; const pos = getPos(e, canvas); ctx.lineTo(pos.x, pos.y); ctx.stroke(); lastX = pos.x; lastY = pos.y; };
+            const stop  = (e) => { e.preventDefault(); drawing = false; ctx.beginPath(); };
+            canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', stop); canvas.addEventListener('mouseleave', stop);
+            canvas.addEventListener('touchstart', start, { passive: false }); canvas.addEventListener('touchmove', draw, { passive: false }); canvas.addEventListener('touchend', stop, { passive: false });
         });
     }
 
     window.limparAssinatura = (canvasId) => {
         const canvas = document.getElementById(canvasId);
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
     };
 
     function canvasVazio(canvasId) {
         const canvas = document.getElementById(canvasId);
-        const ctx = canvas.getContext('2d');
-        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-        return !pixels.some(p => p !== 0);
+        return !canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data.some(p => p !== 0);
     }
 
     // ==========================================
@@ -2059,8 +1782,6 @@
 
     window.abrirAtendimento = (nomeAluno, idx) => {
         if (!ehCoordenacao) return;
-
-        // Reseta o formulário
         document.getElementById('atend-aluno').value = nomeAluno;
         document.getElementById('atend-turma').value = usuarioAtual.turma;
         document.getElementById('atend-professora').value = '';
@@ -2073,33 +1794,24 @@
         document.getElementById('atend-consideracoes').value = '';
         document.getElementById('atend-participantes').value = '';
         document.getElementById('atend-coord-nome').value = usuarioAtual.nome.replace(' (Coord)','');
-
-        const hoje = new Date().toLocaleDateString('pt-BR');
-        document.getElementById('atend-data-header').innerText = `Data: ${hoje}`;
-
+        document.getElementById('atend-data-header').innerText = `Data: ${new Date().toLocaleDateString('pt-BR')}`;
         window.limparAssinatura('sig-coord');
         document.getElementById('atend-qr-section').style.display = 'none';
         document.getElementById('atend-acoes').style.display = 'flex';
         document.getElementById('qrcode-container').innerHTML = '';
-
         atendimentoAtual = { nomeAluno, idx, data: getHoje() };
-
         document.getElementById('modal-atendimento').style.display = 'flex';
     };
 
-    window.fecharAtendimento = () => {
-        document.getElementById('modal-atendimento').style.display = 'none';
-    };
+    window.fecharAtendimento = () => { document.getElementById('modal-atendimento').style.display = 'none'; };
 
     window.finalizarAtendimento = async () => {
         const coordNome = document.getElementById('atend-coord-nome').value.trim();
         if (!coordNome) return alert("Informe o nome da coordenadora.");
         if (canvasVazio('sig-coord')) return alert("Por favor, assine o documento antes de finalizar.");
-
         loading(true);
         try {
             const sigCoordData = document.getElementById('sig-coord').toDataURL('image/png');
-
             const atendDoc = {
                 aluno: document.getElementById('atend-aluno').value,
                 turma: document.getElementById('atend-turma').value,
@@ -2112,138 +1824,77 @@
                 dadosEscola: document.getElementById('atend-dados-escola').value,
                 consideracoes: document.getElementById('atend-consideracoes').value,
                 participantes: document.getElementById('atend-participantes').value,
-                coordenadora: coordNome,
-                assinaturaCoord: sigCoordData,
-                dataAtendimento: getHoje(),
-                criadoEm: serverTimestamp(),
-                escola: usuarioAtual.turma,
-                status: 'aguardando_familia',
-                assinaturaFamilia: null,
-                nomeFamilia: null
+                coordenadora: coordNome, assinaturaCoord: sigCoordData,
+                dataAtendimento: getHoje(), criadoEm: serverTimestamp(),
+                escola: usuarioAtual.turma, status: 'aguardando_familia',
+                assinaturaFamilia: null, nomeFamilia: null
             };
-
             const docRef = await addDoc(collection(db, "atendimentos"), atendDoc);
-            const idAtendimento = docRef.id;
-
             await registrarLog(`Registrou Atendimento: ${atendDoc.aluno}`);
-
-            // Gera link e QR Code
             const linkBase = window.location.href.split('#')[0];
-            const linkAtendimento = `${linkBase}#assinar/${idAtendimento}`;
-
+            const linkAtendimento = `${linkBase}#assinar/${docRef.id}`;
             document.getElementById('atend-link-url').href = linkAtendimento;
             document.getElementById('atend-link-url').innerText = linkAtendimento;
             document.getElementById('atend-qr-section').style.display = 'block';
             document.getElementById('atend-acoes').style.display = 'none';
             document.getElementById('qrcode-container').innerHTML = '';
-
-            new QRCode(document.getElementById('qrcode-container'), {
-                text: linkAtendimento,
-                width: 180,
-                height: 180,
-                colorDark: "#004aad",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.M
-            });
-
-            atendimentoAtual.id = idAtendimento;
-            atendimentoAtual.link = linkAtendimento;
-
-        } catch(e) {
-            console.error(e);
-            alert("Erro ao salvar atendimento: " + e.message);
-        } finally { loading(false); }
+            new QRCode(document.getElementById('qrcode-container'), { text: linkAtendimento, width: 180, height: 180, colorDark: "#004aad", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+            atendimentoAtual.id = docRef.id; atendimentoAtual.link = linkAtendimento;
+        } catch(e) { console.error(e); alert("Erro ao salvar: " + e.message); }
+        finally { loading(false); }
     };
 
     window.copiarLinkAtendimento = () => {
         if (!atendimentoAtual?.link) return;
-        navigator.clipboard.writeText(atendimentoAtual.link)
-            .then(() => alert("✅ Link copiado!"))
-            .catch(() => {
-                const ta = document.createElement('textarea');
-                ta.value = atendimentoAtual.link;
-                document.body.appendChild(ta); ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-                alert("✅ Link copiado!");
-            });
+        navigator.clipboard.writeText(atendimentoAtual.link).then(() => alert("✅ Link copiado!")).catch(() => {
+            const ta = document.createElement('textarea'); ta.value = atendimentoAtual.link;
+            document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+            alert("✅ Link copiado!");
+        });
     };
 
     window.compartilharAtendimento = () => {
         if (!atendimentoAtual?.link) return;
-        if (navigator.share) {
-            navigator.share({
-                title: `Atendimento — ${atendimentoAtual.nomeAluno}`,
-                text: `Registro de atendimento de ${atendimentoAtual.nomeAluno}. Acesse para assinar e receber sua cópia:`,
-                url: atendimentoAtual.link
-            });
-        } else {
-            window.copiarLinkAtendimento();
-        }
+        if (navigator.share) navigator.share({ title: `Atendimento — ${atendimentoAtual.nomeAluno}`, text: `Registro de atendimento de ${atendimentoAtual.nomeAluno}. Acesse para assinar:`, url: atendimentoAtual.link });
+        else window.copiarLinkAtendimento();
     };
 
     window.imprimirAtendimento = () => {
-        document.body.classList.add('printing-atend');
-        window.print();
+        document.body.classList.add('printing-atend'); window.print();
         setTimeout(() => document.body.classList.remove('printing-atend'), 1000);
     };
 
     // ==========================================
-    // ASSINATURA FAMÍLIA (página pública)
+    // ASSINATURA FAMÍLIA
     // ==========================================
     async function carregarDocParaFamiliaAssinar(idAtend) {
         loading(true);
         try {
             const docSnap = await getDoc(doc(db, "atendimentos", idAtend));
-            if (!docSnap.exists()) {
-                alert("Documento não encontrado ou link inválido.");
-                loading(false);
-                return;
-            }
+            if (!docSnap.exists()) { alert("Documento não encontrado."); loading(false); return; }
             const data = docSnap.data();
-
-            // Esconde o app e mostra apenas o modal de assinatura
             document.getElementById('view-login').style.display = 'none';
-
             let preview = `
                 <h4 style="color:var(--primary);margin-bottom:12px;">📋 Registro de Atendimento</h4>
                 <p><strong>Aluno:</strong> ${data.aluno}</p>
                 <p><strong>Turma:</strong> ${data.turma} | <strong>Turno:</strong> ${data.turno || 'N/A'}</p>
                 <p><strong>Data:</strong> ${formatData(data.dataAtendimento)}</p>
                 <hr style="margin:12px 0; border:none; border-top:1px solid var(--border);">
-                <p><strong>Objetivos:</strong></p>
-                <p style="white-space:pre-wrap;color:var(--text-2);">${data.objetivos || 'N/A'}</p>
-                <p><strong>Dados Família/Clínico:</strong></p>
-                <p style="white-space:pre-wrap;color:var(--text-2);">${data.dadosFamilia || 'N/A'}</p>
-                <p><strong>Dados Escola:</strong></p>
-                <p style="white-space:pre-wrap;color:var(--text-2);">${data.dadosEscola || 'N/A'}</p>
-                <p><strong>Considerações Finais:</strong></p>
-                <p style="white-space:pre-wrap;color:var(--text-2);">${data.consideracoes || 'N/A'}</p>
-                <p><strong>Participantes:</strong></p>
-                <p style="white-space:pre-wrap;color:var(--text-2);">${data.participantes || 'N/A'}</p>
+                <p><strong>Objetivos:</strong></p><p style="white-space:pre-wrap;color:var(--text-2);">${data.objetivos || 'N/A'}</p>
+                <p><strong>Dados Família/Clínico:</strong></p><p style="white-space:pre-wrap;color:var(--text-2);">${data.dadosFamilia || 'N/A'}</p>
+                <p><strong>Dados Escola:</strong></p><p style="white-space:pre-wrap;color:var(--text-2);">${data.dadosEscola || 'N/A'}</p>
+                <p><strong>Considerações Finais:</strong></p><p style="white-space:pre-wrap;color:var(--text-2);">${data.consideracoes || 'N/A'}</p>
+                <p><strong>Participantes:</strong></p><p style="white-space:pre-wrap;color:var(--text-2);">${data.participantes || 'N/A'}</p>
                 <hr style="margin:12px 0; border:none; border-top:1px solid var(--border);">
-                <p><strong>Assinado pela Coordenação:</strong> ${data.coordenadora}</p>
-            `;
-
-            if (data.assinaturaCoord) {
-                preview += `<img src="${data.assinaturaCoord}" style="height:50px;display:block;margin-top:6px;" alt="Assinatura coord">`;
-            }
-
-            if (data.status === 'assinado_familia') {
-                preview += `<div style="background:var(--success-light);color:var(--success);padding:10px 14px;border-radius:var(--radius-sm);margin-top:12px;font-weight:700;">✅ Este documento já foi assinado pela família.</div>`;
-            }
-
+                <p><strong>Assinado pela Coordenação:</strong> ${data.coordenadora}</p>`;
+            if (data.assinaturaCoord) preview += `<img src="${data.assinaturaCoord}" style="height:50px;display:block;margin-top:6px;" alt="Assinatura coord">`;
+            if (data.status === 'assinado_familia') preview += `<div style="background:var(--success-light);color:var(--success);padding:10px 14px;border-radius:var(--radius-sm);margin-top:12px;font-weight:700;">✅ Este documento já foi assinado pela família.</div>`;
             document.getElementById('familia-doc-preview').innerHTML = preview;
-
-            // Armazena ID para quando assinar
             window._idAtendParaAssinar = idAtend;
             window._statusAtend = data.status;
-
             document.getElementById('modal-assinar-familia').style.display = 'flex';
-        } catch(e) {
-            console.error(e);
-            alert("Erro ao carregar documento.");
-        } finally { loading(false); }
+        } catch(e) { console.error(e); alert("Erro ao carregar."); }
+        finally { loading(false); }
     }
 
     window.confirmarAssinaturaFamilia = async () => {
@@ -2251,31 +1902,19 @@
         const nome = document.getElementById('familia-nome').value.trim();
         if (!nome) return alert("Informe seu nome completo.");
         if (canvasVazio('sig-familia')) return alert("Por favor, assine antes de confirmar.");
-
         loading(true);
         try {
             const sigData = document.getElementById('sig-familia').toDataURL('image/png');
-            await setDoc(doc(db, "atendimentos", window._idAtendParaAssinar), {
-                assinaturaFamilia: sigData,
-                nomeFamilia: nome,
-                status: 'assinado_familia',
-                assinadoEm: serverTimestamp()
-            }, { merge: true });
-
+            await setDoc(doc(db, "atendimentos", window._idAtendParaAssinar), { assinaturaFamilia: sigData, nomeFamilia: nome, status: 'assinado_familia', assinadoEm: serverTimestamp() }, { merge: true });
             document.getElementById('modal-assinar-familia').style.display = 'none';
-            document.body.innerHTML = `
-                <div style="font-family:'Plus Jakarta Sans',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:var(--bg);text-align:center;padding:20px;--bg:#f0f4f8;--primary:#004aad;--success:#10b981;">
-                    <div style="font-size:3.5rem;margin-bottom:16px;">✅</div>
-                    <h2 style="color:#004aad;margin-bottom:8px;">Documento Assinado!</h2>
-                    <p style="color:#4a5568;max-width:400px;margin-bottom:24px;">Obrigado, <strong>${nome}</strong>! Sua assinatura foi registrada com sucesso. A escola receberá uma cópia do documento assinado.</p>
-                    <div style="background:#d1fae5;color:#065f46;padding:12px 24px;border-radius:12px;font-weight:700;">
-                        Assinatura confirmada em ${new Date().toLocaleString('pt-BR')}
-                    </div>
-                </div>
-            `;
-        } catch(e) {
-            alert("Erro ao confirmar assinatura: " + e.message);
-        } finally { loading(false); }
+            document.body.innerHTML = `<div style="font-family:'Plus Jakarta Sans',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#f0f4f8;text-align:center;padding:20px;">
+                <div style="font-size:3.5rem;margin-bottom:16px;">✅</div>
+                <h2 style="color:#004aad;margin-bottom:8px;">Documento Assinado!</h2>
+                <p style="color:#4a5568;max-width:400px;margin-bottom:24px;">Obrigado, <strong>${nome}</strong>! Sua assinatura foi registrada com sucesso.</p>
+                <div style="background:#d1fae5;color:#065f46;padding:12px 24px;border-radius:12px;font-weight:700;">Assinatura confirmada em ${new Date().toLocaleString('pt-BR')}</div>
+            </div>`;
+        } catch(e) { alert("Erro ao confirmar: " + e.message); }
+        finally { loading(false); }
     };
 
 </script>
