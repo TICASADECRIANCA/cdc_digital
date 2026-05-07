@@ -660,7 +660,10 @@
         </div>
     </div>
 
-    <!-- FIX 3: Botão Indicadores aponta para a URL correta; apenas coord vê -->
+    <!-- =====================================================
+         FIX 1: NAV — "Indicadores" aparece só para coordenação
+         O item é adicionado/removido via JS em entrarTurma()
+    ====================================================== -->
     <div class="nav-tabs">
         <div class="nav-item active" id="nav-freq" onclick="window.mudarAba('freq')">
             <span class="nav-icon">📅</span> Chamada
@@ -671,7 +674,8 @@
         <div class="nav-item" onclick="window.open('reunioes.html', '_blank')">
             <span class="nav-icon">📝</span> Reuniões
         </div>
-        <div class="nav-item" id="nav-indicadores" onclick="window.abrirIndicadores()">
+        <!-- Indicadores: visível só para coordenação (controlado por JS) -->
+        <div class="nav-item hidden" id="nav-indicadores" onclick="window.abrirIndicadores()">
             <span class="nav-icon">📊</span> Indicadores
         </div>
     </div>
@@ -876,7 +880,7 @@
     const getHoje = () => new Date().toISOString().split('T')[0];
 
     // ==========================================
-    // FIX 1: ESTRUTURA DE TURMAS — até 1º Ano do Fundamental
+    // ESTRUTURA DE TURMAS
     // ==========================================
     const ESTRUTURA_TURMAS = {
         "Berçário": [{ nome: "Berçário", letras: ["A","B"] }],
@@ -887,7 +891,6 @@
         "Infantil 5": [{ nome: "Infantil 5", letras: ["A","B","C","D","E","F","G","I"] }],
         "Fundamental 1": [
             { nome: "1º Ano", letras: ["A","B","C","D","I"] }
-            // FIX 1: Removidos 2º, 3º, 4º e 5º Ano — escola só vai até 1º Ano
         ],
         "Integral": [{ nome: "Integral", letras: ["1","2"] }],
         "Atividades Extras": [
@@ -969,19 +972,15 @@
     }
 
     // ==========================================
-    // FIX 2: BUSCA ALUNOS — coordenação usa mesma integração que professor
-    // Fluxo: busca colaboradores → acha professor ou coord por nome → busca listas → busca alunos
+    // BUSCA ALUNOS SOPHIA
     // ==========================================
     window.buscarAlunosSophia = async (turmaNome, nomeProf) => {
         try {
             const token = await autenticarSophia();
             if (!token) return false;
 
-            // Para coordenação: tenta encontrar o professor da turma no Firebase
-            // e usa o nome dele para buscar no SophiA
             let nomeBusca = nomeProf.replace(/\s*\(Coord\)\s*/i, "").trim();
             
-            // FIX 2: Se for coordenação, busca o professor responsável pela turma no Firebase
             if (ehCoordenacao) {
                 console.log(`🔍 [Coord] Buscando professor da turma "${turmaNome}" no Firebase...`);
                 const profSnap = await getDocs(query(collection(db, "professores"), where("turma","==",turmaNome)));
@@ -1000,7 +999,6 @@
             });
             if (!respColab.ok) throw new Error(`Colaboradores: HTTP ${respColab.status}`);
             const colaboradores = await respColab.json();
-            console.log(`   ↳ ${colaboradores.length} colaboradores`);
 
             const nomeLimpo = normalizar(nomeBusca.split(' ').slice(0,2).join(' '));
             let professorSophia = null;
@@ -1025,47 +1023,32 @@
 
             const idProfessor = professorSophia.codigo || professorSophia.Codigo || professorSophia.id || professorSophia.Id;
             window.idProfessorSophiAtual = idProfessor;
-            console.log(`   ↳ ✅ "${professorSophia.nome || professorSophia.Nome}", ID: ${idProfessor}`);
 
             const anoInicio = `${new Date().getFullYear()}-01-01T00:00:00`;
             const anoFim    = `${new Date().getFullYear()}-12-31T23:59:59`;
 
-            console.log(`🔍 [2/3] Buscando listas via /ListaChamada/Professor/${idProfessor}...`);
             const urlListas = `${SOPHIA_URL}/ListaChamada/Professor/${idProfessor}?DataInicial=${anoInicio}&DataFinal=${anoFim}&Status=-1`;
             const respListas = await fetch(urlListas, { headers: { 'Token': token, 'Accept': 'application/json' } });
-
-            if (!respListas.ok) {
-                console.warn(`   ↳ ⚠️ HTTP ${respListas.status}. Fallback Firebase.`);
-                return false;
-            }
+            if (!respListas.ok) return false;
 
             const listas = await respListas.json();
-            console.log(`   ↳ ${listas.length} listas`);
-
             const listaCerta = listas.find(l => {
                 const td = l.turma || l.Turma || l.nomeTurma || l.nomeListaChamada || "";
                 return turmaCoincide(td, turmaNome);
             });
 
-            if (!listaCerta) {
-                console.warn(`   ↳ ⚠️ Turma "${turmaNome}" não achada. Disponíveis:`, listas.map(l=>l.turma));
-                return false;
-            }
+            if (!listaCerta) return false;
 
             const idListaChamada = listaCerta.codigoLista || listaCerta.codigoListaChamada;
             window.idListaAtualSophia     = idListaChamada;
             window.idListaAulaAtualSophia = listaCerta.codigoListaAula;
-            console.log(`   ↳ ✅ Lista: "${listaCerta.turma}", codigoLista: ${idListaChamada}`);
 
-            console.log(`🔍 [3/3] Buscando alunos via /ListaChamada/Alunos/${idListaChamada}...`);
             const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${idListaChamada}`, {
                 headers: { 'Token': token, 'Accept': 'application/json' }
             });
-            if (!respAlunos.ok) { console.warn(`   ↳ ⚠️ HTTP ${respAlunos.status}. Fallback.`); return false; }
+            if (!respAlunos.ok) return false;
 
             const alunosBrutos = await respAlunos.json();
-            console.log(`   ↳ ${Array.isArray(alunosBrutos) ? alunosBrutos.length : '?'} alunos`);
-
             if (!Array.isArray(alunosBrutos) || alunosBrutos.length === 0) return false;
 
             listaAlunosCache = [];
@@ -1081,7 +1064,6 @@
             });
 
             listaAlunosCache.sort((a,b) => a.nome.localeCompare(b.nome));
-            console.log(`✅ Cache: ${listaAlunosCache.length} alunos`);
             renderizarTabelaAlunos(listaAlunosCache, []);
             return true;
         } catch (e) {
@@ -1098,7 +1080,7 @@
             const token    = await autenticarSophia();
             const idProf   = window.idProfessorSophiAtual;
             const idLista  = window.idListaAtualSophia;
-            if (!idProf || !idLista) { console.warn("⚠️ IDs SophiA ausentes."); return false; }
+            if (!idProf || !idLista) return false;
 
             const alunosPayload = listaAlunosCache.filter(a => !a.exAluno && a.id).map(a => ({
                 codigoListaChamadaAula: parseInt(a.codigoListaChamadaAula) || 0,
@@ -1108,7 +1090,6 @@
             }));
 
             const payload = { codigoProfessor: parseInt(idProf), quantidadeAula: 1, codigoListaChamada: parseInt(idLista), status: 1, alunos: alunosPayload };
-            console.log(`📡 PUT /ListaChamada/Alunos — ${alunosPayload.length} alunos`);
 
             const response = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos`, {
                 method: 'PUT',
@@ -1116,9 +1097,7 @@
                 body: JSON.stringify(payload)
             });
 
-            const respText = await response.text();
-            if (!response.ok) { console.error(`❌ SophiA PUT (HTTP ${response.status}):`, respText); return false; }
-            console.log("✅ Frequência sincronizada!", respText);
+            if (!response.ok) return false;
 
             try {
                 await fetch(`${SOPHIA_URL}/ListaChamada/ListaChamada`, {
@@ -1129,7 +1108,7 @@
             } catch(e2) { /* não crítico */ }
 
             return true;
-        } catch (e) { console.error("❌ Falha PUT SophiA:", e); return false; }
+        } catch (e) { return false; }
     };
 
     // ==========================================
@@ -1180,17 +1159,26 @@
     };
 
     // ==========================================
-    // FIX 3: BOTÃO INDICADORES — passa perfil da coord na URL
+    // FIX 1: INDICADORES — abre com perfil correto e só aparece para coord
     // ==========================================
     window.abrirIndicadores = () => {
-        if (!usuarioAtual) return;
-        // Passa o perfil como parâmetro para que indicadores.html filtre corretamente
-        const perfil = ehCoordenacao ? (perfilCoord?.perfil || 'GERAL') : 'PROFESSOR';
+        if (!usuarioAtual || !ehCoordenacao) return;
+        const perfil = perfilCoord?.perfil || 'GERAL';
         const turma  = usuarioAtual.turma || '';
         const nome   = encodeURIComponent(usuarioAtual.nome || '');
         const url = `indicadores.html?perfil=${perfil}&turma=${encodeURIComponent(turma)}&nome=${nome}`;
         window.open(url, '_blank');
     };
+
+    // Controla visibilidade do botão Indicadores na nav
+    function atualizarNavIndicadores() {
+        const navIndicadores = document.getElementById('nav-indicadores');
+        if (ehCoordenacao) {
+            navIndicadores.classList.remove('hidden');
+        } else {
+            navIndicadores.classList.add('hidden');
+        }
+    }
 
     // ==========================================
     // LOGIN / LOGOUT
@@ -1261,12 +1249,15 @@
         document.getElementById('display-turma-nome').innerText = nomeProf.split(' ')[0];
         window.showView('app');
         window.mudarAba('freq');
-        loading(true);
+
+        // FIX 1: Atualiza visibilidade do botão Indicadores
+        atualizarNavIndicadores();
 
         const thAtend = document.getElementById('th-atend');
         if (ehCoordenacao) thAtend.classList.remove('hidden');
         else thAtend.classList.add('hidden');
 
+        loading(true);
         const sucessoSophia = await window.buscarAlunosSophia(turma, nomeProf);
         if (sucessoSophia) {
             document.getElementById('display-turma-badge').innerText = turma + " ✦ SOPHIA";
@@ -1805,116 +1796,287 @@
 
     window.fecharAtendimento = () => { document.getElementById('modal-atendimento').style.display = 'none'; };
 
+    // ==========================================
+    // FIX 2: FINALIZAR ATENDIMENTO — salva corretamente e gera link/cópia
+    // ==========================================
     window.finalizarAtendimento = async () => {
         const coordNome = document.getElementById('atend-coord-nome').value.trim();
         if (!coordNome) return alert("Informe o nome da coordenadora.");
         if (canvasVazio('sig-coord')) return alert("Por favor, assine o documento antes de finalizar.");
+
         loading(true);
         try {
             const sigCoordData = document.getElementById('sig-coord').toDataURL('image/png');
+
+            // Coleta todos os campos do formulário
             const atendDoc = {
-                aluno: document.getElementById('atend-aluno').value,
-                turma: document.getElementById('atend-turma').value,
-                turno: document.getElementById('atend-turno').value,
-                professora: document.getElementById('atend-professora').value,
-                filiacao: document.getElementById('atend-filiacao').value,
-                nascimento: document.getElementById('atend-nascimento').value,
-                objetivos: document.getElementById('atend-objetivos').value,
-                dadosFamilia: document.getElementById('atend-dados-familia').value,
-                dadosEscola: document.getElementById('atend-dados-escola').value,
-                consideracoes: document.getElementById('atend-consideracoes').value,
-                participantes: document.getElementById('atend-participantes').value,
-                coordenadora: coordNome, assinaturaCoord: sigCoordData,
-                dataAtendimento: getHoje(), criadoEm: serverTimestamp(),
-                escola: usuarioAtual.turma, status: 'aguardando_familia',
-                assinaturaFamilia: null, nomeFamilia: null
+                aluno:           document.getElementById('atend-aluno').value,
+                turma:           document.getElementById('atend-turma').value,
+                turno:           document.getElementById('atend-turno').value,
+                professora:      document.getElementById('atend-professora').value,
+                filiacao:        document.getElementById('atend-filiacao').value,
+                nascimento:      document.getElementById('atend-nascimento').value,
+                objetivos:       document.getElementById('atend-objetivos').value,
+                dadosFamilia:    document.getElementById('atend-dados-familia').value,
+                dadosEscola:     document.getElementById('atend-dados-escola').value,
+                consideracoes:   document.getElementById('atend-consideracoes').value,
+                participantes:   document.getElementById('atend-participantes').value,
+                coordenadora:    coordNome,
+                assinaturaCoord: sigCoordData,
+                dataAtendimento: getHoje(),
+                criadoEm:        serverTimestamp(),
+                escola:          usuarioAtual?.turma || '',
+                status:          'aguardando_familia',
+                assinaturaFamilia: null,
+                nomeFamilia:       null
             };
+
+            // Salva no Firestore — usa addDoc para garantir ID único
             const docRef = await addDoc(collection(db, "atendimentos"), atendDoc);
+            console.log("✅ Atendimento salvo com ID:", docRef.id);
+
             await registrarLog(`Registrou Atendimento: ${atendDoc.aluno}`);
+
+            // Gera o link de assinatura para a família
             const linkBase = window.location.href.split('#')[0];
             const linkAtendimento = `${linkBase}#assinar/${docRef.id}`;
+
+            // Atualiza UI
             document.getElementById('atend-link-url').href = linkAtendimento;
             document.getElementById('atend-link-url').innerText = linkAtendimento;
             document.getElementById('atend-qr-section').style.display = 'block';
             document.getElementById('atend-acoes').style.display = 'none';
+
+            // Gera QR Code
             document.getElementById('qrcode-container').innerHTML = '';
-            new QRCode(document.getElementById('qrcode-container'), { text: linkAtendimento, width: 180, height: 180, colorDark: "#004aad", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
-            atendimentoAtual.id = docRef.id; atendimentoAtual.link = linkAtendimento;
-        } catch(e) { console.error(e); alert("Erro ao salvar: " + e.message); }
-        finally { loading(false); }
+            new QRCode(document.getElementById('qrcode-container'), {
+                text: linkAtendimento,
+                width: 180, height: 180,
+                colorDark: "#004aad", colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+
+            // Guarda dados para compartilhamento
+            atendimentoAtual = {
+                ...atendimentoAtual,
+                id: docRef.id,
+                link: linkAtendimento,
+                nomeAluno: atendDoc.aluno
+            };
+
+            alert(`✅ Atendimento salvo!\n\nID: ${docRef.id}\n\nCompartilhe o link ou QR Code com a família para assinatura.`);
+
+        } catch(e) {
+            console.error("❌ Erro ao salvar atendimento:", e);
+            alert("Erro ao salvar: " + e.message);
+        } finally {
+            loading(false);
+        }
     };
 
     window.copiarLinkAtendimento = () => {
         if (!atendimentoAtual?.link) return;
-        navigator.clipboard.writeText(atendimentoAtual.link).then(() => alert("✅ Link copiado!")).catch(() => {
-            const ta = document.createElement('textarea'); ta.value = atendimentoAtual.link;
-            document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-            alert("✅ Link copiado!");
-        });
+        navigator.clipboard.writeText(atendimentoAtual.link)
+            .then(() => alert("✅ Link copiado!"))
+            .catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = atendimentoAtual.link;
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                document.body.removeChild(ta);
+                alert("✅ Link copiado!");
+            });
     };
 
     window.compartilharAtendimento = () => {
         if (!atendimentoAtual?.link) return;
-        if (navigator.share) navigator.share({ title: `Atendimento — ${atendimentoAtual.nomeAluno}`, text: `Registro de atendimento de ${atendimentoAtual.nomeAluno}. Acesse para assinar:`, url: atendimentoAtual.link });
-        else window.copiarLinkAtendimento();
+        if (navigator.share) {
+            navigator.share({
+                title: `Atendimento — ${atendimentoAtual.nomeAluno}`,
+                text: `Registro de atendimento de ${atendimentoAtual.nomeAluno}. Acesse para assinar:`,
+                url: atendimentoAtual.link
+            });
+        } else {
+            window.copiarLinkAtendimento();
+        }
     };
 
     window.imprimirAtendimento = () => {
-        document.body.classList.add('printing-atend'); window.print();
+        document.body.classList.add('printing-atend');
+        window.print();
         setTimeout(() => document.body.classList.remove('printing-atend'), 1000);
     };
 
     // ==========================================
-    // ASSINATURA FAMÍLIA
+    // FIX 2: ASSINATURA FAMÍLIA — salva corretamente e exibe cópia completa
     // ==========================================
     async function carregarDocParaFamiliaAssinar(idAtend) {
         loading(true);
         try {
             const docSnap = await getDoc(doc(db, "atendimentos", idAtend));
-            if (!docSnap.exists()) { alert("Documento não encontrado."); loading(false); return; }
+            if (!docSnap.exists()) {
+                alert("Documento não encontrado.");
+                loading(false);
+                return;
+            }
             const data = docSnap.data();
+
+            // Esconde a tela de login — família acessa direto pelo link
             document.getElementById('view-login').style.display = 'none';
+
+            // Monta preview do documento para a família ver antes de assinar
+            const nascFormatado = data.nascimento ? formatData(data.nascimento) : 'N/A';
             let preview = `
-                <h4 style="color:var(--primary);margin-bottom:12px;">📋 Registro de Atendimento</h4>
-                <p><strong>Aluno:</strong> ${data.aluno}</p>
-                <p><strong>Turma:</strong> ${data.turma} | <strong>Turno:</strong> ${data.turno || 'N/A'}</p>
-                <p><strong>Data:</strong> ${formatData(data.dataAtendimento)}</p>
-                <hr style="margin:12px 0; border:none; border-top:1px solid var(--border);">
-                <p><strong>Objetivos:</strong></p><p style="white-space:pre-wrap;color:var(--text-2);">${data.objetivos || 'N/A'}</p>
-                <p><strong>Dados Família/Clínico:</strong></p><p style="white-space:pre-wrap;color:var(--text-2);">${data.dadosFamilia || 'N/A'}</p>
-                <p><strong>Dados Escola:</strong></p><p style="white-space:pre-wrap;color:var(--text-2);">${data.dadosEscola || 'N/A'}</p>
-                <p><strong>Considerações Finais:</strong></p><p style="white-space:pre-wrap;color:var(--text-2);">${data.consideracoes || 'N/A'}</p>
-                <p><strong>Participantes:</strong></p><p style="white-space:pre-wrap;color:var(--text-2);">${data.participantes || 'N/A'}</p>
-                <hr style="margin:12px 0; border:none; border-top:1px solid var(--border);">
-                <p><strong>Assinado pela Coordenação:</strong> ${data.coordenadora}</p>`;
-            if (data.assinaturaCoord) preview += `<img src="${data.assinaturaCoord}" style="height:50px;display:block;margin-top:6px;" alt="Assinatura coord">`;
-            if (data.status === 'assinado_familia') preview += `<div style="background:var(--success-light);color:var(--success);padding:10px 14px;border-radius:var(--radius-sm);margin-top:12px;font-weight:700;">✅ Este documento já foi assinado pela família.</div>`;
+                <div style="text-align:center;margin-bottom:16px;">
+                    <div style="font-size:0.7rem;font-weight:800;letter-spacing:1px;color:var(--text-3);text-transform:uppercase;margin-bottom:4px;">Casa de Criança</div>
+                    <h4 style="color:var(--primary);font-size:1rem;margin-bottom:2px;">Registro de Atendimento</h4>
+                    <div style="font-size:0.8rem;color:var(--text-3);">Data: ${formatData(data.dataAtendimento)}</div>
+                </div>
+                <p style="margin-bottom:6px;"><strong>Aluno(a):</strong> ${data.aluno}</p>
+                <p style="margin-bottom:6px;"><strong>Turma:</strong> ${data.turma} &nbsp;|&nbsp; <strong>Turno:</strong> ${data.turno || 'N/A'}</p>
+                <p style="margin-bottom:6px;"><strong>Data de Nasc.:</strong> ${nascFormatado}</p>
+                <p style="margin-bottom:6px;"><strong>Filiação:</strong> ${data.filiacao || 'N/A'}</p>
+                <p style="margin-bottom:6px;"><strong>Professora:</strong> ${data.professora || 'N/A'}</p>
+                <hr style="margin:12px 0;border:none;border-top:1px solid var(--border);">
+                <p style="font-weight:700;margin-bottom:4px;">🎯 Objetivos do Atendimento:</p>
+                <p style="white-space:pre-wrap;color:var(--text-2);margin-bottom:12px;">${data.objetivos || 'N/A'}</p>
+                <p style="font-weight:700;margin-bottom:4px;">👨‍👩‍👧 Dados Família / Clínico:</p>
+                <p style="white-space:pre-wrap;color:var(--text-2);margin-bottom:12px;">${data.dadosFamilia || 'N/A'}</p>
+                <p style="font-weight:700;margin-bottom:4px;">🏫 Dados da Escola:</p>
+                <p style="white-space:pre-wrap;color:var(--text-2);margin-bottom:12px;">${data.dadosEscola || 'N/A'}</p>
+                <p style="font-weight:700;margin-bottom:4px;">📝 Considerações Finais:</p>
+                <p style="white-space:pre-wrap;color:var(--text-2);margin-bottom:12px;">${data.consideracoes || 'N/A'}</p>
+                <p style="font-weight:700;margin-bottom:4px;">👥 Participantes:</p>
+                <p style="white-space:pre-wrap;color:var(--text-2);margin-bottom:12px;">${data.participantes || 'N/A'}</p>
+                <hr style="margin:12px 0;border:none;border-top:1px solid var(--border);">
+                <p style="margin-bottom:6px;"><strong>✍️ Coordenação:</strong> ${data.coordenadora}</p>`;
+
+            if (data.assinaturaCoord) {
+                preview += `<img src="${data.assinaturaCoord}" style="height:50px;display:block;margin-top:6px;border:1px solid var(--border);border-radius:4px;" alt="Assinatura coord">`;
+            }
+
+            if (data.status === 'assinado_familia') {
+                preview += `
+                    <div style="background:var(--success-light);color:var(--success);padding:12px 16px;border-radius:var(--radius-sm);margin-top:16px;font-weight:700;text-align:center;">
+                        ✅ Este documento já foi assinado pela família.<br>
+                        <span style="font-weight:400;font-size:0.85rem;">Assinado por: ${data.nomeFamilia || 'N/A'}</span>
+                    </div>`;
+            }
+
             document.getElementById('familia-doc-preview').innerHTML = preview;
             window._idAtendParaAssinar = idAtend;
             window._statusAtend = data.status;
+            window._dadosAtend = data; // guarda para usar na cópia
             document.getElementById('modal-assinar-familia').style.display = 'flex';
-        } catch(e) { console.error(e); alert("Erro ao carregar."); }
-        finally { loading(false); }
+        } catch(e) {
+            console.error(e);
+            alert("Erro ao carregar o documento.");
+        } finally {
+            loading(false);
+        }
     }
 
     window.confirmarAssinaturaFamilia = async () => {
-        if (window._statusAtend === 'assinado_familia') return alert("Este documento já foi assinado.");
+        if (window._statusAtend === 'assinado_familia') {
+            return alert("Este documento já foi assinado pela família.");
+        }
         const nome = document.getElementById('familia-nome').value.trim();
         if (!nome) return alert("Informe seu nome completo.");
         if (canvasVazio('sig-familia')) return alert("Por favor, assine antes de confirmar.");
+
         loading(true);
         try {
             const sigData = document.getElementById('sig-familia').toDataURL('image/png');
-            await setDoc(doc(db, "atendimentos", window._idAtendParaAssinar), { assinaturaFamilia: sigData, nomeFamilia: nome, status: 'assinado_familia', assinadoEm: serverTimestamp() }, { merge: true });
+            const agora   = new Date();
+            const agoraStr = agora.toLocaleString('pt-BR');
+
+            // Salva assinatura da família no Firestore
+            await setDoc(
+                doc(db, "atendimentos", window._idAtendParaAssinar),
+                {
+                    assinaturaFamilia: sigData,
+                    nomeFamilia: nome,
+                    status: 'assinado_familia',
+                    assinadoEm: serverTimestamp()
+                },
+                { merge: true }
+            );
+
+            // Fecha o modal de assinatura
             document.getElementById('modal-assinar-familia').style.display = 'none';
-            document.body.innerHTML = `<div style="font-family:'Plus Jakarta Sans',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#f0f4f8;text-align:center;padding:20px;">
-                <div style="font-size:3.5rem;margin-bottom:16px;">✅</div>
-                <h2 style="color:#004aad;margin-bottom:8px;">Documento Assinado!</h2>
-                <p style="color:#4a5568;max-width:400px;margin-bottom:24px;">Obrigado, <strong>${nome}</strong>! Sua assinatura foi registrada com sucesso.</p>
-                <div style="background:#d1fae5;color:#065f46;padding:12px 24px;border-radius:12px;font-weight:700;">Assinatura confirmada em ${new Date().toLocaleString('pt-BR')}</div>
-            </div>`;
-        } catch(e) { alert("Erro ao confirmar: " + e.message); }
-        finally { loading(false); }
+
+            // FIX 2: Exibe a cópia completa do documento para a família imprimir/guardar
+            const d = window._dadosAtend || {};
+            const nascFormatado = d.nascimento ? formatData(d.nascimento) : 'N/A';
+
+            document.body.innerHTML = `
+                <div style="font-family:'Plus Jakarta Sans',sans-serif;background:#f0f4f8;min-height:100vh;padding:20px;">
+                    <div style="max-width:680px;margin:0 auto;background:white;border-radius:16px;padding:32px;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+
+                        <div style="text-align:center;margin-bottom:24px;padding-bottom:20px;border-bottom:2px solid #e2e8f0;">
+                            <div style="font-size:0.7rem;font-weight:800;letter-spacing:1.5px;color:#718096;text-transform:uppercase;margin-bottom:6px;">Casa de Criança</div>
+                            <h2 style="color:#004aad;font-size:1.2rem;margin-bottom:4px;">Registro de Atendimento</h2>
+                            <div style="color:#718096;font-size:0.85rem;">Data: ${d.dataAtendimento ? formatData(d.dataAtendimento) : agoraStr}</div>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
+                            <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Aluno(a)</strong><p style="margin-top:4px;font-weight:600;color:#1a2332;">${d.aluno || 'N/A'}</p></div>
+                            <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Turma</strong><p style="margin-top:4px;font-weight:600;color:#1a2332;">${d.turma || 'N/A'}</p></div>
+                            <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Turno</strong><p style="margin-top:4px;color:#1a2332;">${d.turno || 'N/A'}</p></div>
+                            <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Nascimento</strong><p style="margin-top:4px;color:#1a2332;">${nascFormatado}</p></div>
+                            <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Filiação</strong><p style="margin-top:4px;color:#1a2332;">${d.filiacao || 'N/A'}</p></div>
+                            <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Professora</strong><p style="margin-top:4px;color:#1a2332;">${d.professora || 'N/A'}</p></div>
+                        </div>
+
+                        <div style="margin-bottom:16px;">
+                            <h4 style="color:#004aad;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">🎯 Objetivos do Atendimento</h4>
+                            <p style="white-space:pre-wrap;color:#4a5568;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">${d.objetivos || 'N/A'}</p>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <h4 style="color:#004aad;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">👨‍👩‍👧 Dados Família / Profissional Clínico</h4>
+                            <p style="white-space:pre-wrap;color:#4a5568;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">${d.dadosFamilia || 'N/A'}</p>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <h4 style="color:#004aad;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">🏫 Dados da Escola</h4>
+                            <p style="white-space:pre-wrap;color:#4a5568;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">${d.dadosEscola || 'N/A'}</p>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <h4 style="color:#004aad;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">📝 Considerações Finais</h4>
+                            <p style="white-space:pre-wrap;color:#4a5568;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">${d.consideracoes || 'N/A'}</p>
+                        </div>
+                        <div style="margin-bottom:20px;">
+                            <h4 style="color:#004aad;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">👥 Participantes</h4>
+                            <p style="white-space:pre-wrap;color:#4a5568;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">${d.participantes || 'N/A'}</p>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;padding-top:20px;border-top:2px solid #e2e8f0;">
+                            <div style="text-align:center;">
+                                <p style="font-size:0.75rem;font-weight:700;color:#4a5568;text-transform:uppercase;margin-bottom:8px;">Coordenação</p>
+                                <p style="font-weight:600;color:#1a2332;margin-bottom:8px;">${d.coordenadora || ''}</p>
+                                ${d.assinaturaCoord ? `<img src="${d.assinaturaCoord}" style="height:50px;border:1px solid #e2e8f0;border-radius:6px;display:block;margin:0 auto;" alt="Assinatura coord">` : ''}
+                            </div>
+                            <div style="text-align:center;">
+                                <p style="font-size:0.75rem;font-weight:700;color:#4a5568;text-transform:uppercase;margin-bottom:8px;">Família / Responsável</p>
+                                <p style="font-weight:600;color:#1a2332;margin-bottom:8px;">${nome}</p>
+                                <img src="${sigData}" style="height:50px;border:1px solid #e2e8f0;border-radius:6px;display:block;margin:0 auto;" alt="Assinatura família">
+                            </div>
+                        </div>
+
+                        <div style="background:#d1fae5;color:#065f46;padding:14px 20px;border-radius:10px;margin-top:20px;text-align:center;font-weight:700;">
+                            ✅ Documento assinado com sucesso em ${agoraStr}
+                        </div>
+
+                        <div style="display:flex;gap:10px;margin-top:20px;justify-content:center;">
+                            <button onclick="window.print()" style="background:#004aad;color:white;border:none;padding:12px 24px;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">🖨️ Imprimir / Salvar PDF</button>
+                        </div>
+                    </div>
+                </div>`;
+
+        } catch(e) {
+            console.error("❌ Erro ao confirmar assinatura:", e);
+            alert("Erro ao confirmar: " + e.message);
+        } finally {
+            loading(false);
+        }
     };
 
 </script>
