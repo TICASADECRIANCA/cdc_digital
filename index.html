@@ -11,6 +11,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- jsPDF para geração de PDF no cliente -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
             --primary: #004aad;
@@ -228,6 +230,7 @@
         .btn-fix { background: var(--warning); color: #fff; }
         .btn-atend { background: linear-gradient(135deg, #0097b2, #0077a0); box-shadow: 0 2px 8px rgba(0,151,178,0.3); }
         .btn-atend:hover { box-shadow: 0 4px 14px rgba(0,151,178,0.4); transform: translateY(-1px); }
+        .btn-draft { background: linear-gradient(135deg, var(--warning), #d97706); box-shadow: 0 2px 8px rgba(245,158,11,0.3); }
 
         /* DESKTOP TABLE */
         .desktop-table {
@@ -394,6 +397,66 @@
             font-size: 0.7rem; padding: 3px 8px; border-radius: 4px;
             color: var(--text-3); font-weight: 600;
         }
+
+        /* MÚLTIPLAS ASSINATURAS FAMÍLIA */
+        .sig-familia-bloco {
+            background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 12px; margin-bottom: 10px;
+        }
+        .sig-familia-bloco .sig-label-top {
+            font-size: 0.75rem; font-weight: 700; color: var(--primary);
+            text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .sig-familia-bloco input {
+            width: 100%; padding: 8px 10px; border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 0.875rem; color: var(--text);
+            margin-bottom: 8px; font-family: inherit;
+        }
+
+        /* CHECKBOX CIENTE */
+        .checkbox-ciente {
+            display: flex; align-items: flex-start; gap: 12px;
+            background: #fffbeb; border: 2px solid var(--warning);
+            border-radius: var(--radius); padding: 14px 16px;
+            margin-bottom: 16px;
+        }
+        .checkbox-ciente input[type="checkbox"] {
+            width: 20px; height: 20px; min-width: 20px;
+            accent-color: var(--primary); cursor: pointer; margin-top: 2px;
+        }
+        .checkbox-ciente label {
+            font-size: 0.875rem; font-weight: 600; color: var(--text);
+            cursor: pointer; line-height: 1.5;
+        }
+        .checkbox-ciente label span { color: var(--danger); }
+
+        /* BADGE RASCUNHO */
+        .badge-rascunho {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--warning-light); color: #92400e;
+            border: 1.5px solid var(--warning); border-radius: 20px;
+            padding: 4px 12px; font-size: 0.75rem; font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+        .badge-finalizado {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--success-light); color: #065f46;
+            border: 1.5px solid var(--success); border-radius: 20px;
+            padding: 4px 12px; font-size: 0.75rem; font-weight: 800;
+        }
+
+        /* HISTÓRICO DE ATENDIMENTOS */
+        .hist-atend-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 16px; border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+        .hist-atend-item:hover { background: var(--surface-2); }
+        .hist-atend-item:last-child { border-bottom: none; }
+        .hist-atend-info strong { display: block; font-size: 0.875rem; font-weight: 700; color: var(--text); }
+        .hist-atend-info small { font-size: 0.75rem; color: var(--text-3); }
+        .hist-atend-actions { display: flex; gap: 6px; }
 
         /* QR CODE */
         .qr-section {
@@ -660,10 +723,6 @@
         </div>
     </div>
 
-    <!-- =====================================================
-         FIX 1: NAV — "Indicadores" aparece só para coordenação
-         O item é adicionado/removido via JS em entrarTurma()
-    ====================================================== -->
     <div class="nav-tabs">
         <div class="nav-item active" id="nav-freq" onclick="window.mudarAba('freq')">
             <span class="nav-icon">📅</span> Chamada
@@ -674,7 +733,6 @@
         <div class="nav-item" onclick="window.open('reunioes.html', '_blank')">
             <span class="nav-icon">📝</span> Reuniões
         </div>
-        <!-- Indicadores: visível só para coordenação (controlado por JS) -->
         <div class="nav-item hidden" id="nav-indicadores" onclick="window.abrirIndicadores()">
             <span class="nav-icon">📊</span> Indicadores
         </div>
@@ -709,7 +767,7 @@
     </div>
 </div>
 
-<!-- MODAL HISTÓRICO -->
+<!-- MODAL HISTÓRICO GERAL -->
 <div id="modal-historico" class="modal-overlay" onclick="if(event.target===this)window.fecharHistorico()">
     <div class="modal-content">
         <div class="modal-header">
@@ -717,6 +775,22 @@
             <button class="btn-close" onclick="window.fecharHistorico()">✕</button>
         </div>
         <div id="modal-lista-conteudo"></div>
+    </div>
+</div>
+
+<!-- =====================================================
+     MODAL HISTÓRICO DE ATENDIMENTOS DO ALUNO (MELHORIA 1)
+====================================================== -->
+<div id="modal-hist-atend" class="modal-overlay" onclick="if(event.target===this)document.getElementById('modal-hist-atend').style.display='none'">
+    <div class="modal-content" style="max-width:680px;">
+        <div class="modal-header">
+            <div>
+                <h3>📁 Histórico de Atendimentos</h3>
+                <div id="hist-atend-aluno-nome" style="font-size:0.8rem; color:var(--text-3); margin-top:4px; font-weight:600;"></div>
+            </div>
+            <button class="btn-close" onclick="document.getElementById('modal-hist-atend').style.display='none'">✕</button>
+        </div>
+        <div id="hist-atend-lista" style="max-height:60vh; overflow-y:auto;"></div>
     </div>
 </div>
 
@@ -747,19 +821,34 @@
     </div>
 </div>
 
-<!-- MODAL ATENDIMENTO -->
+<!-- =====================================================
+     MODAL ATENDIMENTO — COM TODAS AS MELHORIAS
+====================================================== -->
 <div id="modal-atendimento" class="modal-overlay" onclick="if(event.target===this)window.fecharAtendimento()">
     <div class="modal-content" style="max-width:760px;">
         <div class="modal-header">
-            <h3>📋 Registro de Atendimento</h3>
-            <button class="btn-close" onclick="window.fecharAtendimento()">✕</button>
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <h3>📋 Registro de Atendimento</h3>
+                <span id="atend-status-badge"></span>
+            </div>
+            <!-- MELHORIA 1: Botão de Histórico no topo direito do modal -->
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button id="btn-hist-atend-modal" onclick="window.abrirHistAtendDoAluno()" 
+                    style="background:linear-gradient(135deg,#004aad,#0097b2); color:white; border:none; border-radius:var(--radius-sm); padding:7px 14px; font-size:0.8rem; font-weight:700; display:flex; align-items:center; gap:5px;">
+                    📁 Histórico
+                </button>
+                <button class="btn-close" onclick="window.fecharAtendimento()">✕</button>
+            </div>
         </div>
+
         <div style="text-align:center; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--border);">
             <div style="font-size:0.7rem; font-weight:800; letter-spacing:1px; color:var(--text-3); text-transform:uppercase; margin-bottom:4px;">Casa de Criança</div>
             <h4 style="color:var(--primary); font-size:1rem; margin-bottom:2px;">Registro de Atendimento</h4>
             <div style="font-size:0.8rem; color:var(--text-3);" id="atend-data-header">Data: --/--/----</div>
         </div>
+
         <div class="atend-form" id="atend-form-content">
+            <!-- MELHORIA 2: Campos pré-preenchidos -->
             <div class="form-section">
                 <div class="form-section-title">🔖 1. Identificação</div>
                 <div class="form-grid">
@@ -771,28 +860,52 @@
                     <div class="form-group"><label>Filiação</label><input type="text" id="atend-filiacao" placeholder="Nome dos pais/responsáveis"></div>
                 </div>
             </div>
+
             <div class="form-section">
                 <div class="form-section-title">🎯 2. Objetivos do Atendimento</div>
                 <div class="form-group"><label>Descreva os objetivos desta reunião</label><textarea id="atend-objetivos" placeholder="Ex: Acompanhamento do desenvolvimento, questão comportamental, integração..."></textarea></div>
             </div>
+
             <div class="form-section">
                 <div class="form-section-title">👨‍👩‍👧 3. Dados Pontuados pela Família / Profissional Clínico</div>
                 <div class="form-group"><label>Informações trazidas pela família</label><textarea id="atend-dados-familia" placeholder="Relatos, observações da família ou profissional clínico..."></textarea></div>
             </div>
+
             <div class="form-section">
                 <div class="form-section-title">🏫 4. Dados Pontuados pela Escola</div>
                 <div class="form-group"><label>Observações da escola</label><textarea id="atend-dados-escola" placeholder="Comportamento, rendimento, socialização, observações da equipe..."></textarea></div>
             </div>
+
             <div class="form-section">
                 <div class="form-section-title">📝 5. Considerações Finais</div>
                 <div class="form-group"><label>Conclusões e encaminhamentos</label><textarea id="atend-consideracoes" placeholder="Acordos, encaminhamentos, próximos passos..."></textarea></div>
             </div>
+
             <div class="form-section">
                 <div class="form-section-title">👥 6. Participantes desta Reunião</div>
                 <div class="form-group"><label>Nome e função de cada participante</label><textarea id="atend-participantes" placeholder="Ex: Ana Lima (Coordenadora), Maria Santos (Mãe)..."></textarea></div>
             </div>
+
+            <!-- MELHORIA 4: Assinatura da Psicóloga -->
             <div class="form-section">
-                <div class="form-section-title">✍️ Assinatura da Coordenação</div>
+                <div class="form-section-title">🧠 7. Assinatura da Psicóloga (se presente)</div>
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label>Nome da Psicóloga</label>
+                    <input type="text" id="atend-psicologa-nome" placeholder="Nome completo (deixe em branco se não participou)">
+                </div>
+                <div style="margin-top:8px;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.3px; display:block; margin-bottom:6px;">Assinar digitalmente (opcional)</label>
+                    <div class="signature-area">
+                        <canvas id="sig-psicologa" width="600" height="120"></canvas>
+                        <button class="btn-clear-sig" onclick="window.limparAssinatura('sig-psicologa')">Limpar</button>
+                        <div class="signature-label">Assinatura da Psicóloga</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ASSINATURA COORDENAÇÃO -->
+            <div class="form-section">
+                <div class="form-section-title">✍️ 8. Assinatura da Coordenação</div>
                 <div class="form-group"><label>Nome da Coordenadora</label><input type="text" id="atend-coord-nome" placeholder="Nome completo"></div>
                 <div style="margin-top:10px;">
                     <label style="font-size:0.75rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.3px; display:block; margin-bottom:6px;">Assinar digitalmente</label>
@@ -803,20 +916,25 @@
                     </div>
                 </div>
             </div>
+
+            <!-- MELHORIA 2: Botão de Rascunho + botões de ação -->
             <div id="atend-acoes" style="display:flex; flex-direction:column; gap:8px; margin-top:4px;">
+                <button onclick="window.salvarRascunhoAtendimento()" class="btn-action btn-draft" style="width:100%; padding:14px; font-size:0.95rem;">📝 Salvar como Rascunho</button>
                 <button onclick="window.finalizarAtendimento()" class="btn-action btn-save" style="width:100%; padding:14px; font-size:0.95rem;">✅ Finalizar e Gerar Link para Família</button>
                 <button onclick="window.imprimirAtendimento()" class="btn-action btn-print" style="width:100%;">🖨️ Imprimir Documento</button>
                 <button onclick="window.fecharAtendimento()" class="btn-action btn-hist" style="width:100%;">Cancelar</button>
             </div>
+
             <div id="atend-qr-section" style="display:none; margin-top:16px;">
                 <div class="qr-section">
                     <h4>📲 Link para assinatura da família</h4>
                     <p>Compartilhe o QR Code abaixo com a família para que assine digitalmente.</p>
                     <div id="qrcode-container"></div>
                     <a id="atend-link-url" class="qr-link" target="_blank" href="#">Toque para abrir o link</a>
-                    <div style="display:flex; gap:8px; margin-top:12px;">
+                    <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
                         <button onclick="window.copiarLinkAtendimento()" class="btn-action btn-save" style="flex:1;">📋 Copiar Link</button>
                         <button onclick="window.compartilharAtendimento()" class="btn-action btn-atend" style="flex:1;">📤 Compartilhar</button>
+                        <button onclick="window.baixarPdfCoordenacao()" class="btn-action btn-print" style="flex:1;">📄 Baixar PDF</button>
                     </div>
                 </div>
             </div>
@@ -824,7 +942,9 @@
     </div>
 </div>
 
-<!-- MODAL ASSINATURA FAMÍLIA -->
+<!-- =====================================================
+     MODAL ASSINATURA FAMÍLIA — COM MELHORIAS 3, 5, 6
+====================================================== -->
 <div id="modal-assinar-familia" class="modal-overlay" onclick="if(event.target===this)document.getElementById('modal-assinar-familia').style.display='none'">
     <div class="modal-content" style="max-width:680px;">
         <div class="modal-header">
@@ -832,18 +952,45 @@
             <button class="btn-close" onclick="document.getElementById('modal-assinar-familia').style.display='none'">✕</button>
         </div>
         <div id="familia-doc-preview" style="background:var(--surface-2); padding:16px; border-radius:var(--radius); border:1px solid var(--border); margin-bottom:16px; font-size:0.875rem; max-height:300px; overflow-y:auto;"></div>
+
+        <!-- MELHORIA 3: 5 campos de assinatura para família -->
         <div class="form-section">
-            <div class="form-section-title">✍️ Assinatura da Família / Responsável</div>
-            <div class="form-group" style="margin-bottom:10px;"><label>Seu Nome Completo</label><input type="text" id="familia-nome" placeholder="Como consta no documento"></div>
-            <div style="margin-top:8px;">
-                <label style="font-size:0.75rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.3px; display:block; margin-bottom:6px;">Assine digitalmente</label>
+            <div class="form-section-title">✍️ Assinaturas dos Responsáveis</div>
+            <p style="font-size:0.8rem; color:var(--text-3); margin-bottom:14px;">Preencha nome e assinatura dos responsáveis presentes. Pelo menos uma assinatura é obrigatória.</p>
+
+            <!-- Assinatura 1 (obrigatória) -->
+            <div class="sig-familia-bloco">
+                <div class="sig-label-top">
+                    <span>Responsável 1 <span style="color:var(--danger)">*</span></span>
+                </div>
+                <input type="text" id="familia-nome-1" placeholder="Nome completo do responsável">
                 <div class="signature-area">
-                    <canvas id="sig-familia" width="600" height="120"></canvas>
-                    <button class="btn-clear-sig" onclick="window.limparAssinatura('sig-familia')">Limpar</button>
-                    <div class="signature-label">Assinatura do Responsável</div>
+                    <canvas id="sig-familia-1" width="600" height="100"></canvas>
+                    <button class="btn-clear-sig" onclick="window.limparAssinatura('sig-familia-1')">Limpar</button>
+                    <div class="signature-label">Assinatura — Responsável 1</div>
                 </div>
             </div>
+
+            <!-- Assinaturas 2–5 (opcionais) -->
+            <div id="sigs-extras-familia">
+                <!-- geradas dinamicamente -->
+            </div>
+
+            <button onclick="window.adicionarCampoAssinaturaFamilia()" 
+                style="width:100%; padding:10px; background:var(--surface-2); border:2px dashed var(--border); border-radius:var(--radius-sm); color:var(--primary); font-weight:700; font-size:0.85rem; margin-top:4px; display:flex; align-items:center; justify-content:center; gap:6px;"
+                id="btn-add-sig-familia">
+                ➕ Adicionar outro responsável
+            </button>
         </div>
+
+        <!-- MELHORIA 5: Checkbox de ciência obrigatório -->
+        <div class="checkbox-ciente">
+            <input type="checkbox" id="chk-ciente-familia">
+            <label for="chk-ciente-familia">
+                Declaro que estou <strong>ciente e de acordo</strong> com todas as informações registradas neste documento de atendimento, incluindo objetivos, dados discutidos, considerações finais e encaminhamentos. <span>*</span>
+            </label>
+        </div>
+
         <button onclick="window.confirmarAssinaturaFamilia()" class="btn-action btn-save" style="width:100%; padding:14px; font-size:0.95rem;">✅ Confirmar Assinatura e Receber Cópia</button>
     </div>
 </div>
@@ -863,20 +1010,18 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // ==========================================
-    // VARIÁVEIS GLOBAIS
-    // ==========================================
     const SOPHIA_URL = "https://portal.sophia.com.br/SophiAWebApi/9118/api/v1";
     let sophiaToken = null;
     let usuarioAtual = null;
     let perfilCoord = null;
     let listaAlunosCache = [];
     let ehCoordenacao = false;
+    let sigsExtrasFamiliaCount = 0; // controla quantas assinaturas extras foram adicionadas
 
     const SENHAS = { CADASTRO: "$2026", SECRETARIA: "$2026", EDICAO: "1992" };
 
     const loading = (s) => { document.getElementById('loader').style.display = s ? 'flex' : 'none'; };
-    const formatData = (d) => d.split('-').reverse().join('/');
+    const formatData = (d) => d ? d.split('-').reverse().join('/') : '';
     const getHoje = () => new Date().toISOString().split('T')[0];
 
     // ==========================================
@@ -889,9 +1034,7 @@
         "Infantil 3": [{ nome: "Infantil 3", letras: ["A","B","C","D","E","F","G","H","I","J"] }],
         "Infantil 4": [{ nome: "Infantil 4", letras: ["A","B","C","D","E","F","G","I","J"] }],
         "Infantil 5": [{ nome: "Infantil 5", letras: ["A","B","C","D","E","F","G","I"] }],
-        "Fundamental 1": [
-            { nome: "1º Ano", letras: ["A","B","C","D","I"] }
-        ],
+        "Fundamental 1": [{ nome: "1º Ano", letras: ["A","B","C","D","I"] }],
         "Integral": [{ nome: "Integral", letras: ["1","2"] }],
         "Atividades Extras": [
             { nome: "Futsal", letras: ["A","B","C"] },
@@ -944,10 +1087,7 @@
             sophiaToken = await response.text();
             sophiaToken = sophiaToken.replace(/^"|"$/g, '').trim();
             return sophiaToken;
-        } catch (e) {
-            console.error("❌ Erro Auth Sophia:", e);
-            return null;
-        }
+        } catch (e) { console.error("❌ Erro Auth Sophia:", e); return null; }
     }
 
     // ==========================================
@@ -958,16 +1098,9 @@
         .replace(/[°º]/g,"").trim();
 
     function turmaCoincide(turmaSophia, turmaCasa) {
-        const s = normalizar(turmaSophia);
-        const c = normalizar(turmaCasa);
-        if (s === c) return true;
-        if (s.includes(c)) return true;
-        if (c.includes(s)) return true;
-        const norm = (t) => t
-            .replace(/(\d)(º|ª|\.)/g, '$1')
-            .replace(/\bANO\b/g, 'ANO')
-            .replace(/\bBERCARIO\b/g, 'BERCARIO')
-            .replace(/\s+/g, ' ').trim();
+        const s = normalizar(turmaSophia), c = normalizar(turmaCasa);
+        if (s === c || s.includes(c) || c.includes(s)) return true;
+        const norm = (t) => t.replace(/(\d)(º|ª|\.)/g,'$1').replace(/\bANO\b/g,'ANO').replace(/\bBERCARIO\b/g,'BERCARIO').replace(/\s+/g,' ').trim();
         return norm(s) === norm(c) || norm(s).includes(norm(c)) || norm(c).includes(norm(s));
     }
 
@@ -978,31 +1111,16 @@
         try {
             const token = await autenticarSophia();
             if (!token) return false;
-
             let nomeBusca = nomeProf.replace(/\s*\(Coord\)\s*/i, "").trim();
-            
             if (ehCoordenacao) {
-                console.log(`🔍 [Coord] Buscando professor da turma "${turmaNome}" no Firebase...`);
-                const profSnap = await getDocs(query(collection(db, "professores"), where("turma","==",turmaNome)));
-                if (!profSnap.empty) {
-                    const profData = profSnap.docs[0].data();
-                    nomeBusca = profData.nome;
-                    console.log(`   ↳ Professor encontrado: "${nomeBusca}"`);
-                } else {
-                    console.warn(`   ↳ Nenhum professor cadastrado para "${turmaNome}". Usando nome da coord.`);
-                }
+                const profSnap = await getDocs(query(collection(db,"professores"), where("turma","==",turmaNome)));
+                if (!profSnap.empty) nomeBusca = profSnap.docs[0].data().nome;
             }
-
-            console.log(`🔍 [1/3] Buscando "${nomeBusca}" em /Colaboradores...`);
-            const respColab = await fetch(`${SOPHIA_URL}/Colaboradores`, {
-                headers: { 'Token': token, 'Accept': 'application/json' }
-            });
+            const respColab = await fetch(`${SOPHIA_URL}/Colaboradores`, { headers: { 'Token': token, 'Accept': 'application/json' } });
             if (!respColab.ok) throw new Error(`Colaboradores: HTTP ${respColab.status}`);
             const colaboradores = await respColab.json();
-
             const nomeLimpo = normalizar(nomeBusca.split(' ').slice(0,2).join(' '));
             let professorSophia = null;
-
             for (const c of colaboradores) {
                 const nC = normalizar(c.nome || c.Nome || "");
                 if (nC === normalizar(nomeBusca)) { professorSophia = c; break; }
@@ -1010,66 +1128,40 @@
             if (!professorSophia) {
                 for (const c of colaboradores) {
                     const nC = normalizar(c.nome || c.Nome || "");
-                    if (nC.startsWith(nomeLimpo) || nomeLimpo.split(' ').every(p => nC.includes(p))) {
-                        professorSophia = c; break;
-                    }
+                    if (nC.startsWith(nomeLimpo) || nomeLimpo.split(' ').every(p => nC.includes(p))) { professorSophia = c; break; }
                 }
             }
-
-            if (!professorSophia) {
-                console.warn(`   ↳ ❌ "${nomeBusca}" não encontrado. Fallback Firebase.`);
-                return false;
-            }
-
+            if (!professorSophia) return false;
             const idProfessor = professorSophia.codigo || professorSophia.Codigo || professorSophia.id || professorSophia.Id;
             window.idProfessorSophiAtual = idProfessor;
-
-            const anoInicio = `${new Date().getFullYear()}-01-01T00:00:00`;
-            const anoFim    = `${new Date().getFullYear()}-12-31T23:59:59`;
-
-            const urlListas = `${SOPHIA_URL}/ListaChamada/Professor/${idProfessor}?DataInicial=${anoInicio}&DataFinal=${anoFim}&Status=-1`;
-            const respListas = await fetch(urlListas, { headers: { 'Token': token, 'Accept': 'application/json' } });
+            const anoInicio = `${new Date().getFullYear()}-01-01T00:00:00`, anoFim = `${new Date().getFullYear()}-12-31T23:59:59`;
+            const respListas = await fetch(`${SOPHIA_URL}/ListaChamada/Professor/${idProfessor}?DataInicial=${anoInicio}&DataFinal=${anoFim}&Status=-1`, { headers: { 'Token': token, 'Accept': 'application/json' } });
             if (!respListas.ok) return false;
-
             const listas = await respListas.json();
-            const listaCerta = listas.find(l => {
-                const td = l.turma || l.Turma || l.nomeTurma || l.nomeListaChamada || "";
-                return turmaCoincide(td, turmaNome);
-            });
-
+            const listaCerta = listas.find(l => { const td = l.turma || l.Turma || l.nomeTurma || l.nomeListaChamada || ""; return turmaCoincide(td, turmaNome); });
             if (!listaCerta) return false;
-
             const idListaChamada = listaCerta.codigoLista || listaCerta.codigoListaChamada;
-            window.idListaAtualSophia     = idListaChamada;
+            window.idListaAtualSophia = idListaChamada;
             window.idListaAulaAtualSophia = listaCerta.codigoListaAula;
-
-            const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${idListaChamada}`, {
-                headers: { 'Token': token, 'Accept': 'application/json' }
-            });
+            const respAlunos = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos/${idListaChamada}`, { headers: { 'Token': token, 'Accept': 'application/json' } });
             if (!respAlunos.ok) return false;
-
             const alunosBrutos = await respAlunos.json();
             if (!Array.isArray(alunosBrutos) || alunosBrutos.length === 0) return false;
-
             listaAlunosCache = [];
             const idsAdicionados = new Set();
             alunosBrutos.forEach(aluno => {
-                const idAluno   = aluno.codigoMatricula || aluno.CodigoMatricula || aluno.codigo || aluno.id;
+                const idAluno = aluno.codigoMatricula || aluno.CodigoMatricula || aluno.codigo || aluno.id;
                 const nomeAluno = aluno.nomeAluno || aluno.NomeAluno || aluno.nome || aluno.Nome || "DESCONHECIDO";
-                const codAula   = aluno.codigoListaChamadaAula || aluno.CodigoListaChamadaAula || 0;
+                const codAula = aluno.codigoListaChamadaAula || aluno.CodigoListaChamadaAula || 0;
                 if (idAluno && !idsAdicionados.has(String(idAluno))) {
                     idsAdicionados.add(String(idAluno));
                     listaAlunosCache.push({ id: idAluno, nome: nomeAluno, codigoListaChamadaAula: codAula, turma: turmaNome, presenca: true, exAluno: false });
                 }
             });
-
             listaAlunosCache.sort((a,b) => a.nome.localeCompare(b.nome));
             renderizarTabelaAlunos(listaAlunosCache, []);
             return true;
-        } catch (e) {
-            console.error("❌ Erro buscarAlunosSophia:", e);
-            return false;
-        }
+        } catch (e) { console.error("❌ Erro buscarAlunosSophia:", e); return false; }
     };
 
     // ==========================================
@@ -1077,28 +1169,20 @@
     // ==========================================
     window.salvarNoSophiA_Interno = async () => {
         try {
-            const token    = await autenticarSophia();
-            const idProf   = window.idProfessorSophiAtual;
-            const idLista  = window.idListaAtualSophia;
+            const token = await autenticarSophia();
+            const idProf = window.idProfessorSophiAtual, idLista = window.idListaAtualSophia;
             if (!idProf || !idLista) return false;
-
             const alunosPayload = listaAlunosCache.filter(a => !a.exAluno && a.id).map(a => ({
                 codigoListaChamadaAula: parseInt(a.codigoListaChamadaAula) || 0,
-                codigoMatricula: parseInt(a.id),
-                falta: a.presenca ? 0 : 1,
-                ocorrencias: []
+                codigoMatricula: parseInt(a.id), falta: a.presenca ? 0 : 1, ocorrencias: []
             }));
-
             const payload = { codigoProfessor: parseInt(idProf), quantidadeAula: 1, codigoListaChamada: parseInt(idLista), status: 1, alunos: alunosPayload };
-
             const response = await fetch(`${SOPHIA_URL}/ListaChamada/Alunos`, {
                 method: 'PUT',
                 headers: { 'Token': token, 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify(payload)
             });
-
             if (!response.ok) return false;
-
             try {
                 await fetch(`${SOPHIA_URL}/ListaChamada/ListaChamada`, {
                     method: 'PUT',
@@ -1106,7 +1190,6 @@
                     body: JSON.stringify({ codigoListaChamada: parseInt(idLista), status: 1 })
                 });
             } catch(e2) { /* não crítico */ }
-
             return true;
         } catch (e) { return false; }
     };
@@ -1119,9 +1202,7 @@
         document.getElementById('data-freq').value = getHoje();
         document.getElementById('data-plan').value = getHoje();
         ['login-email','login-senha'].forEach(id => {
-            document.getElementById(id).addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') window.fazerLogin();
-            });
+            document.getElementById(id).addEventListener('keypress', (e) => { if (e.key === 'Enter') window.fazerLogin(); });
         });
         verificarPaginaAssinatura();
         inicializarAssinaturas();
@@ -1142,8 +1223,7 @@
         const views = { login: 'view-login', cadastro: 'view-cadastro', coord: 'view-coord', app: 'app-painel' };
         Object.values(views).forEach(id => {
             const el = document.getElementById(id);
-            el.classList.add('hidden');
-            el.style.display = '';
+            el.classList.add('hidden'); el.style.display = '';
         });
         const el = document.getElementById(views[viewName] || views.login);
         el.classList.remove('hidden');
@@ -1158,26 +1238,17 @@
         document.getElementById('nav-' + aba)?.classList.add('active');
     };
 
-    // ==========================================
-    // FIX 1: INDICADORES — abre com perfil correto e só aparece para coord
-    // ==========================================
     window.abrirIndicadores = () => {
         if (!usuarioAtual || !ehCoordenacao) return;
         const perfil = perfilCoord?.perfil || 'GERAL';
-        const turma  = usuarioAtual.turma || '';
-        const nome   = encodeURIComponent(usuarioAtual.nome || '');
-        const url = `indicadores.html?perfil=${perfil}&turma=${encodeURIComponent(turma)}&nome=${nome}`;
+        const url = `indicadores.html?perfil=${perfil}&turma=${encodeURIComponent(usuarioAtual.turma||'')}&nome=${encodeURIComponent(usuarioAtual.nome||'')}`;
         window.open(url, '_blank');
     };
 
-    // Controla visibilidade do botão Indicadores na nav
     function atualizarNavIndicadores() {
         const navIndicadores = document.getElementById('nav-indicadores');
-        if (ehCoordenacao) {
-            navIndicadores.classList.remove('hidden');
-        } else {
-            navIndicadores.classList.add('hidden');
-        }
+        if (ehCoordenacao) navIndicadores.classList.remove('hidden');
+        else navIndicadores.classList.add('hidden');
     }
 
     // ==========================================
@@ -1189,7 +1260,7 @@
         if (!em || !se) return alert("Preencha e-mail e senha.");
         loading(true);
         try {
-            const s = await getDocs(query(collection(db, "professores"), where("email","==",em), where("senha","==",se)));
+            const s = await getDocs(query(collection(db,"professores"), where("email","==",em), where("senha","==",se)));
             if (s.empty) return alert("Credenciais inválidas.");
             const data = s.docs[0].data();
             if (data.acessos) {
@@ -1220,8 +1291,7 @@
     function montarPainelCoord() {
         const container = document.getElementById('container-turmas');
         container.innerHTML = "";
-        const acessos = perfilCoord.acessos;
-        const isGeral = acessos === "ALL";
+        const acessos = perfilCoord.acessos, isGeral = acessos === "ALL";
         for (const [g, ls] of Object.entries(ESTRUTURA_TURMAS)) {
             ls.forEach(se => se.letras.forEach(l => {
                 const nomeTurma = `${se.nome} ${l}`;
@@ -1249,19 +1319,14 @@
         document.getElementById('display-turma-nome').innerText = nomeProf.split(' ')[0];
         window.showView('app');
         window.mudarAba('freq');
-
-        // FIX 1: Atualiza visibilidade do botão Indicadores
         atualizarNavIndicadores();
-
         const thAtend = document.getElementById('th-atend');
         if (ehCoordenacao) thAtend.classList.remove('hidden');
         else thAtend.classList.add('hidden');
-
         loading(true);
         const sucessoSophia = await window.buscarAlunosSophia(turma, nomeProf);
-        if (sucessoSophia) {
-            document.getElementById('display-turma-badge').innerText = turma + " ✦ SOPHIA";
-        } else {
+        if (sucessoSophia) document.getElementById('display-turma-badge').innerText = turma + " ✦ SOPHIA";
+        else {
             document.getElementById('display-turma-badge').innerText = turma + " ✦ LOCAL";
             await carregarAlunosBase();
         }
@@ -1272,7 +1337,7 @@
 
     async function carregarAlunosBase() {
         try {
-            const q = query(collection(db, "alunos"), where("turma","==",usuarioAtual.turma));
+            const q = query(collection(db,"alunos"), where("turma","==",usuarioAtual.turma));
             const snap = await getDocs(q);
             listaAlunosCache = [];
             snap.forEach(d => listaAlunosCache.push({id: d.id, ...d.data()}));
@@ -1288,7 +1353,6 @@
         const listaMob = document.getElementById('mobile-lista');
         tbody.innerHTML = ""; listaMob.innerHTML = "";
         document.getElementById('empty-msg').style.display = listaExibicao.length === 0 ? 'block' : 'none';
-
         listaExibicao.forEach((a, i) => {
             const presente = !faltosos.includes(a.nome);
             a.presenca = presente;
@@ -1297,7 +1361,6 @@
             const onClick  = a.exAluno ? '' : `onclick="window.alternarPresenca(this, ${i})"`;
             const tagRemovido = a.exAluno ? '<span class="texto-removido"> (Ex-Aluno)</span>' : '';
             const btnAtend = ehCoordenacao ? `<button onclick="window.abrirAtendimento('${a.nome}', ${i})" style="background:var(--sec); color:white; border:none; border-radius:6px; padding:5px 10px; font-size:0.75rem; font-weight:700; cursor:pointer;">📋</button>` : '';
-
             tbody.innerHTML += `
                 <tr>
                     <td style="color:var(--text-3); font-weight:600;">${i+1}</td>
@@ -1306,7 +1369,6 @@
                     ${ehCoordenacao ? `<td style="text-align:center" class="no-print">${btnAtend}</td>` : ''}
                     <td class="no-print"><button onclick="window.apagarAluno('${a.id}')" style="background:var(--danger-light); color:var(--danger); border:none; border-radius:6px; padding:5px 8px; font-size:0.75rem; font-weight:700; cursor:pointer;" ${a.exAluno ? 'disabled' : ''}>🗑️</button></td>
                 </tr>`;
-
             listaMob.innerHTML += `
                 <div class="student-card status-${btnClass}" id="card-${i}">
                     <div class="student-info"><strong>${i+1}. ${a.nome}${tagRemovido}</strong></div>
@@ -1341,8 +1403,7 @@
         try {
             const q = query(collection(db,"frequencia"), where("turma","==",usuarioAtual.turma), where("data","==",dt));
             const snap = await getDocs(q);
-            let listaFinal = [...listaAlunosCache];
-            let faltosos = [];
+            let listaFinal = [...listaAlunosCache], faltosos = [];
             if (!snap.empty) {
                 const dados = snap.docs[0].data();
                 if (dados.detalhes) {
@@ -1366,37 +1427,26 @@
         const data = document.getElementById('data-freq').value;
         if (!data) return alert("Selecione uma data antes de salvar.");
         if (!listaAlunosCache || listaAlunosCache.length === 0) return alert("Nenhum aluno encontrado.");
-
-        const syncDiv  = document.getElementById('sync-status');
-        const syncIcon = document.getElementById('sync-icon');
-        const syncText = document.getElementById('sync-text');
+        const syncDiv = document.getElementById('sync-status');
+        const syncIcon = document.getElementById('sync-icon'), syncText = document.getElementById('sync-text');
         syncDiv.style.display = 'block';
         syncIcon.innerText = '⏳'; syncText.innerText = 'Salvando no CASA+...';
         loading(true);
         try {
             const detalhes = listaAlunosCache.map(a => ({ nome: a.nome, presente: a.presenca }));
             const idDoc = `${usuarioAtual.turma.replace(/\s/g,'')}_${data}`;
-            await setDoc(doc(db, "frequencia", idDoc), {
+            await setDoc(doc(db,"frequencia",idDoc), {
                 turma: usuarioAtual.turma, data: data, detalhes: detalhes,
                 professor: usuarioAtual.nome, atualizadoEm: new Date().toISOString()
             });
-
             syncIcon.innerText = '🔄'; syncText.innerText = 'Sincronizando com SophiA...';
             const sucessoSophia = await window.salvarNoSophiA_Interno();
             await registrarLog("Salvou Chamada");
-
-            if (sucessoSophia) {
-                syncIcon.innerText = '✅'; syncText.innerText = 'Salvo e sincronizado com o SophiA!';
-                syncText.style.color = 'var(--success)';
-            } else {
-                syncIcon.innerText = '⚠️'; syncText.innerText = 'Salvo no CASA+. SophiA indisponível.';
-                syncText.style.color = 'var(--warning)';
-            }
+            if (sucessoSophia) { syncIcon.innerText = '✅'; syncText.innerText = 'Salvo e sincronizado com o SophiA!'; syncText.style.color = 'var(--success)'; }
+            else { syncIcon.innerText = '⚠️'; syncText.innerText = 'Salvo no CASA+. SophiA indisponível.'; syncText.style.color = 'var(--warning)'; }
             setTimeout(() => { syncDiv.style.display = 'none'; syncText.style.color = ''; }, 5000);
-        } catch(e) {
-            console.error(e); syncIcon.innerText = '❌'; syncText.innerText = 'Erro: ' + e.message;
-            syncText.style.color = 'var(--danger)';
-        } finally { loading(false); }
+        } catch(e) { console.error(e); syncIcon.innerText = '❌'; syncText.innerText = 'Erro: ' + e.message; syncText.style.color = 'var(--danger)'; }
+        finally { loading(false); }
     };
 
     // ==========================================
@@ -1422,7 +1472,7 @@
 
     window.gerarRelatorioFaltas = async () => {
         const inicio = document.getElementById('mes-relatorio-inicio').value;
-        const fim    = document.getElementById('mes-relatorio-fim').value;
+        const fim = document.getElementById('mes-relatorio-fim').value;
         if (!inicio || !fim) return alert("Selecione o período.");
         const divRes = document.getElementById('resultado-relatorio');
         divRes.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-3);">⏳ Processando...</div>';
@@ -1449,11 +1499,10 @@
                 <div style="background:var(--success);color:white;padding:12px;border-radius:var(--radius);text-align:center;"><div style="font-size:1.5rem;font-weight:800;">${presentes}</div><div style="font-size:0.75rem;opacity:0.9;">Sem Faltas</div></div>
                 <div style="background:var(--danger);color:white;padding:12px;border-radius:var(--radius);text-align:center;"><div style="font-size:1.5rem;font-weight:800;">${Object.values(mapaFaltas).filter(f=>f>0).length}</div><div style="font-size:0.75rem;opacity:0.9;">Com Faltas</div></div>
             </div>
-            <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
-                <thead><tr style="background:var(--surface-2);">
-                    <th style="text-align:left;padding:10px 12px;font-weight:700;color:var(--text-2);border-bottom:2px solid var(--border);">Aluno</th>
-                    <th style="text-align:center;padding:10px 12px;font-weight:700;color:var(--text-2);border-bottom:2px solid var(--border);">Faltas</th>
-                </tr></thead><tbody>`;
+            <table style="width:100%;border-collapse:collapse;font-size:0.875rem;"><thead><tr style="background:var(--surface-2);">
+                <th style="text-align:left;padding:10px 12px;font-weight:700;color:var(--text-2);border-bottom:2px solid var(--border);">Aluno</th>
+                <th style="text-align:center;padding:10px 12px;font-weight:700;color:var(--text-2);border-bottom:2px solid var(--border);">Faltas</th>
+            </tr></thead><tbody>`;
             Object.entries(mapaFaltas).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([n,f]) => {
                 html += `<tr><td style="padding:9px 12px;border-bottom:1px solid var(--border);font-weight:500;">${n}</td>
                 <td style="text-align:center;padding:9px 12px;border-bottom:1px solid var(--border);">
@@ -1468,7 +1517,7 @@
 
     window.exportarExcel = async () => {
         const inicio = document.getElementById('mes-relatorio-inicio').value;
-        const fim    = document.getElementById('mes-relatorio-fim').value;
+        const fim = document.getElementById('mes-relatorio-fim').value;
         if (!inicio || !fim) return alert("Selecione os meses primeiro.");
         const snap = await getDocs(query(collection(db,"frequencia"), where("turma","==",usuarioAtual.turma)));
         let mapaFaltas = {};
@@ -1485,8 +1534,7 @@
         Object.entries(mapaFaltas).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([n,f]) => csv.push(`"${n}",${f}`));
         const blob = new Blob(["\uFEFF" + csv.join("\n")], { type: 'text/csv;charset=utf-8;' });
         const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = `Faltas_${usuarioAtual.turma}_${Date.now()}.csv`;
+        a.href = URL.createObjectURL(blob); a.download = `Faltas_${usuarioAtual.turma}_${Date.now()}.csv`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
     };
 
@@ -1547,7 +1595,7 @@
     // CADASTRO
     // ==========================================
     function carregarOpcoesTurma() {
-        const s1   = document.getElementById('cad-turma-unica');
+        const s1 = document.getElementById('cad-turma-unica');
         const contC = document.getElementById('container-checkboxes');
         s1.innerHTML = '<option value="" disabled selected>Selecione a Turma</option>';
         contC.innerHTML = '';
@@ -1579,10 +1627,10 @@
     };
 
     window.fazerCadastro = async () => {
-        const nome  = document.getElementById('cad-nome').value.trim();
+        const nome = document.getElementById('cad-nome').value.trim();
         const email = document.getElementById('cad-email').value.trim();
         const senha = document.getElementById('cad-senha').value;
-        const tipo  = document.getElementById('cad-tipo').value;
+        const tipo = document.getElementById('cad-tipo').value;
         if (!nome || !email || !senha) return alert("Preencha todos os campos.");
         let turma = "", acessos = null;
         if (tipo === 'professor') {
@@ -1596,9 +1644,7 @@
                 const sel = Array.from(document.querySelectorAll('#container-checkboxes input:checked')).map(cb => cb.value);
                 if (sel.length === 0) return alert("Selecione as turmas.");
                 acessos = sel;
-            } else {
-                acessos = PERFIS_COORDENACAO[perf];
-            }
+            } else acessos = PERFIS_COORDENACAO[perf];
         }
         loading(true);
         try {
@@ -1655,8 +1701,7 @@
             const snap = await getDocs(query(collection(db,"alunos")));
             const seen = new Set(), dups = [];
             snap.forEach(d => {
-                const dd = d.data();
-                const key = `${dd.nome.trim().toLowerCase()}|${dd.turma}`;
+                const dd = d.data(), key = `${dd.nome.trim().toLowerCase()}|${dd.turma}`;
                 if (seen.has(key)) dups.push(d.id); else seen.add(key);
             });
             if (dups.length === 0) alert("Nenhuma duplicata encontrada.");
@@ -1691,7 +1736,7 @@
     };
 
     // ==========================================
-    // HISTÓRICO
+    // HISTÓRICO GERAL
     // ==========================================
     window.abrirHistorico = async (tipo) => {
         loading(true);
@@ -1736,68 +1781,241 @@
     // ASSINATURA CANVAS
     // ==========================================
     function inicializarAssinaturas() {
-        ['sig-coord', 'sig-familia'].forEach(id => {
-            const canvas = document.getElementById(id);
-            if (!canvas) return;
-            let drawing = false, lastX, lastY;
-            const getPos = (e, canvas) => {
-                const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
-                if (e.touches) return { x: (e.touches[0].clientX - rect.left) * scaleX, y: (e.touches[0].clientY - rect.top) * scaleY };
-                return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
-            };
-            const ctx = canvas.getContext('2d');
-            ctx.strokeStyle = '#1a2332'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-            const start = (e) => { e.preventDefault(); drawing = true; const pos = getPos(e, canvas); lastX = pos.x; lastY = pos.y; ctx.beginPath(); ctx.moveTo(lastX, lastY); };
-            const draw  = (e) => { e.preventDefault(); if (!drawing) return; const pos = getPos(e, canvas); ctx.lineTo(pos.x, pos.y); ctx.stroke(); lastX = pos.x; lastY = pos.y; };
-            const stop  = (e) => { e.preventDefault(); drawing = false; ctx.beginPath(); };
-            canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', stop); canvas.addEventListener('mouseleave', stop);
-            canvas.addEventListener('touchstart', start, { passive: false }); canvas.addEventListener('touchmove', draw, { passive: false }); canvas.addEventListener('touchend', stop, { passive: false });
-        });
+        const canvasIds = ['sig-coord', 'sig-psicologa', 'sig-familia-1'];
+        canvasIds.forEach(id => inicializarCanvas(id));
+    }
+
+    function inicializarCanvas(id) {
+        const canvas = document.getElementById(id);
+        if (!canvas) return;
+        if (canvas._initialized) return;
+        canvas._initialized = true;
+        let drawing = false;
+        const getPos = (e, canvas) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+            if (e.touches) return { x: (e.touches[0].clientX - rect.left) * scaleX, y: (e.touches[0].clientY - rect.top) * scaleY };
+            return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+        };
+        const ctx = canvas.getContext('2d');
+        ctx.strokeStyle = '#1a2332'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        let lastX, lastY;
+        const start = (e) => { e.preventDefault(); drawing = true; const pos = getPos(e, canvas); lastX = pos.x; lastY = pos.y; ctx.beginPath(); ctx.moveTo(lastX, lastY); };
+        const draw  = (e) => { e.preventDefault(); if (!drawing) return; const pos = getPos(e, canvas); ctx.lineTo(pos.x, pos.y); ctx.stroke(); lastX = pos.x; lastY = pos.y; };
+        const stop  = (e) => { e.preventDefault(); drawing = false; ctx.beginPath(); };
+        canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', stop); canvas.addEventListener('mouseleave', stop);
+        canvas.addEventListener('touchstart', start, { passive: false }); canvas.addEventListener('touchmove', draw, { passive: false }); canvas.addEventListener('touchend', stop, { passive: false });
     }
 
     window.limparAssinatura = (canvasId) => {
         const canvas = document.getElementById(canvasId);
-        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
     };
 
     function canvasVazio(canvasId) {
         const canvas = document.getElementById(canvasId);
+        if (!canvas) return true;
         return !canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data.some(p => p !== 0);
     }
 
     // ==========================================
-    // ATENDIMENTO
+    // MELHORIA 3: ADICIONAR ASSINATURAS EXTRAS
+    // ==========================================
+    window.adicionarCampoAssinaturaFamilia = () => {
+        if (sigsExtrasFamiliaCount >= 4) {
+            document.getElementById('btn-add-sig-familia').style.display = 'none';
+            return;
+        }
+        sigsExtrasFamiliaCount++;
+        const num = sigsExtrasFamiliaCount + 1;
+        const container = document.getElementById('sigs-extras-familia');
+        const bloco = document.createElement('div');
+        bloco.className = 'sig-familia-bloco';
+        bloco.id = `bloco-sig-${num}`;
+        bloco.innerHTML = `
+            <div class="sig-label-top">
+                <span>Responsável ${num} (opcional)</span>
+                <button onclick="document.getElementById('bloco-sig-${num}').remove(); sigsExtrasFamiliaCount--; document.getElementById('btn-add-sig-familia').style.display='flex';"
+                    style="background:var(--danger-light); color:var(--danger); border:none; border-radius:4px; padding:2px 8px; font-size:0.7rem; font-weight:700; cursor:pointer;">✕ Remover</button>
+            </div>
+            <input type="text" id="familia-nome-${num}" placeholder="Nome completo do responsável">
+            <div class="signature-area">
+                <canvas id="sig-familia-${num}" width="600" height="100"></canvas>
+                <button class="btn-clear-sig" onclick="window.limparAssinatura('sig-familia-${num}')">Limpar</button>
+                <div class="signature-label">Assinatura — Responsável ${num}</div>
+            </div>`;
+        container.appendChild(bloco);
+        // Inicializa o novo canvas
+        setTimeout(() => inicializarCanvas(`sig-familia-${num}`), 100);
+        if (sigsExtrasFamiliaCount >= 4) document.getElementById('btn-add-sig-familia').style.display = 'none';
+    };
+
+    // ==========================================
+    // ATENDIMENTO — variáveis
     // ==========================================
     let atendimentoAtual = null;
 
-    window.abrirAtendimento = (nomeAluno, idx) => {
+    // ==========================================
+    // MELHORIA 2: ABRIR ATENDIMENTO com pré-preenchimento + suporte a rascunho
+    // ==========================================
+    window.abrirAtendimento = async (nomeAluno, idx) => {
         if (!ehCoordenacao) return;
+
+        // Reseta campos
         document.getElementById('atend-aluno').value = nomeAluno;
         document.getElementById('atend-turma').value = usuarioAtual.turma;
-        document.getElementById('atend-professora').value = '';
         document.getElementById('atend-nascimento').value = '';
         document.getElementById('atend-turno').value = '';
         document.getElementById('atend-filiacao').value = '';
+        document.getElementById('atend-professora').value = '';
         document.getElementById('atend-objetivos').value = '';
         document.getElementById('atend-dados-familia').value = '';
         document.getElementById('atend-dados-escola').value = '';
         document.getElementById('atend-consideracoes').value = '';
         document.getElementById('atend-participantes').value = '';
+        document.getElementById('atend-psicologa-nome').value = '';
         document.getElementById('atend-coord-nome').value = usuarioAtual.nome.replace(' (Coord)','');
         document.getElementById('atend-data-header').innerText = `Data: ${new Date().toLocaleDateString('pt-BR')}`;
         window.limparAssinatura('sig-coord');
+        window.limparAssinatura('sig-psicologa');
         document.getElementById('atend-qr-section').style.display = 'none';
         document.getElementById('atend-acoes').style.display = 'flex';
         document.getElementById('qrcode-container').innerHTML = '';
-        atendimentoAtual = { nomeAluno, idx, data: getHoje() };
+
+        // Badge status
+        const badge = document.getElementById('atend-status-badge');
+        badge.innerHTML = '';
+
+        atendimentoAtual = { nomeAluno, idx, data: getHoje(), id: null };
+
+        // MELHORIA 2: Pré-preenchimento automático — busca dados do aluno no Firestore
+        loading(true);
+        try {
+            // Busca turno padrão pela turma (se houver)
+            const turmaLower = usuarioAtual.turma.toLowerCase();
+            if (turmaLower.includes('integral')) document.getElementById('atend-turno').value = 'Integral';
+            else if (turmaLower.includes('tarde')) document.getElementById('atend-turno').value = 'Tarde';
+            else document.getElementById('atend-turno').value = 'Manhã';
+
+            // Busca professora da turma
+            const profSnap = await getDocs(query(collection(db,"professores"), where("turma","==",usuarioAtual.turma)));
+            if (!profSnap.empty) {
+                const profData = profSnap.docs[0].data();
+                document.getElementById('atend-professora').value = profData.nome || '';
+            }
+
+            // Verifica se existe rascunho não finalizado para este aluno
+            const rascunhosSnap = await getDocs(query(
+                collection(db,"atendimentos"),
+                where("aluno","==",nomeAluno),
+                where("status","==","rascunho")
+            ));
+
+            if (!rascunhosSnap.empty) {
+                const dadosRascunho = rascunhosSnap.docs[0].data();
+                const idRascunho = rascunhosSnap.docs[0].id;
+                const usarRascunho = confirm(`📝 Existe um rascunho salvo para ${nomeAluno} (${formatData(dadosRascunho.dataAtendimento)}).\n\nDeseja carregar o rascunho?`);
+                if (usarRascunho) {
+                    preencherFormAtendimento(dadosRascunho);
+                    atendimentoAtual.id = idRascunho;
+                    badge.innerHTML = '<span class="badge-rascunho">📝 Rascunho</span>';
+                }
+            }
+
+            // Busca dados anteriores do aluno (nascimento e filiação de atendimentos passados)
+            if (!document.getElementById('atend-nascimento').value) {
+                const historicoSnap = await getDocs(query(
+                    collection(db,"atendimentos"),
+                    where("aluno","==",nomeAluno),
+                    where("status","!=","rascunho")
+                ));
+                if (!historicoSnap.empty) {
+                    // Pega o mais recente com esses dados preenchidos
+                    const docs = historicoSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    docs.sort((a,b) => (b.dataAtendimento||'').localeCompare(a.dataAtendimento||''));
+                    const ultimo = docs[0];
+                    if (ultimo.nascimento && !document.getElementById('atend-nascimento').value)
+                        document.getElementById('atend-nascimento').value = ultimo.nascimento;
+                    if (ultimo.filiacao && !document.getElementById('atend-filiacao').value)
+                        document.getElementById('atend-filiacao').value = ultimo.filiacao;
+                }
+            }
+        } catch(e) { console.error("Erro ao pré-preencher:", e); }
+        finally { loading(false); }
+
         document.getElementById('modal-atendimento').style.display = 'flex';
     };
+
+    function preencherFormAtendimento(d) {
+        if (d.nascimento) document.getElementById('atend-nascimento').value = d.nascimento;
+        if (d.turno) document.getElementById('atend-turno').value = d.turno;
+        if (d.filiacao) document.getElementById('atend-filiacao').value = d.filiacao;
+        if (d.professora) document.getElementById('atend-professora').value = d.professora;
+        if (d.objetivos) document.getElementById('atend-objetivos').value = d.objetivos;
+        if (d.dadosFamilia) document.getElementById('atend-dados-familia').value = d.dadosFamilia;
+        if (d.dadosEscola) document.getElementById('atend-dados-escola').value = d.dadosEscola;
+        if (d.consideracoes) document.getElementById('atend-consideracoes').value = d.consideracoes;
+        if (d.participantes) document.getElementById('atend-participantes').value = d.participantes;
+        if (d.psicologaNome) document.getElementById('atend-psicologa-nome').value = d.psicologaNome;
+        if (d.coordenadora) document.getElementById('atend-coord-nome').value = d.coordenadora;
+    }
 
     window.fecharAtendimento = () => { document.getElementById('modal-atendimento').style.display = 'none'; };
 
     // ==========================================
-    // FIX 2: FINALIZAR ATENDIMENTO — salva corretamente e gera link/cópia
+    // MELHORIA 2: SALVAR RASCUNHO
+    // ==========================================
+    window.salvarRascunhoAtendimento = async () => {
+        const coordNome = document.getElementById('atend-coord-nome').value.trim();
+        if (!coordNome) return alert("Informe o nome da coordenadora.");
+
+        loading(true);
+        try {
+            const atendDoc = coletarDadosFormAtendimento();
+            atendDoc.status = 'rascunho';
+
+            if (atendimentoAtual?.id) {
+                // Atualiza rascunho existente
+                await setDoc(doc(db,"atendimentos",atendimentoAtual.id), atendDoc, { merge: true });
+            } else {
+                // Cria novo rascunho
+                const docRef = await addDoc(collection(db,"atendimentos"), atendDoc);
+                atendimentoAtual.id = docRef.id;
+            }
+
+            // Atualiza badge
+            document.getElementById('atend-status-badge').innerHTML = '<span class="badge-rascunho">📝 Rascunho Salvo</span>';
+            await registrarLog(`Salvou Rascunho Atendimento: ${atendDoc.aluno}`);
+            alert("📝 Rascunho salvo com sucesso!\n\nVocê pode retomar este atendimento a qualquer momento.");
+        } catch(e) {
+            console.error("Erro ao salvar rascunho:", e);
+            alert("Erro ao salvar rascunho: " + e.message);
+        } finally { loading(false); }
+    };
+
+    function coletarDadosFormAtendimento() {
+        return {
+            aluno:           document.getElementById('atend-aluno').value,
+            turma:           document.getElementById('atend-turma').value,
+            turno:           document.getElementById('atend-turno').value,
+            professora:      document.getElementById('atend-professora').value,
+            filiacao:        document.getElementById('atend-filiacao').value,
+            nascimento:      document.getElementById('atend-nascimento').value,
+            objetivos:       document.getElementById('atend-objetivos').value,
+            dadosFamilia:    document.getElementById('atend-dados-familia').value,
+            dadosEscola:     document.getElementById('atend-dados-escola').value,
+            consideracoes:   document.getElementById('atend-consideracoes').value,
+            participantes:   document.getElementById('atend-participantes').value,
+            psicologaNome:   document.getElementById('atend-psicologa-nome').value,
+            coordenadora:    document.getElementById('atend-coord-nome').value.trim(),
+            dataAtendimento: getHoje(),
+            escola:          usuarioAtual?.turma || '',
+            criadoEm:        serverTimestamp()
+        };
+    }
+
+    // ==========================================
+    // FINALIZAR ATENDIMENTO
     // ==========================================
     window.finalizarAtendimento = async () => {
         const coordNome = document.getElementById('atend-coord-nome').value.trim();
@@ -1807,47 +2025,36 @@
         loading(true);
         try {
             const sigCoordData = document.getElementById('sig-coord').toDataURL('image/png');
+            const sigPsicData  = canvasVazio('sig-psicologa') ? null : document.getElementById('sig-psicologa').toDataURL('image/png');
 
-            // Coleta todos os campos do formulário
-            const atendDoc = {
-                aluno:           document.getElementById('atend-aluno').value,
-                turma:           document.getElementById('atend-turma').value,
-                turno:           document.getElementById('atend-turno').value,
-                professora:      document.getElementById('atend-professora').value,
-                filiacao:        document.getElementById('atend-filiacao').value,
-                nascimento:      document.getElementById('atend-nascimento').value,
-                objetivos:       document.getElementById('atend-objetivos').value,
-                dadosFamilia:    document.getElementById('atend-dados-familia').value,
-                dadosEscola:     document.getElementById('atend-dados-escola').value,
-                consideracoes:   document.getElementById('atend-consideracoes').value,
-                participantes:   document.getElementById('atend-participantes').value,
-                coordenadora:    coordNome,
-                assinaturaCoord: sigCoordData,
-                dataAtendimento: getHoje(),
-                criadoEm:        serverTimestamp(),
-                escola:          usuarioAtual?.turma || '',
-                status:          'aguardando_familia',
-                assinaturaFamilia: null,
-                nomeFamilia:       null
-            };
+            const atendDoc = coletarDadosFormAtendimento();
+            atendDoc.assinaturaCoord = sigCoordData;
+            atendDoc.assiaturaPsicologa = sigPsicData;
+            atendDoc.status = 'aguardando_familia';
+            atendDoc.assinaturasResponsaveis = null;
+            atendDoc.assinadoEm = null;
 
-            // Salva no Firestore — usa addDoc para garantir ID único
-            const docRef = await addDoc(collection(db, "atendimentos"), atendDoc);
-            console.log("✅ Atendimento salvo com ID:", docRef.id);
+            let docId;
+            if (atendimentoAtual?.id) {
+                // Converte rascunho em atendimento finalizado
+                await setDoc(doc(db,"atendimentos",atendimentoAtual.id), atendDoc, { merge: true });
+                docId = atendimentoAtual.id;
+            } else {
+                const docRef = await addDoc(collection(db,"atendimentos"), atendDoc);
+                docId = docRef.id;
+            }
 
-            await registrarLog(`Registrou Atendimento: ${atendDoc.aluno}`);
+            await registrarLog(`Finalizou Atendimento: ${atendDoc.aluno}`);
 
-            // Gera o link de assinatura para a família
             const linkBase = window.location.href.split('#')[0];
-            const linkAtendimento = `${linkBase}#assinar/${docRef.id}`;
+            const linkAtendimento = `${linkBase}#assinar/${docId}`;
 
-            // Atualiza UI
             document.getElementById('atend-link-url').href = linkAtendimento;
             document.getElementById('atend-link-url').innerText = linkAtendimento;
             document.getElementById('atend-qr-section').style.display = 'block';
             document.getElementById('atend-acoes').style.display = 'none';
+            document.getElementById('atend-status-badge').innerHTML = '<span class="badge-finalizado">✅ Finalizado</span>';
 
-            // Gera QR Code
             document.getElementById('qrcode-container').innerHTML = '';
             new QRCode(document.getElementById('qrcode-container'), {
                 text: linkAtendimento,
@@ -1856,22 +2063,12 @@
                 correctLevel: QRCode.CorrectLevel.M
             });
 
-            // Guarda dados para compartilhamento
-            atendimentoAtual = {
-                ...atendimentoAtual,
-                id: docRef.id,
-                link: linkAtendimento,
-                nomeAluno: atendDoc.aluno
-            };
-
-            alert(`✅ Atendimento salvo!\n\nID: ${docRef.id}\n\nCompartilhe o link ou QR Code com a família para assinatura.`);
-
+            atendimentoAtual = { ...atendimentoAtual, id: docId, link: linkAtendimento, nomeAluno: atendDoc.aluno, dados: atendDoc };
+            alert(`✅ Atendimento finalizado!\n\nCompartilhe o QR Code ou link com a família para assinatura.`);
         } catch(e) {
-            console.error("❌ Erro ao salvar atendimento:", e);
+            console.error("❌ Erro ao finalizar atendimento:", e);
             alert("Erro ao salvar: " + e.message);
-        } finally {
-            loading(false);
-        }
+        } finally { loading(false); }
     };
 
     window.copiarLinkAtendimento = () => {
@@ -1882,22 +2079,15 @@
                 const ta = document.createElement('textarea');
                 ta.value = atendimentoAtual.link;
                 document.body.appendChild(ta); ta.select(); document.execCommand('copy');
-                document.body.removeChild(ta);
-                alert("✅ Link copiado!");
+                document.body.removeChild(ta); alert("✅ Link copiado!");
             });
     };
 
     window.compartilharAtendimento = () => {
         if (!atendimentoAtual?.link) return;
         if (navigator.share) {
-            navigator.share({
-                title: `Atendimento — ${atendimentoAtual.nomeAluno}`,
-                text: `Registro de atendimento de ${atendimentoAtual.nomeAluno}. Acesse para assinar:`,
-                url: atendimentoAtual.link
-            });
-        } else {
-            window.copiarLinkAtendimento();
-        }
+            navigator.share({ title: `Atendimento — ${atendimentoAtual.nomeAluno}`, text: `Registro de atendimento de ${atendimentoAtual.nomeAluno}. Acesse para assinar:`, url: atendimentoAtual.link });
+        } else window.copiarLinkAtendimento();
     };
 
     window.imprimirAtendimento = () => {
@@ -1907,23 +2097,271 @@
     };
 
     // ==========================================
-    // FIX 2: ASSINATURA FAMÍLIA — salva corretamente e exibe cópia completa
+    // MELHORIA 1: HISTÓRICO DE ATENDIMENTOS DO ALUNO
+    // O histórico é vinculado ao aluno (nome), não à turma — acompanha ele pela escola
+    // ==========================================
+    window.abrirHistAtendDoAluno = async () => {
+        const nomeAluno = document.getElementById('atend-aluno').value;
+        if (!nomeAluno) return alert("Abra primeiro o atendimento de um aluno.");
+
+        loading(true);
+        document.getElementById('hist-atend-aluno-nome').innerText = `Aluno: ${nomeAluno}`;
+        document.getElementById('hist-atend-lista').innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-3);">⏳ Carregando histórico...</div>';
+        document.getElementById('modal-hist-atend').style.display = 'flex';
+
+        try {
+            // Busca TODOS os atendimentos do aluno, independente de turma
+            const snap = await getDocs(query(
+                collection(db,"atendimentos"),
+                where("aluno","==",nomeAluno),
+                orderBy("dataAtendimento","desc")
+            ));
+
+            if (snap.empty) {
+                document.getElementById('hist-atend-lista').innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-3);">📭 Nenhum atendimento registrado para este aluno.</div>';
+                return;
+            }
+
+            let html = '';
+            snap.forEach(d => {
+                const dd = d.data();
+                const statusLabel = dd.status === 'rascunho'
+                    ? '<span class="badge-rascunho" style="font-size:0.7rem;">📝 Rascunho</span>'
+                    : dd.status === 'assinado_familia'
+                        ? '<span class="badge-finalizado" style="font-size:0.7rem;">✅ Assinado</span>'
+                        : '<span style="background:#fef3c7;color:#92400e;border:1px solid #f59e0b;border-radius:20px;padding:2px 8px;font-size:0.7rem;font-weight:700;">⏳ Aguardando</span>';
+
+                html += `
+                    <div class="hist-atend-item">
+                        <div class="hist-atend-info">
+                            <strong>📅 ${formatData(dd.dataAtendimento) || 'Data não registrada'}</strong>
+                            <small>Turma: ${dd.turma || 'N/A'} &nbsp;|&nbsp; Coord: ${dd.coordenadora || 'N/A'}</small>
+                            <div style="margin-top:4px;">${statusLabel}</div>
+                        </div>
+                        <div class="hist-atend-actions">
+                            <button onclick="window.verAtendHistorico('${d.id}')" 
+                                style="background:var(--primary); color:white; border:none; border-radius:var(--radius-sm); padding:7px 12px; font-size:0.75rem; font-weight:700; cursor:pointer;">👁️ Ver</button>
+                            <button onclick="window.baixarPdfAtendimento('${d.id}')"
+                                style="background:#2c3e50; color:white; border:none; border-radius:var(--radius-sm); padding:7px 12px; font-size:0.75rem; font-weight:700; cursor:pointer;">📄 PDF</button>
+                        </div>
+                    </div>`;
+            });
+
+            document.getElementById('hist-atend-lista').innerHTML = html;
+        } catch(e) {
+            console.error("Erro ao carregar histórico:", e);
+            document.getElementById('hist-atend-lista').innerHTML = '<div style="text-align:center;padding:24px;color:var(--danger);">Erro ao carregar histórico.</div>';
+        } finally { loading(false); }
+    };
+
+    // Abre atendimento histórico em nova aba para visualização
+    window.verAtendHistorico = async (idAtend) => {
+        loading(true);
+        try {
+            const docSnap = await getDoc(doc(db,"atendimentos",idAtend));
+            if (!docSnap.exists()) return alert("Documento não encontrado.");
+            const d = docSnap.data();
+            const html = gerarHtmlDocAtendimento(d, idAtend);
+            const janela = window.open('', '_blank');
+            janela.document.write(html);
+            janela.document.close();
+        } catch(e) { alert("Erro ao abrir atendimento."); console.error(e); }
+        finally { loading(false); }
+    };
+
+    // MELHORIA 1: Baixar PDF do atendimento histórico
+    window.baixarPdfAtendimento = async (idAtend) => {
+        loading(true);
+        try {
+            const docSnap = await getDoc(doc(db,"atendimentos",idAtend));
+            if (!docSnap.exists()) return alert("Documento não encontrado.");
+            gerarEBaixarPdf(docSnap.data(), idAtend);
+        } catch(e) { alert("Erro ao gerar PDF."); console.error(e); }
+        finally { loading(false); }
+    };
+
+    // Baixar PDF do atendimento atual (coordenação)
+    window.baixarPdfCoordenacao = () => {
+        if (!atendimentoAtual?.dados) return alert("Finalize o atendimento primeiro.");
+        gerarEBaixarPdf(atendimentoAtual.dados, atendimentoAtual.id);
+    };
+
+    // ==========================================
+    // GERADOR DE PDF (jsPDF) — reutilizado em todos os contextos
+    // ==========================================
+    function gerarEBaixarPdf(d, idAtend) {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const W = 210, M = 15;
+        let y = 20;
+
+        // Cabeçalho
+        pdf.setFillColor(0, 74, 173);
+        pdf.rect(0, 0, W, 28, 'F');
+        pdf.setTextColor(255,255,255);
+        pdf.setFontSize(9); pdf.setFont('helvetica','normal');
+        pdf.text('CASA DE CRIANÇA', W/2, 10, { align: 'center' });
+        pdf.setFontSize(14); pdf.setFont('helvetica','bold');
+        pdf.text('Registro de Atendimento', W/2, 18, { align: 'center' });
+        pdf.setFontSize(9); pdf.setFont('helvetica','normal');
+        pdf.text(`Data: ${formatData(d.dataAtendimento) || 'N/A'}`, W/2, 25, { align: 'center' });
+        y = 36;
+
+        pdf.setTextColor(30,35,50);
+
+        // Seção de identificação
+        pdf.setFillColor(248,250,252);
+        pdf.rect(M, y, W - M*2, 40, 'F');
+        pdf.setFontSize(8); pdf.setFont('helvetica','bold'); pdf.setTextColor(0,74,173);
+        pdf.text('🔖 IDENTIFICAÇÃO', M+3, y+6);
+        pdf.setTextColor(30,35,50); pdf.setFont('helvetica','normal');
+        const campos = [
+            ['Aluno(a)', d.aluno||'N/A', 'Turma', d.turma||'N/A'],
+            ['Turno', d.turno||'N/A', 'Nascimento', formatData(d.nascimento)||'N/A'],
+            ['Filiação', d.filiacao||'N/A', 'Professora', d.professora||'N/A'],
+        ];
+        campos.forEach((row, ri) => {
+            const baseY = y + 13 + ri * 9;
+            pdf.setFont('helvetica','bold'); pdf.setFontSize(7.5);
+            pdf.text(row[0]+':', M+3, baseY);
+            pdf.setFont('helvetica','normal');
+            pdf.text(row[1], M+22, baseY);
+            pdf.setFont('helvetica','bold');
+            pdf.text(row[2]+':', M+85, baseY);
+            pdf.setFont('helvetica','normal');
+            pdf.text(row[3], M+107, baseY);
+        });
+        y += 45;
+
+        // Seções de texto
+        const secoes = [
+            ['🎯 OBJETIVOS DO ATENDIMENTO', d.objetivos],
+            ['👨‍👩‍👧 DADOS FAMÍLIA / PROFISSIONAL CLÍNICO', d.dadosFamilia],
+            ['🏫 DADOS DA ESCOLA', d.dadosEscola],
+            ['📝 CONSIDERAÇÕES FINAIS', d.consideracoes],
+            ['👥 PARTICIPANTES', d.participantes],
+        ];
+
+        secoes.forEach(([titulo, conteudo]) => {
+            if (!conteudo) return;
+            pdf.setFillColor(0,74,173);
+            pdf.setTextColor(255,255,255);
+            pdf.setFontSize(8); pdf.setFont('helvetica','bold');
+            pdf.rect(M, y, W - M*2, 7, 'F');
+            pdf.text(titulo, M+3, y+4.8);
+            y += 8;
+            pdf.setFillColor(250,252,255);
+            const linhas = pdf.splitTextToSize(conteudo||'N/A', W - M*2 - 6);
+            const altBloco = Math.max(linhas.length * 4.5 + 8, 12);
+            if (y + altBloco > 270) { pdf.addPage(); y = 20; }
+            pdf.rect(M, y, W - M*2, altBloco, 'F');
+            pdf.setTextColor(74,85,104); pdf.setFont('helvetica','normal'); pdf.setFontSize(8);
+            pdf.text(linhas, M+3, y+5);
+            y += altBloco + 4;
+        });
+
+        // Assinaturas
+        if (y + 50 > 270) { pdf.addPage(); y = 20; }
+        pdf.setDrawColor(226,232,240);
+        pdf.line(M, y, W-M, y);
+        y += 6;
+        pdf.setTextColor(30,35,50);
+        pdf.setFontSize(8.5); pdf.setFont('helvetica','bold');
+        pdf.text('ASSINATURAS', W/2, y, { align: 'center' });
+        y += 8;
+
+        const sigsParaExibir = [];
+        if (d.assinaturaCoord) sigsParaExibir.push({ nome: d.coordenadora||'Coordenação', sig: d.assinaturaCoord, label: 'Coordenação' });
+        if (d.assiaturaPsicologa) sigsParaExibir.push({ nome: d.psicologaNome||'Psicóloga', sig: d.assiaturaPsicologa, label: 'Psicóloga' });
+        if (d.assinaturasResponsaveis) {
+            d.assinaturasResponsaveis.forEach(r => {
+                if (r.assinatura) sigsParaExibir.push({ nome: r.nome, sig: r.assinatura, label: 'Responsável' });
+            });
+        }
+
+        const colW = (W - M*2) / Math.min(sigsParaExibir.length || 1, 3);
+        sigsParaExibir.forEach((item, idx) => {
+            const colIdx = idx % 3;
+            const xSig = M + colIdx * colW;
+            if (colIdx === 0 && idx > 0) { y += 40; }
+            try {
+                pdf.addImage(item.sig, 'PNG', xSig+2, y, colW-4, 18);
+            } catch(e2) { /* imagem inválida */ }
+            pdf.setFont('helvetica','normal'); pdf.setFontSize(7.5); pdf.setTextColor(74,85,104);
+            pdf.text(item.nome, xSig + (colW/2), y+22, { align: 'center' });
+            pdf.text(item.label, xSig + (colW/2), y+26.5, { align: 'center' });
+        });
+
+        y = pdf.internal.pageSize.height - 12;
+        pdf.setFontSize(7); pdf.setTextColor(150,150,150);
+        pdf.text(`Documento gerado em ${new Date().toLocaleString('pt-BR')} — ID: ${idAtend||'N/A'}`, W/2, y, { align: 'center' });
+
+        const nomeArq = `Atendimento_${(d.aluno||'aluno').replace(/\s+/g,'_')}_${d.dataAtendimento||'sd'}.pdf`;
+        pdf.save(nomeArq);
+    }
+
+    // HTML para visualização em nova aba
+    function gerarHtmlDocAtendimento(d, idAtend) {
+        const nascFormatado = d.nascimento ? formatData(d.nascimento) : 'N/A';
+        const sigsResp = d.assinaturasResponsaveis || [];
+        let sigsHtml = '';
+        sigsResp.forEach(r => {
+            if (r.nome) sigsHtml += `
+                <div style="text-align:center;">
+                    <p style="font-size:0.75rem;font-weight:700;color:#4a5568;text-transform:uppercase;margin-bottom:8px;">Responsável</p>
+                    <p style="font-weight:600;color:#1a2332;margin-bottom:8px;">${r.nome}</p>
+                    ${r.assinatura ? `<img src="${r.assinatura}" style="height:50px;border:1px solid #e2e8f0;border-radius:6px;display:block;margin:0 auto;" alt="Assinatura">` : ''}
+                </div>`;
+        });
+        return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Atendimento — ${d.aluno||''}</title>
+        <style>body{font-family:'Plus Jakarta Sans',sans-serif;background:#f0f4f8;min-height:100vh;padding:20px;}
+        .doc{max-width:700px;margin:0 auto;background:white;border-radius:16px;padding:32px;box-shadow:0 4px 20px rgba(0,0,0,0.08);}
+        h2{color:#004aad;}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:20px;}
+        .sec{margin-bottom:16px;}.sec h4{color:#004aad;font-size:0.85rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+        .sec p{white-space:pre-wrap;color:#4a5568;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;}
+        .sigs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-top:24px;padding-top:20px;border-top:2px solid #e2e8f0;}
+        </style></head><body><div class="doc">
+        <div style="text-align:center;margin-bottom:24px;padding-bottom:20px;border-bottom:2px solid #e2e8f0;">
+            <div style="font-size:0.7rem;font-weight:800;letter-spacing:1.5px;color:#718096;text-transform:uppercase;margin-bottom:6px;">Casa de Criança</div>
+            <h2>Registro de Atendimento</h2>
+            <div style="color:#718096;font-size:0.85rem;">Data: ${formatData(d.dataAtendimento)||'N/A'}</div>
+        </div>
+        <div class="grid">
+            <div><strong style="font-size:.75rem;color:#4a5568;text-transform:uppercase;">Aluno(a)</strong><p style="margin-top:4px;font-weight:600;color:#1a2332;">${d.aluno||'N/A'}</p></div>
+            <div><strong style="font-size:.75rem;color:#4a5568;text-transform:uppercase;">Turma</strong><p style="margin-top:4px;font-weight:600;color:#1a2332;">${d.turma||'N/A'}</p></div>
+            <div><strong style="font-size:.75rem;color:#4a5568;text-transform:uppercase;">Turno</strong><p style="margin-top:4px;color:#1a2332;">${d.turno||'N/A'}</p></div>
+            <div><strong style="font-size:.75rem;color:#4a5568;text-transform:uppercase;">Nascimento</strong><p style="margin-top:4px;color:#1a2332;">${nascFormatado}</p></div>
+            <div><strong style="font-size:.75rem;color:#4a5568;text-transform:uppercase;">Filiação</strong><p style="margin-top:4px;color:#1a2332;">${d.filiacao||'N/A'}</p></div>
+            <div><strong style="font-size:.75rem;color:#4a5568;text-transform:uppercase;">Professora</strong><p style="margin-top:4px;color:#1a2332;">${d.professora||'N/A'}</p></div>
+        </div>
+        <div class="sec"><h4>🎯 Objetivos</h4><p>${d.objetivos||'N/A'}</p></div>
+        <div class="sec"><h4>👨‍👩‍👧 Dados Família / Clínico</h4><p>${d.dadosFamilia||'N/A'}</p></div>
+        <div class="sec"><h4>🏫 Dados da Escola</h4><p>${d.dadosEscola||'N/A'}</p></div>
+        <div class="sec"><h4>📝 Considerações Finais</h4><p>${d.consideracoes||'N/A'}</p></div>
+        <div class="sec"><h4>👥 Participantes</h4><p>${d.participantes||'N/A'}</p></div>
+        <div class="sigs">
+            <div style="text-align:center;"><p style="font-size:.75rem;font-weight:700;color:#4a5568;text-transform:uppercase;margin-bottom:8px;">Coordenação</p><p style="font-weight:600;color:#1a2332;margin-bottom:8px;">${d.coordenadora||''}</p>${d.assinaturaCoord?`<img src="${d.assinaturaCoord}" style="height:50px;border:1px solid #e2e8f0;border-radius:6px;display:block;margin:0 auto;">`:''}</div>
+            ${d.assiaturaPsicologa&&d.psicologaNome?`<div style="text-align:center;"><p style="font-size:.75rem;font-weight:700;color:#4a5568;text-transform:uppercase;margin-bottom:8px;">Psicóloga</p><p style="font-weight:600;color:#1a2332;margin-bottom:8px;">${d.psicologaNome}</p><img src="${d.assiaturaPsicologa}" style="height:50px;border:1px solid #e2e8f0;border-radius:6px;display:block;margin:0 auto;"></div>`:''}
+            ${sigsHtml}
+        </div>
+        ${d.status==='assinado_familia'?`<div style="background:#d1fae5;color:#065f46;padding:12px 16px;border-radius:10px;margin-top:20px;text-align:center;font-weight:700;">✅ Documento assinado pela família</div>`:''}
+        <div style="display:flex;gap:10px;margin-top:20px;justify-content:center;">
+            <button onclick="window.print()" style="background:#004aad;color:white;border:none;padding:12px 24px;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:sans-serif;">🖨️ Imprimir / Salvar PDF</button>
+        </div>
+        </div></body></html>`;
+    }
+
+    // ==========================================
+    // ASSINATURA FAMÍLIA — carrega documento
     // ==========================================
     async function carregarDocParaFamiliaAssinar(idAtend) {
         loading(true);
         try {
-            const docSnap = await getDoc(doc(db, "atendimentos", idAtend));
-            if (!docSnap.exists()) {
-                alert("Documento não encontrado.");
-                loading(false);
-                return;
-            }
+            const docSnap = await getDoc(doc(db,"atendimentos",idAtend));
+            if (!docSnap.exists()) { alert("Documento não encontrado."); loading(false); return; }
             const data = docSnap.data();
-
-            // Esconde a tela de login — família acessa direto pelo link
             document.getElementById('view-login').style.display = 'none';
 
-            // Monta preview do documento para a família ver antes de assinar
             const nascFormatado = data.nascimento ? formatData(data.nascimento) : 'N/A';
             let preview = `
                 <div style="text-align:center;margin-bottom:16px;">
@@ -1932,151 +2370,165 @@
                     <div style="font-size:0.8rem;color:var(--text-3);">Data: ${formatData(data.dataAtendimento)}</div>
                 </div>
                 <p style="margin-bottom:6px;"><strong>Aluno(a):</strong> ${data.aluno}</p>
-                <p style="margin-bottom:6px;"><strong>Turma:</strong> ${data.turma} &nbsp;|&nbsp; <strong>Turno:</strong> ${data.turno || 'N/A'}</p>
+                <p style="margin-bottom:6px;"><strong>Turma:</strong> ${data.turma} &nbsp;|&nbsp; <strong>Turno:</strong> ${data.turno||'N/A'}</p>
                 <p style="margin-bottom:6px;"><strong>Data de Nasc.:</strong> ${nascFormatado}</p>
-                <p style="margin-bottom:6px;"><strong>Filiação:</strong> ${data.filiacao || 'N/A'}</p>
-                <p style="margin-bottom:6px;"><strong>Professora:</strong> ${data.professora || 'N/A'}</p>
+                <p style="margin-bottom:6px;"><strong>Filiação:</strong> ${data.filiacao||'N/A'}</p>
+                <p style="margin-bottom:6px;"><strong>Professora:</strong> ${data.professora||'N/A'}</p>
                 <hr style="margin:12px 0;border:none;border-top:1px solid var(--border);">
                 <p style="font-weight:700;margin-bottom:4px;">🎯 Objetivos do Atendimento:</p>
-                <p style="white-space:pre-wrap;color:var(--text-2);margin-bottom:12px;">${data.objetivos || 'N/A'}</p>
+                <p style="white-space:pre-wrap;color:var(--text-2);margin-bottom:12px;">${data.objetivos||'N/A'}</p>
                 <p style="font-weight:700;margin-bottom:4px;">👨‍👩‍👧 Dados Família / Clínico:</p>
-                <p style="white-space:pre-wrap;color:var(--text-2);margin-bottom:12px;">${data.dadosFamilia || 'N/A'}</p>
+                <p style="white-space:pre-wrap;color:var(--text-2);margin-bottom:12px;">${data.dadosFamilia||'N/A'}</p>
                 <p style="font-weight:700;margin-bottom:4px;">🏫 Dados da Escola:</p>
-                <p style="white-space:pre-wrap;color:var(--text-2);margin-bottom:12px;">${data.dadosEscola || 'N/A'}</p>
+                <p style="white-space:pre-wrap;color:var(--text-2);margin-bottom:12px;">${data.dadosEscola||'N/A'}</p>
                 <p style="font-weight:700;margin-bottom:4px;">📝 Considerações Finais:</p>
-                <p style="white-space:pre-wrap;color:var(--text-2);margin-bottom:12px;">${data.consideracoes || 'N/A'}</p>
+                <p style="white-space:pre-wrap;color:var(--text-2);margin-bottom:12px;">${data.consideracoes||'N/A'}</p>
                 <p style="font-weight:700;margin-bottom:4px;">👥 Participantes:</p>
-                <p style="white-space:pre-wrap;color:var(--text-2);margin-bottom:12px;">${data.participantes || 'N/A'}</p>
+                <p style="white-space:pre-wrap;color:var(--text-2);margin-bottom:12px;">${data.participantes||'N/A'}</p>
                 <hr style="margin:12px 0;border:none;border-top:1px solid var(--border);">
                 <p style="margin-bottom:6px;"><strong>✍️ Coordenação:</strong> ${data.coordenadora}</p>`;
 
-            if (data.assinaturaCoord) {
-                preview += `<img src="${data.assinaturaCoord}" style="height:50px;display:block;margin-top:6px;border:1px solid var(--border);border-radius:4px;" alt="Assinatura coord">`;
-            }
+            if (data.assinaturaCoord) preview += `<img src="${data.assinaturaCoord}" style="height:50px;display:block;margin-top:6px;border:1px solid var(--border);border-radius:4px;" alt="Assinatura coord">`;
+            if (data.assiaturaPsicologa && data.psicologaNome) preview += `<p style="margin-top:10px;"><strong>🧠 Psicóloga:</strong> ${data.psicologaNome}</p><img src="${data.assiaturaPsicologa}" style="height:50px;display:block;margin-top:6px;border:1px solid var(--border);border-radius:4px;" alt="Assinatura psicóloga">`;
 
             if (data.status === 'assinado_familia') {
-                preview += `
-                    <div style="background:var(--success-light);color:var(--success);padding:12px 16px;border-radius:var(--radius-sm);margin-top:16px;font-weight:700;text-align:center;">
-                        ✅ Este documento já foi assinado pela família.<br>
-                        <span style="font-weight:400;font-size:0.85rem;">Assinado por: ${data.nomeFamilia || 'N/A'}</span>
-                    </div>`;
+                preview += `<div style="background:var(--success-light);color:var(--success);padding:12px 16px;border-radius:var(--radius-sm);margin-top:16px;font-weight:700;text-align:center;">✅ Este documento já foi assinado.</div>`;
             }
 
             document.getElementById('familia-doc-preview').innerHTML = preview;
+            // Reset campos assinatura
+            sigsExtrasFamiliaCount = 0;
+            document.getElementById('sigs-extras-familia').innerHTML = '';
+            document.getElementById('btn-add-sig-familia').style.display = 'flex';
+            document.getElementById('familia-nome-1').value = '';
+            window.limparAssinatura('sig-familia-1');
+            setTimeout(() => inicializarCanvas('sig-familia-1'), 100);
+            document.getElementById('chk-ciente-familia').checked = false;
+
             window._idAtendParaAssinar = idAtend;
             window._statusAtend = data.status;
-            window._dadosAtend = data; // guarda para usar na cópia
+            window._dadosAtend = data;
             document.getElementById('modal-assinar-familia').style.display = 'flex';
-        } catch(e) {
-            console.error(e);
-            alert("Erro ao carregar o documento.");
-        } finally {
-            loading(false);
-        }
+        } catch(e) { console.error(e); alert("Erro ao carregar o documento."); }
+        finally { loading(false); }
     }
 
+    // ==========================================
+    // MELHORIA 3, 5, 6: CONFIRMAR ASSINATURA FAMÍLIA
+    // ==========================================
     window.confirmarAssinaturaFamilia = async () => {
-        if (window._statusAtend === 'assinado_familia') {
-            return alert("Este documento já foi assinado pela família.");
+        if (window._statusAtend === 'assinado_familia') return alert("Este documento já foi assinado pela família.");
+
+        // MELHORIA 5: Checkbox obrigatório
+        if (!document.getElementById('chk-ciente-familia').checked) {
+            return alert("⚠️ É obrigatório marcar que você está ciente e concorda com o conteúdo do documento antes de assinar.");
         }
-        const nome = document.getElementById('familia-nome').value.trim();
-        if (!nome) return alert("Informe seu nome completo.");
-        if (canvasVazio('sig-familia')) return alert("Por favor, assine antes de confirmar.");
+
+        // MELHORIA 3: Coleta todas as assinaturas
+        const nome1 = document.getElementById('familia-nome-1').value.trim();
+        if (!nome1) return alert("Informe o nome do Responsável 1.");
+        if (canvasVazio('sig-familia-1')) return alert("Por favor, assine no campo do Responsável 1.");
+
+        const assinaturasResponsaveis = [];
+        // Responsável 1 (obrigatório)
+        assinaturasResponsaveis.push({
+            nome: nome1,
+            assinatura: document.getElementById('sig-familia-1').toDataURL('image/png')
+        });
+
+        // Responsáveis extras (opcionais, só inclui se tiver nome e assinatura)
+        for (let i = 2; i <= sigsExtrasFamiliaCount + 1; i++) {
+            const nomeExtra = document.getElementById(`familia-nome-${i}`)?.value?.trim();
+            const sigVazio = canvasVazio(`sig-familia-${i}`);
+            if (nomeExtra && !sigVazio) {
+                assinaturasResponsaveis.push({
+                    nome: nomeExtra,
+                    assinatura: document.getElementById(`sig-familia-${i}`).toDataURL('image/png')
+                });
+            }
+        }
 
         loading(true);
         try {
-            const sigData = document.getElementById('sig-familia').toDataURL('image/png');
-            const agora   = new Date();
-            const agoraStr = agora.toLocaleString('pt-BR');
+            const agora = new Date(), agoraStr = agora.toLocaleString('pt-BR');
 
-            // Salva assinatura da família no Firestore
             await setDoc(
-                doc(db, "atendimentos", window._idAtendParaAssinar),
+                doc(db,"atendimentos",window._idAtendParaAssinar),
                 {
-                    assinaturaFamilia: sigData,
-                    nomeFamilia: nome,
+                    assinaturasResponsaveis: assinaturasResponsaveis,
+                    nomeFamilia: nome1,
                     status: 'assinado_familia',
                     assinadoEm: serverTimestamp()
                 },
                 { merge: true }
             );
 
-            // Fecha o modal de assinatura
             document.getElementById('modal-assinar-familia').style.display = 'none';
 
-            // FIX 2: Exibe a cópia completa do documento para a família imprimir/guardar
-            const d = window._dadosAtend || {};
+            // MELHORIA 6: Gera PDF e baixa automaticamente no celular/dispositivo da família
+            const dadosCompletos = { ...window._dadosAtend, assinaturasResponsaveis, nomeFamilia: nome1, status: 'assinado_familia' };
+            gerarEBaixarPdf(dadosCompletos, window._idAtendParaAssinar);
+
+            // Exibe página de confirmação com opção de baixar novamente
+            const d = dadosCompletos;
             const nascFormatado = d.nascimento ? formatData(d.nascimento) : 'N/A';
+            let sigsHtmlConf = '';
+            assinaturasResponsaveis.forEach(r => {
+                sigsHtmlConf += `<div style="text-align:center;"><p style="font-size:.75rem;font-weight:700;color:#4a5568;text-transform:uppercase;margin-bottom:8px;">Responsável</p><p style="font-weight:600;color:#1a2332;margin-bottom:8px;">${r.nome}</p><img src="${r.assinatura}" style="height:50px;border:1px solid #e2e8f0;border-radius:6px;display:block;margin:0 auto;" alt="Assinatura"></div>`;
+            });
 
             document.body.innerHTML = `
                 <div style="font-family:'Plus Jakarta Sans',sans-serif;background:#f0f4f8;min-height:100vh;padding:20px;">
                     <div style="max-width:680px;margin:0 auto;background:white;border-radius:16px;padding:32px;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-
                         <div style="text-align:center;margin-bottom:24px;padding-bottom:20px;border-bottom:2px solid #e2e8f0;">
                             <div style="font-size:0.7rem;font-weight:800;letter-spacing:1.5px;color:#718096;text-transform:uppercase;margin-bottom:6px;">Casa de Criança</div>
                             <h2 style="color:#004aad;font-size:1.2rem;margin-bottom:4px;">Registro de Atendimento</h2>
                             <div style="color:#718096;font-size:0.85rem;">Data: ${d.dataAtendimento ? formatData(d.dataAtendimento) : agoraStr}</div>
                         </div>
-
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
-                            <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Aluno(a)</strong><p style="margin-top:4px;font-weight:600;color:#1a2332;">${d.aluno || 'N/A'}</p></div>
-                            <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Turma</strong><p style="margin-top:4px;font-weight:600;color:#1a2332;">${d.turma || 'N/A'}</p></div>
-                            <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Turno</strong><p style="margin-top:4px;color:#1a2332;">${d.turno || 'N/A'}</p></div>
+                            <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Aluno(a)</strong><p style="margin-top:4px;font-weight:600;color:#1a2332;">${d.aluno||'N/A'}</p></div>
+                            <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Turma</strong><p style="margin-top:4px;font-weight:600;color:#1a2332;">${d.turma||'N/A'}</p></div>
+                            <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Turno</strong><p style="margin-top:4px;color:#1a2332;">${d.turno||'N/A'}</p></div>
                             <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Nascimento</strong><p style="margin-top:4px;color:#1a2332;">${nascFormatado}</p></div>
-                            <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Filiação</strong><p style="margin-top:4px;color:#1a2332;">${d.filiacao || 'N/A'}</p></div>
-                            <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Professora</strong><p style="margin-top:4px;color:#1a2332;">${d.professora || 'N/A'}</p></div>
+                            <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Filiação</strong><p style="margin-top:4px;color:#1a2332;">${d.filiacao||'N/A'}</p></div>
+                            <div><strong style="font-size:0.75rem;color:#4a5568;text-transform:uppercase;letter-spacing:0.3px;">Professora</strong><p style="margin-top:4px;color:#1a2332;">${d.professora||'N/A'}</p></div>
                         </div>
+                        <div style="margin-bottom:16px;"><h4 style="color:#004aad;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">🎯 Objetivos do Atendimento</h4><p style="white-space:pre-wrap;color:#4a5568;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">${d.objetivos||'N/A'}</p></div>
+                        <div style="margin-bottom:16px;"><h4 style="color:#004aad;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">👨‍👩‍👧 Dados Família / Profissional Clínico</h4><p style="white-space:pre-wrap;color:#4a5568;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">${d.dadosFamilia||'N/A'}</p></div>
+                        <div style="margin-bottom:16px;"><h4 style="color:#004aad;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">🏫 Dados da Escola</h4><p style="white-space:pre-wrap;color:#4a5568;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">${d.dadosEscola||'N/A'}</p></div>
+                        <div style="margin-bottom:16px;"><h4 style="color:#004aad;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">📝 Considerações Finais</h4><p style="white-space:pre-wrap;color:#4a5568;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">${d.consideracoes||'N/A'}</p></div>
+                        <div style="margin-bottom:20px;"><h4 style="color:#004aad;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">👥 Participantes</h4><p style="white-space:pre-wrap;color:#4a5568;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">${d.participantes||'N/A'}</p></div>
 
-                        <div style="margin-bottom:16px;">
-                            <h4 style="color:#004aad;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">🎯 Objetivos do Atendimento</h4>
-                            <p style="white-space:pre-wrap;color:#4a5568;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">${d.objetivos || 'N/A'}</p>
-                        </div>
-                        <div style="margin-bottom:16px;">
-                            <h4 style="color:#004aad;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">👨‍👩‍👧 Dados Família / Profissional Clínico</h4>
-                            <p style="white-space:pre-wrap;color:#4a5568;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">${d.dadosFamilia || 'N/A'}</p>
-                        </div>
-                        <div style="margin-bottom:16px;">
-                            <h4 style="color:#004aad;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">🏫 Dados da Escola</h4>
-                            <p style="white-space:pre-wrap;color:#4a5568;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">${d.dadosEscola || 'N/A'}</p>
-                        </div>
-                        <div style="margin-bottom:16px;">
-                            <h4 style="color:#004aad;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">📝 Considerações Finais</h4>
-                            <p style="white-space:pre-wrap;color:#4a5568;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">${d.consideracoes || 'N/A'}</p>
-                        </div>
-                        <div style="margin-bottom:20px;">
-                            <h4 style="color:#004aad;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">👥 Participantes</h4>
-                            <p style="white-space:pre-wrap;color:#4a5568;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">${d.participantes || 'N/A'}</p>
-                        </div>
-
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;padding-top:20px;border-top:2px solid #e2e8f0;">
-                            <div style="text-align:center;">
-                                <p style="font-size:0.75rem;font-weight:700;color:#4a5568;text-transform:uppercase;margin-bottom:8px;">Coordenação</p>
-                                <p style="font-weight:600;color:#1a2332;margin-bottom:8px;">${d.coordenadora || ''}</p>
-                                ${d.assinaturaCoord ? `<img src="${d.assinaturaCoord}" style="height:50px;border:1px solid #e2e8f0;border-radius:6px;display:block;margin:0 auto;" alt="Assinatura coord">` : ''}
-                            </div>
-                            <div style="text-align:center;">
-                                <p style="font-size:0.75rem;font-weight:700;color:#4a5568;text-transform:uppercase;margin-bottom:8px;">Família / Responsável</p>
-                                <p style="font-weight:600;color:#1a2332;margin-bottom:8px;">${nome}</p>
-                                <img src="${sigData}" style="height:50px;border:1px solid #e2e8f0;border-radius:6px;display:block;margin:0 auto;" alt="Assinatura família">
-                            </div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-top:24px;padding-top:20px;border-top:2px solid #e2e8f0;">
+                            <div style="text-align:center;"><p style="font-size:0.75rem;font-weight:700;color:#4a5568;text-transform:uppercase;margin-bottom:8px;">Coordenação</p><p style="font-weight:600;color:#1a2332;margin-bottom:8px;">${d.coordenadora||''}</p>${d.assinaturaCoord?`<img src="${d.assinaturaCoord}" style="height:50px;border:1px solid #e2e8f0;border-radius:6px;display:block;margin:0 auto;" alt="Assinatura coord">`:''}</div>
+                            ${d.assiaturaPsicologa&&d.psicologaNome?`<div style="text-align:center;"><p style="font-size:0.75rem;font-weight:700;color:#4a5568;text-transform:uppercase;margin-bottom:8px;">Psicóloga</p><p style="font-weight:600;color:#1a2332;margin-bottom:8px;">${d.psicologaNome}</p><img src="${d.assiaturaPsicologa}" style="height:50px;border:1px solid #e2e8f0;border-radius:6px;display:block;margin:0 auto;" alt="Assinatura psicóloga">`:``}
+                            ${sigsHtmlConf}
                         </div>
 
                         <div style="background:#d1fae5;color:#065f46;padding:14px 20px;border-radius:10px;margin-top:20px;text-align:center;font-weight:700;">
                             ✅ Documento assinado com sucesso em ${agoraStr}
                         </div>
+                        <div style="background:#fffbeb;color:#92400e;padding:12px 16px;border-radius:10px;margin-top:10px;font-size:0.85rem;">
+                            📄 O PDF foi gerado automaticamente. Se não baixou, clique no botão abaixo.
+                        </div>
 
-                        <div style="display:flex;gap:10px;margin-top:20px;justify-content:center;">
-                            <button onclick="window.print()" style="background:#004aad;color:white;border:none;padding:12px 24px;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">🖨️ Imprimir / Salvar PDF</button>
+                        <div style="display:flex;gap:10px;margin-top:20px;justify-content:center;flex-wrap:wrap;">
+                            <button id="btn-redownload" style="background:#004aad;color:white;border:none;padding:12px 24px;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">📄 Baixar PDF novamente</button>
+                            <button onclick="window.print()" style="background:#2c3e50;color:white;border:none;padding:12px 24px;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">🖨️ Imprimir</button>
                         </div>
                     </div>
                 </div>`;
 
+            // Reatribui o evento ao botão de re-download após substituir o body
+            setTimeout(() => {
+                const btnReDl = document.getElementById('btn-redownload');
+                if (btnReDl) btnReDl.onclick = () => gerarEBaixarPdf(dadosCompletos, window._idAtendParaAssinar);
+            }, 200);
+
         } catch(e) {
             console.error("❌ Erro ao confirmar assinatura:", e);
             alert("Erro ao confirmar: " + e.message);
-        } finally {
-            loading(false);
-        }
+        } finally { loading(false); }
     };
 
 </script>
