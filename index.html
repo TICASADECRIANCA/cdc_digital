@@ -780,16 +780,36 @@
             <h4 style="color:var(--primary); font-size:1rem; margin-bottom:2px;">Registro de Atendimento</h4>
             <div style="font-size:0.8rem; color:var(--text-3);" id="atend-data-header">Data: --/--/----</div>
         </div>
+        <!-- Barra de carregamento de dados do aluno -->
+        <div id="atend-loading-bar" style="display:none; background:linear-gradient(135deg,#e8f4ff,#f0faff); border:1px solid #bfdfff; border-radius:10px; padding:12px 16px; margin-bottom:14px; align-items:center; gap:10px;">
+            <div style="width:20px;height:20px;border:2px solid #bfdfff;border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;"></div>
+            <div>
+                <div style="font-size:0.8rem;font-weight:700;color:var(--primary);">Buscando dados do aluno...</div>
+                <div style="font-size:0.72rem;color:var(--text-3);margin-top:2px;">Nascimento e filiação sendo carregados automaticamente</div>
+            </div>
+        </div>
         <div class="atend-form" id="atend-form-content">
             <div class="form-section">
                 <div class="form-section-title">🔖 1. Identificação</div>
                 <div class="form-grid">
                     <div class="form-group"><label>Aluno(a)</label><input type="text" id="atend-aluno" readonly style="background:var(--surface-2);"></div>
-                    <div class="form-group"><label>Data de Nascimento</label><input type="date" id="atend-nascimento"></div>
+                    <div class="form-group">
+                        <label style="display:flex;align-items:center;gap:6px;">
+                            Data de Nascimento
+                            <span id="badge-nasc" style="display:none;background:#d1fae5;color:#065f46;font-size:0.65rem;padding:1px 6px;border-radius:10px;font-weight:700;">✦ AUTO</span>
+                        </label>
+                        <input type="date" id="atend-nascimento">
+                    </div>
                     <div class="form-group"><label>Turma</label><input type="text" id="atend-turma" readonly style="background:var(--surface-2);"></div>
                     <div class="form-group"><label>Turno</label><select id="atend-turno"><option value="">Selecione</option><option value="Manhã">Manhã</option><option value="Tarde">Tarde</option><option value="Integral">Integral</option></select></div>
                     <div class="form-group"><label>Professora</label><input type="text" id="atend-professora"></div>
-                    <div class="form-group"><label>Filiação</label><input type="text" id="atend-filiacao" placeholder="Nome dos pais/responsáveis"></div>
+                    <div class="form-group">
+                        <label style="display:flex;align-items:center;gap:6px;">
+                            Filiação (Pais/Responsáveis)
+                            <span id="badge-filiacao" style="display:none;background:#d1fae5;color:#065f46;font-size:0.65rem;padding:1px 6px;border-radius:10px;font-weight:700;">✦ AUTO</span>
+                        </label>
+                        <input type="text" id="atend-filiacao" placeholder="Nome dos pais/responsáveis">
+                    </div>
                 </div>
             </div>
             <div class="form-section">
@@ -1200,19 +1220,62 @@
                     const codAula = aluno.codigoListaChamadaAula ||
                                     aluno.CodigoListaChamadaAula || 0;
 
+                    // ── Captura dados extras retornados pelo SophiA ──
+                    // Data de nascimento (varios formatos possíveis)
+                    const rawNasc = aluno.dataNascimento || aluno.DataNascimento ||
+                                    aluno.nascimento || aluno.Nascimento ||
+                                    aluno.dtNascimento || aluno.DtNascimento || "";
+                    // Converte p/ formato input[type=date]: yyyy-mm-dd
+                    let nascFormatado = "";
+                    if (rawNasc) {
+                        try {
+                            // SophiA pode retornar "dd/mm/yyyy", "yyyy-mm-ddTHH:mm:ss" ou "yyyy-mm-dd"
+                            if (rawNasc.includes("/")) {
+                                const p = rawNasc.split("/");
+                                if (p.length === 3) nascFormatado = `${p[2].substring(0,4)}-${p[1].padStart(2,"0")}-${p[0].padStart(2,"0")}`;
+                            } else if (rawNasc.includes("T")) {
+                                nascFormatado = rawNasc.substring(0, 10);
+                            } else if (rawNasc.match(/^\d{4}-\d{2}-\d{2}/)) {
+                                nascFormatado = rawNasc.substring(0, 10);
+                            }
+                        } catch(e) { nascFormatado = ""; }
+                    }
+
+                    // Responsáveis / filiação
+                    const responsaveis = [];
+                    // Campo direto
+                    const resp1 = aluno.nomeMae || aluno.NomeMae || aluno.mae || aluno.Mae || "";
+                    const resp2 = aluno.nomePai || aluno.NomePai || aluno.pai || aluno.Pai || "";
+                    const respGen = aluno.responsavel || aluno.Responsavel ||
+                                   aluno.nomeResponsavel || aluno.NomeResponsavel ||
+                                   aluno.responsaveis || aluno.Responsaveis || "";
+                    if (resp1) responsaveis.push(resp1.trim());
+                    if (resp2) responsaveis.push(resp2.trim());
+                    if (respGen && typeof respGen === "string" && !responsaveis.includes(respGen.trim())) {
+                        responsaveis.push(respGen.trim());
+                    }
+                    const filiacao = responsaveis.join(" / ") || "";
+
                     // Usa o nome como chave de deduplicação quando não há ID
                     const chave = idAluno ? String(idAluno) : normalizar(nomeAluno);
 
                     if (chave && !idsAdicionados.has(chave)) {
                         idsAdicionados.add(chave);
                         listaAlunosCache.push({
-                            id: idAluno || nomeAluno, // fallback: usa nome como id
+                            id: idAluno || nomeAluno,
                             nome: nomeAluno,
                             codigoListaChamadaAula: codAula,
                             codigoListaChamada: idLista,
                             turma: turmaNome,
                             presenca: true,
-                            exAluno: false
+                            exAluno: false,
+                            // Dados pessoais capturados do SophiA
+                            nascimento: nascFormatado,
+                            filiacao: filiacao,
+                            dadosBrutosSophia: {
+                                nascimento: rawNasc,
+                                responsaveis: responsaveis
+                            }
                         });
                     }
                 });
@@ -1971,18 +2034,16 @@
 
     window.abrirAtendimento = async (nomeAluno, idx) => {
         if (!ehCoordenacao) return;
+
+        // ── Reset do formulário ──
+        const campos = ['atend-nascimento','atend-turno','atend-filiacao','atend-professora',
+                        'atend-objetivos','atend-dados-familia','atend-dados-escola',
+                        'atend-consideracoes','atend-participantes','atend-psicologa-nome'];
+        campos.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+        // Reset badges AUTO
+        ['badge-nasc','badge-filiacao'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
         document.getElementById('atend-aluno').value = nomeAluno;
         document.getElementById('atend-turma').value = usuarioAtual.turma;
-        document.getElementById('atend-nascimento').value = '';
-        document.getElementById('atend-turno').value = '';
-        document.getElementById('atend-filiacao').value = '';
-        document.getElementById('atend-professora').value = '';
-        document.getElementById('atend-objetivos').value = '';
-        document.getElementById('atend-dados-familia').value = '';
-        document.getElementById('atend-dados-escola').value = '';
-        document.getElementById('atend-consideracoes').value = '';
-        document.getElementById('atend-participantes').value = '';
-        document.getElementById('atend-psicologa-nome').value = '';
         document.getElementById('atend-coord-nome').value = usuarioAtual.nome.replace(' (Coord)','');
         document.getElementById('atend-data-header').innerText = `Data: ${new Date().toLocaleDateString('pt-BR')}`;
         window.limparAssinatura('sig-coord');
@@ -1990,63 +2051,224 @@
         document.getElementById('atend-qr-section').style.display = 'none';
         document.getElementById('atend-acoes').style.display = 'flex';
         document.getElementById('qrcode-container').innerHTML = '';
-        const badge = document.getElementById('atend-status-badge');
-        badge.innerHTML = '';
+        document.getElementById('atend-status-badge').innerHTML = '';
+
+        // Mostra indicador de carregamento dentro do modal
+        const loadingBar = document.getElementById('atend-loading-bar');
+        if (loadingBar) { loadingBar.style.display = 'flex'; }
+
         atendimentoAtual = { nomeAluno, idx, data: getHoje(), id: null };
         loading(true);
+
         try {
+            // ── 1. Turno automático pela turma ──
             const turmaLower = usuarioAtual.turma.toLowerCase();
             if (turmaLower.includes('integral')) document.getElementById('atend-turno').value = 'Integral';
             else if (turmaLower.includes('tarde')) document.getElementById('atend-turno').value = 'Tarde';
             else document.getElementById('atend-turno').value = 'Manhã';
-            const profSnap = await getDocs(query(collection(db,"professores"), where("turma","==",usuarioAtual.turma)));
-            if (!profSnap.empty) {
-                const profData = profSnap.docs[0].data();
-                document.getElementById('atend-professora').value = profData.nome || '';
-            }
-            // CORRIGIDO: Busca rascunhos sem orderBy para evitar erro de índice
-            const rascunhosSnap = await getDocs(query(
-                collection(db,"atendimentos"),
-                where("aluno","==",nomeAluno),
-                where("status","==","rascunho")
-            ));
-            if (!rascunhosSnap.empty) {
-                const dadosRascunho = rascunhosSnap.docs[0].data();
-                const idRascunho = rascunhosSnap.docs[0].id;
-                const usarRascunho = confirm(`📝 Existe um rascunho salvo para ${nomeAluno} (${formatData(dadosRascunho.dataAtendimento)}).\n\nDeseja carregar o rascunho?`);
-                if (usarRascunho) {
-                    preencherFormAtendimento(dadosRascunho);
-                    atendimentoAtual.id = idRascunho;
-                    badge.innerHTML = '<span class="badge-rascunho">📝 Rascunho</span>';
+
+            // ── 2. Nome da professora ──
+            try {
+                const profSnap = await getDocs(query(collection(db,"professores"), where("turma","==",usuarioAtual.turma)));
+                if (!profSnap.empty) {
+                    document.getElementById('atend-professora').value = profSnap.docs[0].data().nome || '';
                 }
+            } catch(e) { console.warn("Erro buscando professora:", e); }
+
+            // ── 3. CAMADA 0: Dados salvos no Firebase (dados_alunos) ──
+            // Esta coleção é populada automaticamente a cada atendimento — acesso mais rápido
+            let nascimentoEncontrado = '', filiacaoEncontrada = '';
+            const alunoCache = listaAlunosCache.find(a => a.nome === nomeAluno);
+            const matriculaId = alunoCache?.id ? String(alunoCache.id) : null;
+
+            if (matriculaId) {
+                try {
+                    const dadosRef = doc(db, "dados_alunos", matriculaId);
+                    const dadosSnap = await getDoc(dadosRef);
+                    if (dadosSnap.exists()) {
+                        const d = dadosSnap.data();
+                        if (d.nascimento) nascimentoEncontrado = d.nascimento;
+                        if (d.filiacao) filiacaoEncontrada = d.filiacao;
+                        console.log('[CDC-ATEND] Dados do Firebase dados_alunos:', { nascimento: nascimentoEncontrado, filiacao: filiacaoEncontrada });
+                    }
+                } catch(e) { console.warn("Erro buscando dados_alunos:", e); }
             }
-            // CORRIGIDO: Busca histórico sem campo !=  para evitar erro de índice
-            const historicoSnap = await getDocs(query(
-                collection(db,"atendimentos"),
-                where("aluno","==",nomeAluno)
-            ));
-            if (!historicoSnap.empty) {
-                const docs = historicoSnap.docs
-                    .map(d => ({ id: d.id, ...d.data() }))
-                    .filter(d => d.status !== 'rascunho');
-                docs.sort((a,b) => (b.dataAtendimento||'').localeCompare(a.dataAtendimento||''));
-                if (docs.length > 0) {
-                    const ultimo = docs[0];
-                    if (ultimo.nascimento && !document.getElementById('atend-nascimento').value)
-                        document.getElementById('atend-nascimento').value = ultimo.nascimento;
-                    if (ultimo.filiacao && !document.getElementById('atend-filiacao').value)
-                        document.getElementById('atend-filiacao').value = ultimo.filiacao;
+
+            // ── CAMADA 1: Cache SophiA (carregado junto com a chamada) ──
+            if (alunoCache) {
+                if (!nascimentoEncontrado && alunoCache.nascimento) nascimentoEncontrado = alunoCache.nascimento;
+                if (!filiacaoEncontrada && alunoCache.filiacao) filiacaoEncontrada = alunoCache.filiacao;
+                console.log('[CDC-ATEND] Dados do cache SophiA:', { nascimento: alunoCache.nascimento, filiacao: alunoCache.filiacao });
+            }
+
+            // ── 4. CAMADA 2: Histórico de atendimentos anteriores no Firebase ──
+            // (mais confiável que o SophiA pois foi preenchido pela coordenação)
+            try {
+                const historicoSnap = await getDocs(query(
+                    collection(db,"atendimentos"),
+                    where("aluno","==",nomeAluno)
+                ));
+                if (!historicoSnap.empty) {
+                    const docs = historicoSnap.docs
+                        .map(d => ({ id: d.id, ...d.data() }))
+                        .sort((a,b) => (b.dataAtendimento||'').localeCompare(a.dataAtendimento||''));
+
+                    // Verifica rascunho
+                    const rascunho = docs.find(d => d.status === 'rascunho');
+                    if (rascunho) {
+                        const usarRascunho = confirm(`📝 Existe um rascunho salvo para ${nomeAluno} (${formatData(rascunho.dataAtendimento)}).\n\nDeseja carregar o rascunho?`);
+                        if (usarRascunho) {
+                            preencherFormAtendimento(rascunho);
+                            atendimentoAtual.id = rascunho.id;
+                            document.getElementById('atend-status-badge').innerHTML = '<span class="badge-rascunho">📝 Rascunho</span>';
+                            // Rascunho tem prioridade total — sai aqui
+                            if (loadingBar) loadingBar.style.display = 'none';
+                            loading(false);
+                            document.getElementById('modal-atendimento').style.display = 'flex';
+                            return;
+                        }
+                    }
+
+                    // Pega dados de atendimentos finalizados anteriores
+                    const finalizados = docs.filter(d => d.status !== 'rascunho');
+                    if (finalizados.length > 0) {
+                        const ultimo = finalizados[0];
+                        // Dados do Firebase têm prioridade sobre o cache SophiA
+                        if (ultimo.nascimento) nascimentoEncontrado = ultimo.nascimento;
+                        if (ultimo.filiacao) filiacaoEncontrada = ultimo.filiacao;
+                        console.log('[CDC-ATEND] Dados do histórico Firebase:', { nascimento: nascimentoEncontrado, filiacao: filiacaoEncontrada });
+                    }
                 }
+            } catch(e) { console.warn("Erro buscando histórico:", e); }
+
+            // ── 5. CAMADA 3: Busca detalhada no SophiA pelo codigoMatricula ──
+            // Só executa se ainda falta algum dado
+            if ((!nascimentoEncontrado || !filiacaoEncontrada) && alunoCache?.id && !isNaN(parseInt(alunoCache.id))) {
+                try {
+                    console.log('[CDC-ATEND] Buscando detalhes no SophiA para matrícula:', alunoCache.id);
+                    const token = await autenticarSophia();
+                    if (token) {
+                        // Tenta endpoint de matrícula/aluno diretamente
+                        const endpoints = [
+                            `${SOPHIA_URL}/Matricula/${alunoCache.id}`,
+                            `${SOPHIA_URL}/Aluno/${alunoCache.id}`,
+                            `${SOPHIA_URL}/Alunos/${alunoCache.id}`,
+                        ];
+                        for (const ep of endpoints) {
+                            try {
+                                const resp = await fetch(ep, {
+                                    headers: { 'Token': token, 'Accept': 'application/json' }
+                                });
+                                if (resp.ok) {
+                                    const dadoAluno = await resp.json();
+                                    console.log('[CDC-ATEND] SophiA detalhe:', dadoAluno);
+
+                                    // Extrai nascimento
+                                    if (!nascimentoEncontrado) {
+                                        const rawN = dadoAluno.dataNascimento || dadoAluno.DataNascimento ||
+                                                     dadoAluno.nascimento || dadoAluno.Nascimento ||
+                                                     dadoAluno.dtNascimento || dadoAluno.DtNascimento || "";
+                                        if (rawN) nascimentoEncontrado = converterDataSophia(rawN);
+                                    }
+
+                                    // Extrai responsáveis/filiação
+                                    if (!filiacaoEncontrada) {
+                                        const resps = [];
+                                        const mae = dadoAluno.nomeMae || dadoAluno.NomeMae || dadoAluno.mae || "";
+                                        const pai = dadoAluno.nomePai || dadoAluno.NomePai || dadoAluno.pai || "";
+                                        const resp = dadoAluno.responsavel || dadoAluno.Responsavel ||
+                                                     dadoAluno.nomeResponsavel || dadoAluno.NomeResponsavel || "";
+                                        if (mae) resps.push(mae.trim());
+                                        if (pai) resps.push(pai.trim());
+                                        if (resp && !resps.includes(resp.trim())) resps.push(resp.trim());
+                                        // Verifica campo de array de responsáveis
+                                        const arrResp = dadoAluno.responsaveis || dadoAluno.Responsaveis || [];
+                                        if (Array.isArray(arrResp)) {
+                                            arrResp.forEach(r => {
+                                                const n = r.nome || r.Nome || r.nomeResponsavel || r.NomeResponsavel || (typeof r === 'string' ? r : '');
+                                                if (n && !resps.includes(n.trim())) resps.push(n.trim());
+                                            });
+                                        }
+                                        if (resps.length > 0) filiacaoEncontrada = resps.join(" / ");
+                                    }
+
+                                    if (nascimentoEncontrado || filiacaoEncontrada) break; // achou, para
+                                }
+                            } catch(epErr) { /* endpoint não existe, tenta próximo */ }
+                        }
+                    }
+                } catch(e) { console.warn("[CDC-ATEND] Erro buscando detalhe SophiA:", e); }
             }
-        } catch(e) { console.error("Erro ao pré-preencher:", e); }
-        finally { loading(false); }
+
+            // ── 6. Aplica os dados encontrados no formulário ──
+            if (nascimentoEncontrado) {
+                document.getElementById('atend-nascimento').value = nascimentoEncontrado;
+                const badgeNasc = document.getElementById('badge-nasc');
+                if (badgeNasc) badgeNasc.style.display = 'inline';
+                console.log('[CDC-ATEND] ✅ Nascimento preenchido:', nascimentoEncontrado);
+            }
+            if (filiacaoEncontrada) {
+                document.getElementById('atend-filiacao').value = filiacaoEncontrada;
+                const badgeFil = document.getElementById('badge-filiacao');
+                if (badgeFil) badgeFil.style.display = 'inline';
+                console.log('[CDC-ATEND] ✅ Filiação preenchida:', filiacaoEncontrada);
+            }
+            if (!nascimentoEncontrado && !filiacaoEncontrada) {
+                console.warn('[CDC-ATEND] ⚠️ Nenhum dado pessoal encontrado para:', nomeAluno, '— preencha manualmente.');
+            }
+
+            // ── 7. Salva no Firebase para uso futuro (atualiza se mudou) ──
+            if ((nascimentoEncontrado || filiacaoEncontrada) && alunoCache?.id) {
+                try {
+                    const alunoRef = doc(db, "dados_alunos", String(alunoCache.id));
+                    await setDoc(alunoRef, {
+                        nome: nomeAluno,
+                        turma: usuarioAtual.turma,
+                        nascimento: nascimentoEncontrado || '',
+                        filiacao: filiacaoEncontrada || '',
+                        atualizadoEm: serverTimestamp()
+                    }, { merge: true });
+                } catch(e) { /* não crítico, ignora */ }
+            }
+
+        } catch(e) {
+            console.error("[CDC-ATEND] Erro ao pré-preencher atendimento:", e);
+        } finally {
+            if (loadingBar) loadingBar.style.display = 'none';
+            loading(false);
+        }
+
         document.getElementById('modal-atendimento').style.display = 'flex';
     };
 
+    // Converte data do SophiA para formato yyyy-mm-dd
+    function converterDataSophia(raw) {
+        if (!raw) return "";
+        try {
+            if (raw.includes("/")) {
+                const p = raw.split("/");
+                if (p.length === 3) return `${p[2].substring(0,4)}-${p[1].padStart(2,"0")}-${p[0].padStart(2,"0")}`;
+            } else if (raw.includes("T")) {
+                return raw.substring(0, 10);
+            } else if (raw.match(/^\d{4}-\d{2}-\d{2}/)) {
+                return raw.substring(0, 10);
+            }
+        } catch(e) { return ""; }
+        return "";
+    }
+
     function preencherFormAtendimento(d) {
-        if (d.nascimento) document.getElementById('atend-nascimento').value = d.nascimento;
+        if (d.nascimento) {
+            document.getElementById('atend-nascimento').value = d.nascimento;
+            const bn = document.getElementById('badge-nasc');
+            if (bn) { bn.style.display = 'inline'; bn.style.background = '#fef3c7'; bn.style.color = '#92400e'; bn.innerText = '✦ SALVO'; }
+        }
         if (d.turno) document.getElementById('atend-turno').value = d.turno;
-        if (d.filiacao) document.getElementById('atend-filiacao').value = d.filiacao;
+        if (d.filiacao) {
+            document.getElementById('atend-filiacao').value = d.filiacao;
+            const bf = document.getElementById('badge-filiacao');
+            if (bf) { bf.style.display = 'inline'; bf.style.background = '#fef3c7'; bf.style.color = '#92400e'; bf.innerText = '✦ SALVO'; }
+        }
         if (d.professora) document.getElementById('atend-professora').value = d.professora;
         if (d.objetivos) document.getElementById('atend-objetivos').value = d.objetivos;
         if (d.dadosFamilia) document.getElementById('atend-dados-familia').value = d.dadosFamilia;
